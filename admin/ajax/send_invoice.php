@@ -51,12 +51,6 @@ try {
         exit;
     }
     
-    if (empty($order['customer_email'])) {
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Customer email not found']);
-        exit;
-    }
-
     // Generate PDF invoice
     $pdf = new InvoicePDF('P', 'mm', 'A4');
     $pdf->generateInvoice($order);
@@ -82,9 +76,28 @@ try {
         $mail->SMTPSecure = $mail_config['encryption'];
         $mail->Port = $mail_config['port'];
         
+        // Attempt to get customer email from metafields
+        $metafields = json_decode($order['metafields'], true);
+        $metafields_customer_email = $metafields['customer_email'] ?? null;
+
+        // Validate and use metafields customer email or fallback to customer email
+        $primary_email = $metafields_customer_email ?: $order['customer_email'];
+        
+        if (empty($primary_email)) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'No valid email found for sending invoice']);
+            exit;
+        }
+
         // Recipients
         $mail->setFrom($mail_config['from_email'], $mail_config['from_name']);
-        $mail->addAddress($order['customer_email'], $order['customer_first_name'] . ' ' . $order['customer_last_name']);
+        $mail->addAddress($primary_email, $order['customer_first_name'] . ' ' . $order['customer_last_name']);
+        
+        // Add CC if customer email is different from primary email
+        if (!empty($order['customer_email']) && $order['customer_email'] !== $primary_email) {
+            $mail->addCC($order['customer_email']);
+        }
+        
         $mail->addReplyTo($mail_config['from_email'], $mail_config['from_name']);
         
         // Attach PDF
@@ -190,17 +203,17 @@ try {
         // Clean up temporary PDF file
         unlink($pdfFile);
         
-        // Log success
+        // Log successful email
         $stmt = $conn->prepare("
             INSERT INTO email_logs (order_id, email_type, recipient_email, status, sent_at)
             VALUES (?, 'invoice', ?, 'sent', NOW())
         ");
-        $stmt->execute([$_POST['order_id'], $order['customer_email']]);
+        $stmt->execute([$order['id'], $primary_email]);
         
         header('Content-Type: application/json');
         echo json_encode([
-            'success' => true, 
-            'message' => 'Invoice sent successfully to ' . $order['customer_email']
+            'success' => true,
+            'message' => 'Invoice sent successfully to ' . $primary_email
         ]);
         
     } catch (Exception $e) {
@@ -209,14 +222,14 @@ try {
             unlink($pdfFile);
         }
         
-        // Log error
+        // Log email error
         $stmt = $conn->prepare("
             INSERT INTO email_logs (order_id, email_type, recipient_email, status, error_message, sent_at)
             VALUES (?, 'invoice', ?, 'failed', ?, NOW())
         ");
         $stmt->execute([
-            $_POST['order_id'], 
-            $order['customer_email'],
+            $order['id'],
+            $primary_email,
             'Mailer Error: ' . $e->getMessage()
         ]);
         

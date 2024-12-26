@@ -150,7 +150,17 @@ include 'includes/header.php';
                                 ?>
                                     <tr>
                                         <td data-sort="<?php echo $order['id']; ?>"><?php echo htmlspecialchars($order['order_number']); ?></td>
-                                        <td><?php echo htmlspecialchars($order['customer_first_name'] . ' ' . $order['customer_last_name']); ?></td>
+                                        <td>
+                                            <?php 
+                                                echo htmlspecialchars($order['customer_first_name'] . ' ' . $order['customer_last_name']);
+                                                
+                                                // Get customer email from metafields
+                                                $metafields = json_decode($order['metafields'], true);
+                                                $customerEmail = isset($metafields['customer_email']) ? $metafields['customer_email'] : 'N/A';
+                                                
+                                                echo '<br><small class="text-muted">' . htmlspecialchars($customerEmail) . '</small>';
+                                            ?>
+                                        </td>
                                         <td class="text-end" data-sort="<?php echo $order['total_price']; ?>">
                                             <?php echo $currency_symbol . number_format($order['total_price'], 2); ?>
                                         </td>
