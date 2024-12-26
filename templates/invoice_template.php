@@ -170,9 +170,7 @@
     <table class="header-table">
         <tr>
             <td class="logo-cell">
-                <?php if (!empty($logo_base64)): ?>
-                <img src="<?php echo $logo_base64; ?>" alt="MTSB" style="max-width: 100px; height: auto;">
-                <?php endif; ?>
+                <img src="data:image/png;base64,<?php echo base64_encode(file_get_contents($logo_path)); ?>" alt="MTSB">
             </td>
             <td class="invoice-header">
                 <div class="invoice-title">INVOICE</div>
@@ -189,7 +187,7 @@
         <div class="billing-details">
             <div class="section-title">Billing Details</div>
             <div class="details-content">
-                <div><strong><?php echo htmlspecialchars($order['customer_name'] ?: 'Customer'); ?></strong></div>
+                <div><strong><?php echo htmlspecialchars($order['customer_name']); ?></strong></div>
                 <div><?php echo htmlspecialchars($order['billing_address']['address1'] ?? ''); ?></div>
                 <?php if (!empty($order['billing_address']['address2'])): ?>
                     <div><?php echo htmlspecialchars($order['billing_address']['address2']); ?></div>

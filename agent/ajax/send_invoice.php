@@ -3,12 +3,11 @@ session_start();
 require_once '../../config/database.php';
 require_once '../../includes/functions.php';
 require_once '../../vendor/autoload.php';
+require_once '../../classes/InvoicePDF.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
-use Dompdf\Dompdf;
-use Dompdf\Options;
 
 header('Content-Type: application/json');
 
@@ -67,52 +66,17 @@ try {
     $order['discount_codes'] = json_decode($order['discount_codes'], true);
     $order['metafields'] = json_decode($order['metafields'], true);
 
-    // Add customer name
-    $order['customer_name'] = trim($order['customer_first_name'] . ' ' . $order['customer_last_name']);
-
     if (empty($order['metafields']['customer_email'])) {
         throw new Exception("No metafield email found for this order");
     }
 
-    // Initialize Dompdf
-    $options = new Options();
-    $options->set('isHtml5ParserEnabled', true);
-    $options->set('isPhpEnabled', true);
-    $options->set('isRemoteEnabled', true);
-    $options->set('chroot', __DIR__ . '/../../');
-    
-    $dompdf = new Dompdf($options);
-    
-    // Get the logo and convert to base64
-    $logo_path = __DIR__ . '/../../assets/images/logo.png';
-    $logo_base64 = '';
-    if (file_exists($logo_path)) {
-        error_log("Logo file found at: " . $logo_path);
-        $logo_type = pathinfo($logo_path, PATHINFO_EXTENSION);
-        $logo_data = file_get_contents($logo_path);
-        $logo_base64 = 'data:image/' . $logo_type . ';base64,' . base64_encode($logo_data);
-        error_log("Logo base64 length: " . strlen($logo_base64));
-    } else {
-        error_log("Logo file not found at: " . $logo_path);
-    }
-    
-    // Get the invoice template
-    ob_start();
-    include '../../templates/invoice_template.php';
-    $html = ob_get_clean();
-    
-    // Load HTML into Dompdf
-    $dompdf->loadHtml($html);
-    
-    // Set paper size and orientation
-    $dompdf->setPaper('A4', 'portrait');
-    
-    // Render PDF
-    $dompdf->render();
+    // Generate PDF invoice
+    $pdf = new InvoicePDF('P', 'mm', 'A4');
+    $pdf->generateInvoice($order);
     
     // Save PDF to temporary file
     $pdfFile = tempnam(sys_get_temp_dir(), 'invoice_');
-    file_put_contents($pdfFile, $dompdf->output());
+    $pdf->Output($pdfFile, 'F');
     
     // Load mail configuration
     $mail_config = require_once '../../config/mail.php';
@@ -136,37 +100,56 @@ try {
         $mail->addAddress($order['metafields']['customer_email'], $order['customer_first_name'] . ' ' . $order['customer_last_name']);
         $mail->addReplyTo($mail_config['from_email'], $mail_config['from_name']);
         
+        // Attach PDF
+        $mail->addAttachment($pdfFile, 'Invoice_' . $order['order_number'] . '.pdf');
+        
         // Content
         $mail->isHTML(true);
-        $mail->Subject = 'Invoice for Order #' . $order['order_number'];
+        $mail->Subject = "Invoice for Order #{$order['order_number']}";
         
+        // Get the date with fallback options
+        $formatted_date = '';
+        if (!empty($order['formatted_processed_date'])) {
+            $formatted_date = $order['formatted_processed_date'];
+        } elseif (!empty($order['processed_at'])) {
+            $formatted_date = date('M d, Y h:i A', strtotime($order['processed_at']));
+        } else {
+            $formatted_date = date('M d, Y h:i A', strtotime($order['created_at']));
+        }
+
         // Email body
-        $body = "Dear " . htmlspecialchars($order['customer_first_name']) . ",<br><br>";
-        $body .= "Thank you for your order. Please find attached the invoice for your order #" . htmlspecialchars($order['order_number']) . ".<br><br>";
-        $body .= "Order Details:<br>";
-        $body .= "Order Number: " . htmlspecialchars($order['order_number']) . "<br>";
-        $body .= "Order Date: " . htmlspecialchars($order['formatted_created_date']) . "<br>";
-        $body .= "Total Amount: " . htmlspecialchars(number_format($order['total_price'], 2)) . " " . htmlspecialchars($order['currency']) . "<br><br>";
-        $body .= "If you have any questions, please don't hesitate to contact us.<br><br>";
-        $body .= "Best regards,<br>";
-        $body .= htmlspecialchars($mail_config['from_name']);
-        
-        $mail->Body = $body;
-        $mail->AltBody = strip_tags(str_replace('<br>', "\n", $body));
-        
-        // Attach PDF invoice
-        $mail->addAttachment($pdfFile, 'invoice_' . $order['order_number'] . '.pdf');
-        
+        $mail->Body = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+            <h2 style='color: #333;'>Thank You for Your Order!</h2>
+            <p>Dear {$order['customer_first_name']},</p>
+            <p>Please find attached the invoice for your order #{$order['order_number']} placed on {$formatted_date}.</p>
+            <div style='margin: 20px 0; padding: 20px; background-color: #f8f9fa; border-radius: 5px;'>
+                <h3 style='margin-top: 0;'>Order Summary</h3>
+                <p><strong>Order Number:</strong> #{$order['order_number']}</p>
+                <p><strong>Order Date:</strong> {$formatted_date}</p>
+                <p><strong>Total Amount:</strong> " . format_currency($order['total_price'], $order['currency']) . "</p>
+            </div>
+            <p>If you have any questions about your order, please don't hesitate to contact us.</p>
+            <p>Thank you for your business!</p>
+            <br>
+            <p>Best regards,<br>Your Sales Team</p>
+        </div>";
+
+        // Send email
         $mail->send();
         
-        // Delete temporary PDF file
-        unlink($pdfFile);
+        // Clean up temporary PDF file
+        if (file_exists($pdfFile)) {
+            unlink($pdfFile);
+        }
         
         echo json_encode(['success' => true]);
         
     } catch (Exception $e) {
-        // Delete temporary PDF file
-        unlink($pdfFile);
+        // Clean up temporary PDF file
+        if (file_exists($pdfFile)) {
+            unlink($pdfFile);
+        }
         throw new Exception("Email could not be sent. Mailer Error: {$mail->ErrorInfo}");
     }
     

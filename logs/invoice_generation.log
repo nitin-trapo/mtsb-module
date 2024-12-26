@@ -1,10 +1,10 @@
-[2024-12-26 07:56:01] Starting invoice generation Context: {
-    "commission_id": 204,
+[2024-12-24 07:00:15] Starting invoice generation Context: {
+    "commission_id": 140,
     "request": {
         "method": "GET",
-        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=204",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=140",
         "get_data": {
-            "commission_id": "204"
+            "commission_id": "140"
         },
         "post_data": [],
         "session_data": {
@@ -21,18 +21,18 @@
         },
         {
             "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 416,
+            "line": 415,
             "function": "generate_invoice"
         }
     ]
 }
-[2024-12-26 07:56:01] Commission ID validated Context: {
-    "commission_id": 204,
+[2024-12-24 07:00:15] Commission ID validated Context: {
+    "commission_id": 140,
     "request": {
         "method": "GET",
-        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=204",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=140",
         "get_data": {
-            "commission_id": "204"
+            "commission_id": "140"
         },
         "post_data": [],
         "session_data": {
@@ -49,19 +49,19 @@
         },
         {
             "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 416,
+            "line": 415,
             "function": "generate_invoice"
         }
     ]
 }
-[2024-12-26 07:56:01] Checking product type commission rules Context: {
+[2024-12-24 07:00:15] Checking product type commission rules Context: {
     "product_type": "TRAPO CLASSIC",
     "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
     "request": {
         "method": "GET",
-        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=204",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=140",
         "get_data": {
-            "commission_id": "204"
+            "commission_id": "140"
         },
         "post_data": [],
         "session_data": {
@@ -83,12 +83,298 @@
         },
         {
             "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 416,
+            "line": 415,
             "function": "generate_invoice"
         }
     ]
 }
-[2024-12-26 07:56:01] Found product type specific rule Context: {
+[2024-12-24 07:00:15] Found product type specific rule Context: {
+    "id": 7,
+    "rule_type": "product_type",
+    "rule_value": "TRAPO CLASSIC",
+    "commission_percentage": "20.00",
+    "status": "active",
+    "created_at": "2024-12-11 20:46:34",
+    "updated_at": "2024-12-11 20:46:34",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=140",
+        "get_data": {
+            "commission_id": "140"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 69,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 217,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-24 07:00:15] Checking product type commission rules Context: {
+    "product_type": "TRAPO CLASSIC",
+    "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=140",
+        "get_data": {
+            "commission_id": "140"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 61,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 217,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-24 07:00:15] Found product type specific rule Context: {
+    "id": 7,
+    "rule_type": "product_type",
+    "rule_value": "TRAPO CLASSIC",
+    "commission_percentage": "20.00",
+    "status": "active",
+    "created_at": "2024-12-11 20:46:34",
+    "updated_at": "2024-12-11 20:46:34",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=140",
+        "get_data": {
+            "commission_id": "140"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 69,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 217,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-24 07:00:15] PDF instance created Context: {
+    "commission_id": 140,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=140",
+        "get_data": {
+            "commission_id": "140"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 297,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-24 07:00:15] PDF page added Context: {
+    "commission_id": 140,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=140",
+        "get_data": {
+            "commission_id": "140"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 317,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-24 07:00:15] PDF content generation complete Context: {
+    "commission_id": 140,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=140",
+        "get_data": {
+            "commission_id": "140"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 395,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-25 20:10:13] Starting invoice generation Context: {
+    "commission_id": 141,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
+        "get_data": {
+            "commission_id": "141"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 123,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-25 20:10:13] Commission ID validated Context: {
+    "commission_id": 141,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
+        "get_data": {
+            "commission_id": "141"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 153,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-25 20:10:13] Checking product type commission rules Context: {
+    "product_type": "TRAPO CLASSIC",
+    "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
+        "get_data": {
+            "commission_id": "141"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 61,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 217,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-25 20:10:13] Found product type specific rule Context: {
     "id": 13,
     "rule_type": "product_type",
     "rule_value": "TRAPO CLASSIC",
@@ -98,9 +384,9 @@
     "updated_at": "2024-12-26 00:31:46",
     "request": {
         "method": "GET",
-        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=204",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
         "get_data": {
-            "commission_id": "204"
+            "commission_id": "141"
         },
         "post_data": [],
         "session_data": {
@@ -122,19 +408,159 @@
         },
         {
             "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 416,
+            "line": 415,
             "function": "generate_invoice"
         }
     ]
 }
-[2024-12-26 07:56:01] Checking product type commission rules Context: {
-    "product_type": "OFFLINE SERVICE",
+[2024-12-25 20:10:13] PDF instance created Context: {
+    "commission_id": 141,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
+        "get_data": {
+            "commission_id": "141"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 297,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-25 20:10:13] PDF page added Context: {
+    "commission_id": 141,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
+        "get_data": {
+            "commission_id": "141"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 317,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-25 20:10:13] PDF content generation complete Context: {
+    "commission_id": 141,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
+        "get_data": {
+            "commission_id": "141"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 395,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-25 20:10:27] Starting invoice generation Context: {
+    "commission_id": 141,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
+        "get_data": {
+            "commission_id": "141"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 123,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-25 20:10:27] Commission ID validated Context: {
+    "commission_id": 141,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
+        "get_data": {
+            "commission_id": "141"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 153,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-25 20:10:27] Checking product type commission rules Context: {
+    "product_type": "TRAPO CLASSIC",
     "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
     "request": {
         "method": "GET",
-        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=204",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
         "get_data": {
-            "commission_id": "204"
+            "commission_id": "141"
         },
         "post_data": [],
         "session_data": {
@@ -156,361 +582,12 @@
         },
         {
             "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 416,
+            "line": 415,
             "function": "generate_invoice"
         }
     ]
 }
-[2024-12-26 07:56:01] Found product type specific rule Context: {
-    "id": 6,
-    "rule_type": "product_type",
-    "rule_value": "OFFLINE SERVICE",
-    "commission_percentage": "10.00",
-    "status": "active",
-    "created_at": "2024-12-11 20:45:45",
-    "updated_at": "2024-12-11 20:45:45",
-    "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
-        },
-        "post_data": [],
-        "session_data": {
-            "user_id": 1,
-            "role": "admin",
-            "name": "System Admin"
-        }
-    },
-    "backtrace": [
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 69,
-            "function": "logError"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 217,
-            "function": "getCommissionRate"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 416,
-            "function": "generate_invoice"
-        }
-    ]
-}
-[2024-12-26 07:56:01] Checking product type commission rules Context: {
-    "product_type": "OFFLINE SERVICE",
-    "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
-    "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
-        },
-        "post_data": [],
-        "session_data": {
-            "user_id": 1,
-            "role": "admin",
-            "name": "System Admin"
-        }
-    },
-    "backtrace": [
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 61,
-            "function": "logError"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 217,
-            "function": "getCommissionRate"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 416,
-            "function": "generate_invoice"
-        }
-    ]
-}
-[2024-12-26 07:56:01] Found product type specific rule Context: {
-    "id": 6,
-    "rule_type": "product_type",
-    "rule_value": "OFFLINE SERVICE",
-    "commission_percentage": "10.00",
-    "status": "active",
-    "created_at": "2024-12-11 20:45:45",
-    "updated_at": "2024-12-11 20:45:45",
-    "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
-        },
-        "post_data": [],
-        "session_data": {
-            "user_id": 1,
-            "role": "admin",
-            "name": "System Admin"
-        }
-    },
-    "backtrace": [
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 69,
-            "function": "logError"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 217,
-            "function": "getCommissionRate"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 416,
-            "function": "generate_invoice"
-        }
-    ]
-}
-[2024-12-26 07:56:01] PDF instance created Context: {
-    "commission_id": 204,
-    "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
-        },
-        "post_data": [],
-        "session_data": {
-            "user_id": 1,
-            "role": "admin",
-            "name": "System Admin"
-        }
-    },
-    "backtrace": [
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 298,
-            "function": "logError"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 416,
-            "function": "generate_invoice"
-        }
-    ]
-}
-[2024-12-26 07:56:01] PDF page added Context: {
-    "commission_id": 204,
-    "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
-        },
-        "post_data": [],
-        "session_data": {
-            "user_id": 1,
-            "role": "admin",
-            "name": "System Admin"
-        }
-    },
-    "backtrace": [
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 318,
-            "function": "logError"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 416,
-            "function": "generate_invoice"
-        }
-    ]
-}
-[2024-12-26 07:56:01] PDF content generation complete Context: {
-    "commission_id": 204,
-    "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
-        },
-        "post_data": [],
-        "session_data": {
-            "user_id": 1,
-            "role": "admin",
-            "name": "System Admin"
-        }
-    },
-    "backtrace": [
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 396,
-            "function": "logError"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
-            "line": 416,
-            "function": "generate_invoice"
-        }
-    ]
-}
-[2024-12-26 08:01:41] Starting invoice generation Context: {
-    "commission_id": 204,
-    "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/agent\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
-        },
-        "post_data": [],
-        "session_data": {
-            "user_id": 17,
-            "role": "agent",
-            "name": null,
-            "email": "nitinpatoliya.my@trapo.com",
-            "customer_id": 56
-        }
-    },
-    "backtrace": [
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 151,
-            "function": "logError"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 509,
-            "function": "generate_invoice"
-        }
-    ]
-}
-[2024-12-26 08:01:41] Checking commission access Context: {
-    "commission_id": 204,
-    "agent_id": 56,
-    "session": {
-        "user_id": 17,
-        "role": "agent",
-        "name": null,
-        "email": "nitinpatoliya.my@trapo.com",
-        "customer_id": 56
-    },
-    "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/agent\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
-        },
-        "post_data": [],
-        "session_data": {
-            "user_id": 17,
-            "role": "agent",
-            "name": null,
-            "email": "nitinpatoliya.my@trapo.com",
-            "customer_id": 56
-        }
-    },
-    "backtrace": [
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 192,
-            "function": "logError"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 509,
-            "function": "generate_invoice"
-        }
-    ]
-}
-[2024-12-26 08:01:41] Running commission query Context: {
-    "query": "\n            SELECT \n                c.*,\n                a.first_name as agent_first_name,\n                a.last_name as agent_last_name,\n                a.email as agent_email,\n                a.phone as agent_phone,\n                o.order_number,\n                o.total_price as order_total,\n                o.currency,\n                o.created_at as order_date,\n                o.line_items,\n                (c.amount \/ o.total_price) as rate\n            FROM commissions c\n            LEFT JOIN customers a ON c.agent_id = a.id\n            LEFT JOIN orders o ON c.order_id = o.id\n            WHERE c.id = :commission_id \n            AND c.agent_id = :agent_id\n        ",
-    "params": {
-        "commission_id": 204,
-        "agent_id": 56
-    },
-    "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/agent\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
-        },
-        "post_data": [],
-        "session_data": {
-            "user_id": 17,
-            "role": "agent",
-            "name": null,
-            "email": "nitinpatoliya.my@trapo.com",
-            "customer_id": 56
-        }
-    },
-    "backtrace": [
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 220,
-            "function": "logError"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 509,
-            "function": "generate_invoice"
-        }
-    ]
-}
-[2024-12-26 08:01:41] Query result Context: {
-    "commission": {
-        "id": 204,
-        "order_id": 230,
-        "agent_id": 56,
-        "amount": "354.00",
-        "status": "pending",
-        "notes": null,
-        "created_at": "2024-12-26 10:26:03",
-        "updated_at": "2024-12-26 12:25:50",
-        "agent_first_name": "Nitin",
-        "agent_last_name": "P",
-        "agent_email": "nitinpatoliya.my@trapo.com",
-        "agent_phone": "+60102222333",
-        "order_number": "MT-CP1023",
-        "order_total": "3186.00",
-        "currency": "MYR",
-        "order_date": "2024-12-11 12:47:48",
-        "line_items": "[{\"id\":14596260954367,\"admin_graphql_api_id\":\"gid:\\\/\\\/shopify\\\/LineItem\\\/14596260954367\",\"attributed_staffs\":[],\"current_quantity\":1,\"fulfillable_quantity\":1,\"fulfillment_service\":\"manual\",\"fulfillment_status\":null,\"gift_card\":false,\"grams\":0,\"name\":\"BYD Atto 3 Extended (2022-Present) - Black \\\/ Black \\\/ Front + Rear\",\"price\":\"277.44\",\"price_set\":{\"shop_money\":{\"amount\":\"277.44\",\"currency_code\":\"MYR\"},\"presentment_money\":{\"amount\":\"277.44\",\"currency_code\":\"MYR\"}},\"product_exists\":true,\"product_id\":8882078023935,\"properties\":[],\"quantity\":1,\"requires_shipping\":true,\"sku\":\"TRC-BYD001-B-B\",\"taxable\":true,\"title\":\"BYD Atto 3 Extended (2022-Present)\",\"total_discount\":\"0.00\",\"total_discount_set\":{\"shop_money\":{\"amount\":\"0.00\",\"currency_code\":\"MYR\"},\"presentment_money\":{\"amount\":\"0.00\",\"currency_code\":\"MYR\"}},\"variant_id\":46153059860735,\"variant_inventory_management\":\"shopify\",\"variant_title\":\"Black \\\/ Black \\\/ Front + Rear\",\"vendor\":\"BYD\",\"tax_lines\":[],\"duties\":[],\"discount_allocations\":[{\"amount\":\"27.75\",\"amount_set\":{\"shop_money\":{\"amount\":\"27.75\",\"currency_code\":\"MYR\"},\"presentment_money\":{\"amount\":\"27.75\",\"currency_code\":\"MYR\"}},\"discount_application_index\":0}]},{\"id\":14596260987135,\"admin_graphql_api_id\":\"gid:\\\/\\\/shopify\\\/LineItem\\\/14596260987135\",\"attributed_staffs\":[],\"current_quantity\":1,\"fulfillable_quantity\":1,\"fulfillment_service\":\"manual\",\"fulfillment_status\":null,\"gift_card\":false,\"grams\":0,\"name\":\"Trapo Tint Chroma - (L) \\\/ Sunroof\",\"price\":\"2550.05\",\"price_set\":{\"shop_money\":{\"amount\":\"2550.05\",\"currency_code\":\"MYR\"},\"presentment_money\":{\"amount\":\"2550.05\",\"currency_code\":\"MYR\"}},\"product_exists\":true,\"product_id\":8911012757759,\"properties\":[],\"quantity\":1,\"requires_shipping\":true,\"sku\":\"OXCT-003-L-WH-CHR\",\"taxable\":true,\"title\":\"Trapo Tint Chroma\",\"total_discount\":\"0.00\",\"total_discount_set\":{\"shop_money\":{\"amount\":\"0.00\",\"currency_code\":\"MYR\"},\"presentment_money\":{\"amount\":\"0.00\",\"currency_code\":\"MYR\"}},\"variant_id\":46251747868927,\"variant_inventory_management\":\"shopify\",\"variant_title\":\"(L) \\\/ Sunroof\",\"vendor\":\"MTSB\",\"tax_lines\":[],\"duties\":[],\"discount_allocations\":[{\"amount\":\"255.00\",\"amount_set\":{\"shop_money\":{\"amount\":\"255.00\",\"currency_code\":\"MYR\"},\"presentment_money\":{\"amount\":\"255.00\",\"currency_code\":\"MYR\"}},\"discount_application_index\":0}]},{\"id\":14596261019903,\"admin_graphql_api_id\":\"gid:\\\/\\\/shopify\\\/LineItem\\\/14596261019903\",\"attributed_staffs\":[],\"current_quantity\":1,\"fulfillable_quantity\":1,\"fulfillment_service\":\"manual\",\"fulfillment_status\":null,\"gift_card\":false,\"grams\":0,\"name\":\"Trapo Coating Quik Shield - (L)\",\"price\":\"712.51\",\"price_set\":{\"shop_money\":{\"amount\":\"712.51\",\"currency_code\":\"MYR\"},\"presentment_money\":{\"amount\":\"712.51\",\"currency_code\":\"MYR\"}},\"product_exists\":true,\"product_id\":8911020392703,\"properties\":[],\"quantity\":1,\"requires_shipping\":true,\"sku\":\"OXCC-012-QS-LARGE\",\"taxable\":true,\"title\":\"Trapo Coating Quik Shield\",\"total_discount\":\"0.00\",\"total_discount_set\":{\"shop_money\":{\"amount\":\"0.00\",\"currency_code\":\"MYR\"},\"presentment_money\":{\"amount\":\"0.00\",\"currency_code\":\"MYR\"}},\"variant_id\":46251757568255,\"variant_inventory_management\":\"shopify\",\"variant_title\":\"(L)\",\"vendor\":\"MTSB\",\"tax_lines\":[],\"duties\":[],\"discount_allocations\":[{\"amount\":\"71.25\",\"amount_set\":{\"shop_money\":{\"amount\":\"71.25\",\"currency_code\":\"MYR\"},\"presentment_money\":{\"amount\":\"71.25\",\"currency_code\":\"MYR\"}},\"discount_application_index\":0}]}]",
-        "rate": "0.111111"
-    },
-    "agent_id": 56,
-    "commission_id": 204,
-    "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/agent\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
-        },
-        "post_data": [],
-        "session_data": {
-            "user_id": 17,
-            "role": "agent",
-            "name": null,
-            "email": "nitinpatoliya.my@trapo.com",
-            "customer_id": 56
-        }
-    },
-    "backtrace": [
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 233,
-            "function": "logError"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 509,
-            "function": "generate_invoice"
-        }
-    ]
-}
-[2024-12-26 08:01:41] Found rule by product type Context: {
+[2024-12-25 20:10:27] Found product type specific rule Context: {
     "id": 13,
     "rule_type": "product_type",
     "rule_value": "TRAPO CLASSIC",
@@ -520,38 +597,309 @@
     "updated_at": "2024-12-26 00:31:46",
     "request": {
         "method": "GET",
-        "uri": "\/shopify-agent-module\/agent\/generate_invoice.php?commission_id=204",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
         "get_data": {
-            "commission_id": "204"
+            "commission_id": "141"
         },
         "post_data": [],
         "session_data": {
-            "user_id": 17,
-            "role": "agent",
-            "name": null,
-            "email": "nitinpatoliya.my@trapo.com",
-            "customer_id": 56
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
         }
     },
     "backtrace": [
         {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 66,
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 69,
             "function": "logError"
         },
         {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 273,
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 217,
             "function": "getCommissionRate"
         },
         {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 509,
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
             "function": "generate_invoice"
         }
     ]
 }
-[2024-12-26 08:01:41] Found rule by product type Context: {
+[2024-12-25 20:10:27] PDF instance created Context: {
+    "commission_id": 141,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
+        "get_data": {
+            "commission_id": "141"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 297,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-25 20:10:27] PDF page added Context: {
+    "commission_id": 141,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
+        "get_data": {
+            "commission_id": "141"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 317,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-25 20:10:27] PDF content generation complete Context: {
+    "commission_id": 141,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=141",
+        "get_data": {
+            "commission_id": "141"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 395,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 415,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-26 05:27:08] Starting invoice generation Context: {
+    "commission_id": 139,
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "get_data": [],
+        "post_data": {
+            "commission_id": "139"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 123,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 146,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-26 05:27:08] Commission ID validated Context: {
+    "commission_id": 139,
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "get_data": [],
+        "post_data": {
+            "commission_id": "139"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 153,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 146,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-26 05:27:08] Checking product type commission rules Context: {
+    "product_type": "Mitsubishi Mirage (2012-Present)",
+    "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "get_data": [],
+        "post_data": {
+            "commission_id": "139"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 61,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 217,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 146,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-26 05:27:08] Checking default commission rules Context: {
+    "query": "SELECT * FROM commission_rules \n                 WHERE status = 'active' \n                 AND rule_type = 'all'\n                 LIMIT 1",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "get_data": [],
+        "post_data": {
+            "commission_id": "139"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 84,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 217,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 146,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-26 05:27:08] No commission rule found, using default values Context: {
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "get_data": [],
+        "post_data": {
+            "commission_id": "139"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 101,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 217,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 146,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-26 05:27:08] Checking product type commission rules Context: {
+    "product_type": "OFFLINE SERVICE",
+    "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "get_data": [],
+        "post_data": {
+            "commission_id": "139"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 61,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 217,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 146,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2024-12-26 05:27:08] Found product type specific rule Context: {
     "id": 6,
     "rule_type": "product_type",
     "rule_value": "OFFLINE SERVICE",
@@ -560,165 +908,116 @@
     "created_at": "2024-12-11 20:45:45",
     "updated_at": "2024-12-11 20:45:45",
     "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/agent\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "get_data": [],
+        "post_data": {
+            "commission_id": "139"
         },
-        "post_data": [],
         "session_data": {
-            "user_id": 17,
-            "role": "agent",
-            "name": null,
-            "email": "nitinpatoliya.my@trapo.com",
-            "customer_id": 56
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
         }
     },
     "backtrace": [
         {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 66,
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 69,
             "function": "logError"
         },
         {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 273,
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 217,
             "function": "getCommissionRate"
         },
         {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 509,
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 146,
             "function": "generate_invoice"
         }
     ]
 }
-[2024-12-26 08:01:41] Found rule by product type Context: {
-    "id": 6,
-    "rule_type": "product_type",
-    "rule_value": "OFFLINE SERVICE",
-    "commission_percentage": "10.00",
-    "status": "active",
-    "created_at": "2024-12-11 20:45:45",
-    "updated_at": "2024-12-11 20:45:45",
+[2024-12-26 05:27:08] PDF instance created Context: {
+    "commission_id": 139,
     "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/agent\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "get_data": [],
+        "post_data": {
+            "commission_id": "139"
         },
-        "post_data": [],
         "session_data": {
-            "user_id": 17,
-            "role": "agent",
-            "name": null,
-            "email": "nitinpatoliya.my@trapo.com",
-            "customer_id": 56
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
         }
     },
     "backtrace": [
         {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 66,
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 297,
             "function": "logError"
         },
         {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 273,
-            "function": "getCommissionRate"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 509,
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 146,
             "function": "generate_invoice"
         }
     ]
 }
-[2024-12-26 08:01:41] PDF instance created Context: {
-    "commission_id": 204,
+[2024-12-26 05:27:08] PDF page added Context: {
+    "commission_id": 139,
     "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/agent\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "get_data": [],
+        "post_data": {
+            "commission_id": "139"
         },
-        "post_data": [],
         "session_data": {
-            "user_id": 17,
-            "role": "agent",
-            "name": null,
-            "email": "nitinpatoliya.my@trapo.com",
-            "customer_id": 56
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
         }
     },
     "backtrace": [
         {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 359,
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 317,
             "function": "logError"
         },
         {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 509,
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 146,
             "function": "generate_invoice"
         }
     ]
 }
-[2024-12-26 08:01:41] PDF page added Context: {
-    "commission_id": 204,
+[2024-12-26 05:27:08] PDF content generation complete Context: {
+    "commission_id": 139,
     "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/agent\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "get_data": [],
+        "post_data": {
+            "commission_id": "139"
         },
-        "post_data": [],
         "session_data": {
-            "user_id": 17,
-            "role": "agent",
-            "name": null,
-            "email": "nitinpatoliya.my@trapo.com",
-            "customer_id": 56
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
         }
     },
     "backtrace": [
         {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 379,
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 395,
             "function": "logError"
         },
         {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 509,
-            "function": "generate_invoice"
-        }
-    ]
-}
-[2024-12-26 08:01:41] PDF content generation complete Context: {
-    "commission_id": 204,
-    "request": {
-        "method": "GET",
-        "uri": "\/shopify-agent-module\/agent\/generate_invoice.php?commission_id=204",
-        "get_data": {
-            "commission_id": "204"
-        },
-        "post_data": [],
-        "session_data": {
-            "user_id": 17,
-            "role": "agent",
-            "name": null,
-            "email": "nitinpatoliya.my@trapo.com",
-            "customer_id": 56
-        }
-    },
-    "backtrace": [
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 490,
-            "function": "logError"
-        },
-        {
-            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\agent\\generate_invoice.php",
-            "line": 509,
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 146,
             "function": "generate_invoice"
         }
     ]

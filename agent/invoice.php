@@ -86,17 +86,6 @@ try {
 
     // Set up logo path
     $logo_path = '../assets/images/logo.png';
-
-    $logo_base64 = '';
-    if (file_exists($logo_path)) {
-        error_log("Logo file found at: " . $logo_path);
-        $logo_type = pathinfo($logo_path, PATHINFO_EXTENSION);
-        $logo_data = file_get_contents($logo_path);
-        $logo_base64 = 'data:image/' . $logo_type . ';base64,' . base64_encode($logo_data);
-        error_log("Logo base64 length: " . strlen($logo_base64));
-    } else {
-        error_log("Logo file not found at: " . $logo_path);
-    }
     
     // Start output buffering for template
     ob_start();

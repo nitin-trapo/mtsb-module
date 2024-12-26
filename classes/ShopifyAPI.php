@@ -773,7 +773,6 @@ class ShopifyAPI {
                                 'total_price' => $order['total_price'] ?? 0,
                                 'subtotal_price' => $order['subtotal_price'] ?? 0,
                                 'total_tax' => $order['total_tax'] ?? 0,
-                                'total_discounts' => $order['total_discounts'] ?? 0,
                                 'total_shipping' => isset($order['shipping_lines'][0]) ? $order['shipping_lines'][0]['price'] : 0,
                                 'currency' => $order['currency'],
                                 'financial_status' => $order['financial_status'] ?? '',

@@ -20,3 +20,33 @@
 [2024-12-26 07:11:37] Error fetching customer by ID {"shopify_customer_id":60,"error":"API returned error code: 404","trace":"#0 C:\\xampp\\htdocs\\shopify-agent-module\\classes\\ShopifyAPI.php(936): ShopifyAPI->makeApiCall('customers\/60.js...')\n#1 C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\sync_customers.php(78): ShopifyAPI->getCustomerById(60)\n#2 {main}"}
 [2024-12-26 07:11:37] Fetching customer {"shopify_customer_id":61}
 [2024-12-26 07:11:38] Error fetching customer by ID {"shopify_customer_id":61,"error":"API returned error code: 404","trace":"#0 C:\\xampp\\htdocs\\shopify-agent-module\\classes\\ShopifyAPI.php(936): ShopifyAPI->makeApiCall('customers\/61.js...')\n#1 C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\sync_customers.php(78): ShopifyAPI->getCustomerById(61)\n#2 {main}"}
+[2024-12-26 15:38:45] Fetching orders {"endpoint":"orders.json?status=any&limit=250&created_at_min=2024-09-27T15%3A38%3A45%2B02%3A00"}
+[2024-12-26 15:38:46] Processing order {"order_number":"MT-CP1027","shopify_order_id":5939728220415}
+[2024-12-26 15:38:47] Metafields processed for order {"order_id":5939728220415,"order_number":"MT-CP1027","metafields":"{\"views\":{\"blocks\":[\"675917f88990398256597249\"]},\"customer_email\":\"protint.autofilm@gmail.com\"}"}
+[2024-12-26 15:38:47] Synced new order {"order_number":"MT-CP1027","shopify_order_id":5939728220415,"customer_id":45}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1026","shopify_order_id":5932463849727}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1025","shopify_order_id":5932166611199}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1024","shopify_order_id":5929304359167}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1023","shopify_order_id":5916742222079}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1022","shopify_order_id":5905150345471}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1021","shopify_order_id":5891357016319}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1020","shopify_order_id":5889828716799}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1019","shopify_order_id":5874683412735}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1018","shopify_order_id":5865812427007}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1017","shopify_order_id":5865599664383}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1016","shopify_order_id":5864563310847}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1015","shopify_order_id":5864561180927}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1014","shopify_order_id":5855459901695}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1013","shopify_order_id":5855450398975}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1012","shopify_order_id":5855448498431}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1011","shopify_order_id":5855447843071}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1010","shopify_order_id":5854341726463}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1009","shopify_order_id":5848626069759}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1008","shopify_order_id":5848622104831}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1007","shopify_order_id":5843250577663}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1006","shopify_order_id":5834460856575}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1005","shopify_order_id":5818769047807}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1004","shopify_order_id":5818760069375}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1003","shopify_order_id":5818744963327}
+[2024-12-26 15:38:47] Processing order {"order_number":"MT-CP1002","shopify_order_id":5818738147583}
+[2024-12-26 15:38:47] No more pages to fetch 
