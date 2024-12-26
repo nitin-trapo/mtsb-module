@@ -1,0 +1,43 @@
+.stats-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: #fff;
+    height: 100%;
+}
+
+.stats-card .card-body {
+    padding: 1.5rem;
+}
+
+
+/* Orders Card */
+
+.stats-card.orders .avatar i {
+    color: #4287f5;
+}
+
+
+/* Commissions Card */
+
+.stats-card.commissions .avatar i {
+    color: #4CAF50;
+}
+
+
+
+/* Pending Card */
+
+.stats-card.pending .avatar i {
+    color: #FF9800;
+}
+
+
+
+/* Paid Card */
+
+.stats-card.paid .avatar i {
+    color: #9C27B0;
+}
+
+

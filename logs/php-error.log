@@ -1,0 +1,70 @@
+[26-Dec-2024 07:03:23 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 5529.19
+    [total_count] => 26
+    [statuses] => pending,approved,paid
+)
+
+[26-Dec-2024 07:03:23 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[26-Dec-2024 07:09:27 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 5529.19
+    [total_count] => 26
+    [statuses] => pending,approved,paid
+)
+
+[26-Dec-2024 07:09:27 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[26-Dec-2024 07:10:06 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 5529.19
+    [total_count] => 26
+    [statuses] => pending,approved,paid
+)
+
+[26-Dec-2024 07:10:06 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[26-Dec-2024 07:57:44 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 5529.19
+    [total_count] => 26
+    [statuses] => pending,approved,paid
+)
+
+[26-Dec-2024 07:57:44 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[26-Dec-2024 14:00:06 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 5529.19
+    [total_count] => 26
+    [statuses] => pending,approved,paid
+)
+
+[26-Dec-2024 14:00:06 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'

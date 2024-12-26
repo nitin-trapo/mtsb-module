@@ -1,0 +1,47 @@
+[2024-12-26 07:08:07] [INFO] Login attempt for email: sarahyusof.my@trapo.com
+[2024-12-26 07:08:07] [INFO] Creating new user account for: sarahyusof.my@trapo.com
+[2024-12-26 07:08:07] [INFO] Created new user with ID: 18
+[2024-12-26 07:08:11] [INFO] Password setup email sent to: sarahyusof.my@trapo.com
+[2024-12-26 07:59:10] [INFO] Login attempt for email: nitinpatoliya.my@trapo.com
+[2024-12-26 07:59:10] [INFO] Verifying password for user: nitinpatoliya.my@trapo.com
+[2024-12-26 07:59:10] [INFO] Login successful for user: nitinpatoliya.my@trapo.com
+[2024-12-26 07:59:10] [INFO] Customer data retrieved: Array
+(
+    [id] => 56
+    [shopify_customer_id] => 7533175898367
+    [email] => nitinpatoliya.my@trapo.com
+    [first_name] => Nitin
+    [last_name] => P
+    [phone] => +60102222333
+    [accepts_marketing] => 0
+    [total_spent] => 6486.00
+    [orders_count] => 2
+    [tags] => Agent, Category-C, Millennium
+    [addresses] => [{"id":9549398868223,"customer_id":7533175898367,"first_name":"Nitin","last_name":"P","company":"BYD CHERAS MILLENNIUM AUTOBEYOND","address1":"No 691, Batu, 5, Jalan Cheras","address2":null,"city":"Kuala Lumpur","province":"Kuala Lumpur","country":"Malaysia","zip":"56000","phone":"0379811992","name":"Nitin P","province_code":"KUL","country_code":"MY","country_name":"Malaysia","default":true},{"id":9536807108863,"customer_id":7533175898367,"first_name":"Nitin","last_name":"P","company":"BYD CHERAS MILLENNIUM AUTOBEYOND","address1":"no 691, Batu, 5, Jln Cheras","address2":null,"city":"Kuala Lumpur","province":"Kuala Lumpur","country":"Malaysia","zip":"56000","phone":"0379811992","name":"Nitin P","province_code":"KUL","country_code":"MY","country_name":"Malaysia","default":false},{"id":9412900028671,"customer_id":7533175898367,"first_name":"Nitin","last_name":"P","company":"","address1":"","address2":"","city":"","province":"","country":"Malaysia","zip":"","phone":"","name":"Nitin P","province_code":null,"country_code":"MY","country_name":"Malaysia","default":false}]
+    [default_address] => {"id":9549398868223,"customer_id":7533175898367,"first_name":"Nitin","last_name":"P","company":"BYD CHERAS MILLENNIUM AUTOBEYOND","address1":"No 691, Batu, 5, Jalan Cheras","address2":null,"city":"Kuala Lumpur","province":"Kuala Lumpur","country":"Malaysia","zip":"56000","phone":"0379811992","name":"Nitin P","province_code":"KUL","country_code":"MY","country_name":"Malaysia","default":true}
+    [tax_exempt] => 0
+    [verified_email] => 1
+    [is_agent] => 1
+    [commission_rate] => 0.00
+    [status] => active
+    [last_sync_at] => 2024-12-24 11:31:47
+    [created_at] => 2024-10-08 00:48:48
+    [updated_at] => 2024-12-24 11:31:47
+    [bank_name] => Axis
+    [bank_account_number] => 1234569
+    [bank_account_holder] => Nitin Patoliya
+    [bank_swift_code] => 11111
+)
+
+[2024-12-26 07:59:10] [INFO] Redirecting user to dashboard
+[2024-12-26 07:59:10] [INFO] Current BASE_URL: http://localhost/shopify-agent-module
+[2024-12-26 07:59:10] [INFO] Session variables set: Array
+(
+    [user_id] => 17
+    [role] => agent
+    [name] => 
+    [email] => nitinpatoliya.my@trapo.com
+    [customer_id] => 56
+)
+
+[2024-12-26 07:59:10] [INFO] Redirecting to: /shopify-agent-module/agent/dashboard.php
