@@ -59,6 +59,7 @@ try {
     $order['billing_address'] = json_decode($order['billing_address'], true);
     $order['line_items'] = json_decode($order['line_items'], true);
     $order['discount_codes'] = json_decode($order['discount_codes'], true);
+    $order['discount_applications'] = json_decode($order['discount_applications'], true) ?? [];
 
     // Parse metafields if exists
     if (!empty($order['metafields'])) {
@@ -106,13 +107,27 @@ try {
         }
     }
 
+    // Process discount codes
+    $processed_discount_codes = [];
+    if (!empty($order['discount_codes'])) {
+        foreach ($order['discount_codes'] as $discount) {
+            // Only add the code
+            $processed_discount_codes[] = [
+                'code' => $discount['code'] ?? 'N/A'
+            ];
+        }
+    }
+
+    // Calculate total discounts
+    $total_discounts = floatval($order['total_discounts'] ?? 0);
+
     // Get discount information
     $discount_code = '';
     $discount_amount = 0;
-    if (!empty($order['discount_codes'])) {
-        $first_discount = reset($order['discount_codes']);
+    if (!empty($processed_discount_codes)) {
+        $first_discount = reset($processed_discount_codes);
         $discount_code = $first_discount['code'] ?? '';
-        $discount_amount = floatval($first_discount['amount'] ?? 0);
+        $discount_amount = floatval($first_discount['value'] ?? 0);
     }
 
     // Calculate final totals
@@ -134,6 +149,8 @@ try {
             'shipping_address' => $order['shipping_address'],
             'billing_address' => $order['billing_address'],
             'line_items' => $line_items,
+            'discount_codes' => $order['discount_codes'],
+            'discount_applications' => $order['discount_applications'],
             'subtotal_price' => $subtotal,
             'total_shipping' => $total_shipping,
             'total_tax' => $total_tax,

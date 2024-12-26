@@ -56,69 +56,91 @@ try {
     // Function to get commission rate
     function getCommissionRate($conn, $product_type, $product_tags) {
         try {
-            // First check for product type rules
-            if (!empty($product_type)) {
-                $query = "SELECT * FROM commission_rules 
-                         WHERE status = 'active' 
-                         AND rule_type = 'product_type' 
-                         AND LOWER(rule_value) = LOWER(?)
-                         LIMIT 1";
-                
-                $stmt = $conn->prepare($query);
-                $stmt->execute([$product_type]);
-                $rule = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($rule) {
-                    return [
-                        'rate' => floatval($rule['commission_percentage']),
-                        'rule_type' => 'Product Type',
-                        'rule_value' => $product_type,
-                        'rule_id' => $rule['id']
-                    ];
+            // Comprehensive product type identification
+            $product_type = '';
+            $shopify_api = new ShopifyAPI();
+            
+            // Debug logging for line item details
+            logError("Line Item Raw Details", [
+                'item_name' => $product_tags['item_name'] ?? 'N/A',
+                'product_id' => $product_tags['product_id'] ?? 'N/A',
+                'full_item_details' => json_encode($product_tags['full_item_details'])
+            ]);
+            
+            // Try to get product type from Shopify API
+            if (isset($product_tags['product_id'])) {
+                try {
+                    $product_details = $shopify_api->getProductById($product_tags['product_id']);
+                    
+                    if ($product_details && !empty($product_details['product_type'])) {
+                        $product_type = $product_details['product_type'];
+                        
+                        logError("Product Type from API", [
+                            'product_id' => $product_tags['product_id'],
+                            'identified_type' => $product_type
+                        ]);
+                    }
+                } catch (Exception $e) {
+                    logError("API Product Type Fetch Error", [
+                        'product_id' => $product_tags['product_id'],
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
             
-            // Then check for tag-based rules
-            if (!empty($product_tags)) {
-                $tags_array = is_array($product_tags) ? $product_tags : explode(',', $product_tags);
-                $tags_array = array_map('trim', $tags_array);
+            // Fallback to manual mapping if no API result
+            if (empty($product_type)) {
+                $product_type_map = [
+                    'BYD' => 'TRAPO CLASSIC',
+                    'Trapo Tint' => 'OFFLINE SERVICE',
+                    'Trapo Coating' => 'OFFLINE SERVICE',
+                    'Ceramic Coating' => 'OFFLINE SERVICE',
+                    'Paint Protection Film' => 'OFFLINE SERVICE',
+                    'Windscreen Replacement' => 'OFFLINE SERVICE',
+                    'Detailing' => 'OFFLINE SERVICE'
+                ];
                 
-                $query = "SELECT * FROM commission_rules 
-                         WHERE status = 'active' 
-                         AND rule_type = 'product_tag' 
-                         AND LOWER(rule_value) IN (" . implode(',', array_fill(0, count($tags_array), 'LOWER(?)')) . ")
-                         ORDER BY commission_percentage DESC 
-                         LIMIT 1";
-                
-                $stmt = $conn->prepare($query);
-                $stmt->execute($tags_array);
-                $rule = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($rule) {
-                    return [
-                        'rate' => floatval($rule['commission_percentage']),
-                        'rule_type' => 'Product Tag',
-                        'rule_value' => $rule['rule_value'],
-                        'rule_id' => $rule['id']
-                    ];
+                foreach ($product_type_map as $key => $mapped_type) {
+                    if (stripos($product_tags['item_name'], $key) !== false) {
+                        $product_type = $mapped_type;
+                        break;
+                    }
                 }
             }
             
-            // Get default rate
-            $query = "SELECT * FROM commission_rules 
-                     WHERE status = 'active' 
-                     AND rule_type = 'default' 
-                     LIMIT 1";
+            // Final fallback
+            if (empty($product_type)) {
+                $product_type = 'OTHERS';
+            }
             
-            $stmt = $conn->prepare($query);
-            $stmt->execute();
+            // Modify commission rule query to match the all_commissions approach
+            $stmt = $conn->prepare("
+                SELECT * FROM commission_rules 
+                WHERE status = 'active' 
+                AND (
+                    (rule_type = 'product_type' AND LOWER(rule_value) = LOWER(?)) 
+                    OR 
+                    (rule_type = 'default')
+                )
+                ORDER BY rule_type = 'product_type' DESC
+                LIMIT 1
+            ");
+            $stmt->execute([$product_type]);
             $rule = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Detailed logging for rule matching
+            logError("Commission Rule Matching", [
+                'product_type' => $product_type,
+                'matched_rule' => $rule ? json_encode($rule) : 'No rule found',
+                'rule_type' => $rule['rule_type'] ?? 'N/A',
+                'rule_value' => $rule['rule_value'] ?? 'N/A'
+            ]);
             
             if ($rule) {
                 return [
                     'rate' => floatval($rule['commission_percentage']),
-                    'rule_type' => 'Default',
-                    'rule_value' => 'All Products',
+                    'rule_type' => $rule['rule_type'],
+                    'rule_value' => $rule['rule_value'],
                     'rule_id' => $rule['id']
                 ];
             }
@@ -152,26 +174,12 @@ try {
 
     if (!empty($line_items) && is_array($line_items)) {
         foreach ($line_items as $item) {
-            // Get product type from the item name
-            $title_parts = explode(' - ', $item['name']);
-            $product_type = !empty($title_parts[0]) ? trim($title_parts[0]) : '';
-            
-            // Map product types
-            $product_type_map = [
-                'BYD' => 'TRAPO CLASSIC',
-                'Trapo Tint' => 'OFFLINE SERVICE',
-                'Trapo Coating' => 'OFFLINE SERVICE'
-            ];
-            
-            foreach ($product_type_map as $key => $mapped_type) {
-                if (stripos($product_type, $key) !== false) {
-                    $product_type = $mapped_type;
-                    break;
-                }
-            }
-
             // Get commission rate
-            $rate = getCommissionRate($conn, $product_type, []);
+            $rate = getCommissionRate($conn, '', [
+                'item_name' => $item['name'],
+                'product_id' => $item['product_id'],
+                'full_item_details' => $item
+            ]);
             
             if ($rate['rate'] > 0) {
                 // Calculate commission

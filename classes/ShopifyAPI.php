@@ -783,7 +783,8 @@ class ShopifyAPI {
                                 'line_items' => json_encode($order['line_items']),
                                 'shipping_address' => json_encode($order['shipping_address'] ?? null),
                                 'billing_address' => json_encode($order['billing_address'] ?? null),
-                                'discount_codes' => json_encode($order['discount_codes'] ?? [])
+                                'discount_codes' => json_encode($order['discount_codes'] ?? []),
+                                'discount_applications' => json_encode($order['discount_applications'] ?? [])
                             ];
 
                             // Add customer ID if we have it

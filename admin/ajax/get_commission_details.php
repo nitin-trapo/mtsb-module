@@ -18,6 +18,40 @@ function logError($message, $context = []) {
     error_log($logMessage, 3, $logFile);
 }
 
+function fetchProductTypeFromShopify($product_id) {
+    $shop_domain = SHOPIFY_SHOP_DOMAIN;
+    $access_token = SHOPIFY_ACCESS_TOKEN;
+    $api_version = SHOPIFY_API_VERSION;
+
+    $url = "https://{$shop_domain}/admin/api/{$api_version}/products/{$product_id}.json";
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "X-Shopify-Access-Token: {$access_token}",
+        "Content-Type: application/json"
+    ]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    
+    $response = curl_exec($ch);
+    
+    if (curl_errno($ch)) {
+        logError("Curl error fetching product type", ['error' => curl_error($ch)]);
+        curl_close($ch);
+        return null;
+    }
+    
+    curl_close($ch);
+    
+    $product_data = json_decode($response, true);
+    
+    if (isset($product_data['product']['product_type'])) {
+        return $product_data['product']['product_type'];
+    }
+    
+    return null;
+}
+
 try {
     // Check if user is logged in and is admin
     if (!is_logged_in() || !is_admin()) {
@@ -202,35 +236,18 @@ try {
         foreach ($line_items as $item) {
             logError("Processing line item", $item);
             
-            // Extract product details
-            $product_type = '';
-            $product_tags = [];
-            
-            // Get product type from the item name (format: "Product Name - Options")
-            $title_parts = explode(' - ', $item['name']);
-            if (!empty($title_parts[0])) {
-                $product_type = trim($title_parts[0]);
+            // Fetch product type from Shopify API
+            $product_type = null;
+            if (isset($item['product_id'])) {
+                $product_type = fetchProductTypeFromShopify($item['product_id']);
             }
             
-            // Get variant title and SKU
-            $variant_title = isset($item['variant_title']) && !empty($item['variant_title']) ? 
-                $item['variant_title'] : '';
-            $sku = isset($item['sku']) && !empty($item['sku']) ? 
-                $item['sku'] : 'N/A';
-            
-            // Map common product types
-            $product_type_map = [
-                'BYD' => 'TRAPO CLASSIC',
-                'Trapo Tint' => 'OFFLINE SERVICE',
-                'Trapo Coating' => 'OFFLINE SERVICE'
-            ];
-            
-            foreach ($product_type_map as $key => $mapped_type) {
-                if (stripos($product_type, $key) !== false) {
-                    $product_type = $mapped_type;
-                    break;
-                }
+            // If API fetch fails, fallback to existing method
+            if (empty($product_type)) {
+                $product_type = isset($item['product_type']) ? $item['product_type'] : 'Unknown';
             }
+            
+            $product_tags = isset($item['tags']) ? explode(',', $item['tags']) : [];
             
             // Get commission rate and rule info
             $commission_info = getCommissionRate($conn, $product_type, $product_tags);
@@ -263,8 +280,8 @@ try {
             // Store item details with rule information
             $items_with_rules[] = [
                 'product' => $item['title'],
-                'variant_title' => $variant_title,
-                'sku' => $sku,
+                'variant_title' => $item['variant_title'] ?? '',
+                'sku' => $item['sku'] ?? 'N/A',
                 'type' => $product_type ?: 'Not specified',
                 'quantity' => $item_quantity,
                 'price' => $item_price,
@@ -370,7 +387,6 @@ try {
                             <th>Type</th>
                             <th class="text-center">Qty</th>
                             <th class="text-end">Unit Price</th>
-                            <th class="text-end">Discount</th>
                             <th class="text-end">Total</th>
                             <th>Applied Rule</th>
                             <th class="text-end">Rate</th>
@@ -389,7 +405,6 @@ try {
                 <td><span class="badge bg-info">' . htmlspecialchars($item['type']) . '</span></td>
                 <td class="text-center">' . htmlspecialchars($item['quantity']) . '</td>
                 <td class="text-end">' . $currency_symbol . ' ' . number_format($item['price'], 2) . '</td>
-                <td class="text-end">' . $currency_symbol . ' ' . number_format($discount, 2) . '</td>
                 <td class="text-end">' . $currency_symbol . ' ' . number_format($item['total'], 2) . '</td>
                 <td>' . htmlspecialchars($item['rule_type']) . 
                     ($item['rule_value'] !== 'All Products' ? ': <span class="badge bg-secondary">' . htmlspecialchars($item['rule_value']) . '</span>' : '') . '</td>
@@ -400,7 +415,7 @@ try {
 
     $response .= '
                         <tr class="table-info fw-bold">
-                            <td colspan="5" class="text-end">Totals:</td>
+                            <td colspan="4" class="text-end">Totals:</td>
                             <td class="text-end">' . $currency_symbol . ' ' . number_format($total_amount, 2) . '</td>
                             <td>Overall Rate:</td>
                             <td class="text-end">' . number_format($overall_rate, 1) . '%</td>

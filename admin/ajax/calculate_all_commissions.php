@@ -71,75 +71,125 @@ try {
 
             if (!empty($line_items) && is_array($line_items)) {
                 foreach ($line_items as $item) {
-                    // Get product type from the item name
-                    $title_parts = explode(' - ', $item['name']);
-                    $product_type = !empty($title_parts[0]) ? trim($title_parts[0]) : '';
+                    // Comprehensive product type identification
+                    $product_type = '';
+                    $shopify_api = new ShopifyAPI();
                     
-                    // Map product types
-                    $product_type_map = [
-                        'BYD' => 'TRAPO CLASSIC',
-                        'Trapo Tint' => 'OFFLINE SERVICE',
-                        'Trapo Coating' => 'OFFLINE SERVICE'
-                    ];
+                    // Debug logging for line item details
+                    logError("Line Item Raw Details", [
+                        'item_name' => $item['name'] ?? 'N/A',
+                        'product_id' => $item['product_id'] ?? 'N/A',
+                        'full_item_details' => json_encode($item)
+                    ]);
                     
-                    foreach ($product_type_map as $key => $mapped_type) {
-                        if (stripos($product_type, $key) !== false) {
-                            $product_type = $mapped_type;
-                            break;
+                    // Try to get product type from Shopify API
+                    if (isset($item['product_id'])) {
+                        try {
+                            $product_details = $shopify_api->getProductById($item['product_id']);
+                            
+                            if ($product_details && !empty($product_details['product_type'])) {
+                                $product_type = $product_details['product_type'];
+                                
+                                logError("Product Type from API", [
+                                    'product_id' => $item['product_id'],
+                                    'identified_type' => $product_type
+                                ]);
+                            }
+                        } catch (Exception $e) {
+                            logError("API Product Type Fetch Error", [
+                                'product_id' => $item['product_id'],
+                                'error' => $e->getMessage()
+                            ]);
                         }
                     }
-
-                    // Get commission rate from product type rules
+                    
+                    // Fallback to manual mapping if no API result
+                    if (empty($product_type)) {
+                        $product_type_map = [
+                            'BYD' => 'TRAPO CLASSIC',
+                            'Trapo Tint' => 'OFFLINE SERVICE',
+                            'Trapo Coating' => 'OFFLINE SERVICE',
+                            'Ceramic Coating' => 'OFFLINE SERVICE',
+                            'Paint Protection Film' => 'OFFLINE SERVICE',
+                            'Windscreen Replacement' => 'OFFLINE SERVICE',
+                            'Detailing' => 'OFFLINE SERVICE'
+                        ];
+                        
+                        foreach ($product_type_map as $key => $mapped_type) {
+                            if (stripos($item['name'], $key) !== false) {
+                                $product_type = $mapped_type;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Final fallback
+                    if (empty($product_type)) {
+                        $product_type = 'OTHERS';
+                    }
+                    
+                    // Log commission rule matching
                     $stmt = $conn->prepare("
                         SELECT * FROM commission_rules 
                         WHERE status = 'active' 
-                        AND rule_type = 'product_type' 
-                        AND LOWER(rule_value) = LOWER(?)
+                        AND (
+                            (rule_type = 'product_type' AND LOWER(rule_value) = LOWER(?)) 
+                            OR 
+                            (rule_type = 'default')
+                        )
+                        ORDER BY rule_type = 'product_type' DESC
                         LIMIT 1
                     ");
                     $stmt->execute([$product_type]);
                     $rule = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                    // If no product type rule found, get default rule
-                    if (!$rule) {
-                        $stmt = $conn->prepare("
-                            SELECT * FROM commission_rules 
-                            WHERE status = 'active' 
-                            AND rule_type = 'default'
-                            LIMIT 1
-                        ");
-                        $stmt->execute();
-                        $rule = $stmt->fetch(PDO::FETCH_ASSOC);
-                    }
+                    
+                    // Detailed logging for rule matching
+                    logError("Commission Rule Matching", [
+                        'product_type' => $product_type,
+                        'matched_rule' => $rule ? json_encode($rule) : 'No rule found',
+                        'rule_type' => $rule['rule_type'] ?? 'N/A',
+                        'rule_value' => $rule['rule_value'] ?? 'N/A'
+                    ]);
 
                     if ($rule) {
                         $rate = floatval($rule['commission_percentage']);
                         
-                        // Calculate commission
-                        $item_price = isset($item['price_set']['shop_money']['amount']) 
-                            ? floatval($item['price_set']['shop_money']['amount'])
-                            : floatval($item['price']);
-                            
+                        // More robust price extraction
+                        $item_price = 0;
+                        if (isset($item['price_set']['shop_money']['amount'])) {
+                            $item_price = floatval($item['price_set']['shop_money']['amount']);
+                        } elseif (isset($item['price'])) {
+                            $item_price = floatval($item['price']);
+                        }
+                        
                         $item_quantity = isset($item['quantity']) ? intval($item['quantity']) : 0;
                         $item_total = $item_price * $item_quantity;
                         
-                        // Apply any discounts
+                        // More comprehensive discount handling
+                        $total_discount = 0;
                         if (isset($item['total_discount']) && floatval($item['total_discount']) > 0) {
-                            $item_total -= floatval($item['total_discount']);
+                            $total_discount = floatval($item['total_discount']);
                         }
+                        $item_total -= $total_discount;
+                        
+                        // Ensure non-negative total
+                        $item_total = max(0, $item_total);
                         
                         $commission = $item_total * ($rate / 100);
                         $total_commission += $commission;
 
-                        // Log the commission calculation
-                        logError("Commission calculated", [
+                        // Enhanced logging
+                        logError("Commission Calculation Details", [
                             'order_id' => $order['id'],
                             'product' => $item['name'],
                             'product_type' => $product_type,
                             'rule_type' => $rule['rule_type'],
-                            'rate' => $rate,
-                            'item_total' => $item_total,
-                            'commission' => $commission
+                            'commission_rate' => $rate,
+                            'item_price' => $item_price,
+                            'item_quantity' => $item_quantity,
+                            'total_discount' => $total_discount,
+                            'item_total_after_discount' => $item_total,
+                            'calculated_commission' => $commission
                         ]);
                     }
                 }

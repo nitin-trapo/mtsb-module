@@ -357,18 +357,18 @@ function viewDetails(orderId) {
                         <div class="col-md-6">
                             <div class="card mb-3">
                                 <div class="card-body">
-                                    <h6 class="card-title">Customer Information</h6>
+                                    <h6 class="card-title">Agent Information</h6>
                                     <table class="table table-sm mb-0">
                                         <tr>
                                             <th width="35%">Name:</th>
                                             <td>${order.customer_name}</td>
                                         </tr>
                                         <tr>
-                                            <th>Email:</th>
+                                            <th>Agent Email:</th>
                                             <td>${order.customer_email || 'N/A'}</td>
                                         </tr>
                                         <tr>
-                                            <th>Metafields Email:</th>
+                                            <th>Customer Email:</th>
                                             <td>${customerEmail}</td>
                                         </tr>
                                         <tr>
@@ -441,16 +441,44 @@ function viewDetails(orderId) {
                                                 <td class="text-end">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.total_shipping).toFixed(2)}</td>
                                             </tr>
                                         ` : ''}
+                                        ${order.discount_applications && order.discount_applications.length > 0 ? 
+                                            order.discount_applications.map(discount => {
+                                                // Calculate discount amount
+                                                let discountAmount = 0;
+                                                if (discount.target_type === 'shipping_line') {
+                                                    // Calculate percentage or fixed discount for shipping
+                                                    if (discount.value_type === 'percentage') {
+                                                        discountAmount = parseFloat(order.total_shipping) * (parseFloat(discount.value) / 100);
+                                                    } else {
+                                                        discountAmount = parseFloat(discount.value || 0);
+                                                    }
+                                                } else if (discount.value_type === 'percentage') {
+                                                    // Calculate percentage discount based on subtotal
+                                                    discountAmount = parseFloat(order.subtotal_price) * (parseFloat(discount.value) / 100);
+                                                } else {
+                                                    // Use direct value for fixed amount discounts
+                                                    discountAmount = parseFloat(discount.value || 0);
+                                                }
+                                                
+                                                return `
+                                                <tr class="table-light">
+                                                    <td colspan="4" class="text-end">
+                                                        <strong>${discount.code || discount.title || 'Discount'}${discount.value_type === 'percentage' ? ` (${discount.value}%)` : ''}${discount.target_type === 'shipping_line' ? '' : ''}:</strong>
+                                                    </td>
+                                                    <td class="text-end">-${order.currency === 'MYR' ? 'RM' : order.currency} ${discountAmount.toFixed(2)}</td>
+                                                </tr>
+                                                `;
+                                            }).join('') : ''}
+                                        ${order.total_discounts > 0 ? `
+                                            <tr class="table-light">
+                                                <td colspan="4" class="text-end"><strong>Total Discounts:</strong></td>
+                                                <td class="text-end">-${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.total_discounts).toFixed(2)}</td>
+                                            </tr>
+                                        ` : ''}
                                         ${order.total_tax > 0 ? `
                                             <tr class="table-light">
                                                 <td colspan="4" class="text-end"><strong>Tax:</strong></td>
                                                 <td class="text-end">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.total_tax).toFixed(2)}</td>
-                                            </tr>
-                                        ` : ''}
-                                        ${order.total_discounts > 0 ? `
-                                            <tr class="table-light">
-                                                <td colspan="4" class="text-end"><strong>Discount:</strong></td>
-                                                <td class="text-end">-${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.total_discounts).toFixed(2)}</td>
                                             </tr>
                                         ` : ''}
                                         <tr class="table-light fw-bold">
@@ -462,6 +490,8 @@ function viewDetails(orderId) {
                             </div>
                         </div>
                     </div>
+
+                    
                 `;
                 
                 content.html(html);

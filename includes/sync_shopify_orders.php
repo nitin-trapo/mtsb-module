@@ -54,8 +54,8 @@ function sync_shopify_orders() {
                     // Insert order
                     $stmt = $conn->prepare("
                         INSERT INTO " . TABLE_ORDERS . " 
-                        (order_number, customer_id, agent_id, total_price, status, created_at) 
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        (order_number, customer_id, agent_id, total_price, status, created_at, discount_applications) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
                     ");
                     
                     $stmt->execute([
@@ -64,7 +64,8 @@ function sync_shopify_orders() {
                         $agent_id,
                         $order['total_price'],
                         $order['financial_status'],
-                        $order['created_at']
+                        $order['created_at'],
+                        json_encode($order['discount_applications'] ?? [])
                     ]);
                     
                     // Calculate and insert commission

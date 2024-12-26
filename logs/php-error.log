@@ -1,81 +1,11 @@
-[20-Dec-2024 18:38:16 Europe/Berlin] Commission Stats: Array
+[26-Dec-2024 17:01:24 Europe/Berlin] Commission Stats: Array
 (
-    [total_amount] => 5979.66
+    [total_amount] => 7959.83
     [total_count] => 20
-    [statuses] => pending,approved,paid
+    [statuses] => pending
 )
 
-[20-Dec-2024 18:38:16 Europe/Berlin] Query: 
-        SELECT 
-            COALESCE(SUM(amount), 0) as total_amount,
-            COUNT(*) as total_count,
-            GROUP_CONCAT(DISTINCT status) as statuses
-        FROM commissions 
-        WHERE status != 'cancelled'
-[24-Dec-2024 06:57:41 Europe/Berlin] Commission Stats: Array
-(
-    [total_amount] => 5979.66
-    [total_count] => 20
-    [statuses] => pending,approved,paid
-)
-
-[24-Dec-2024 06:57:41 Europe/Berlin] Query: 
-        SELECT 
-            COALESCE(SUM(amount), 0) as total_amount,
-            COUNT(*) as total_count,
-            GROUP_CONCAT(DISTINCT status) as statuses
-        FROM commissions 
-        WHERE status != 'cancelled'
-[25-Dec-2024 17:57:29 Europe/Berlin] Commission Stats: Array
-(
-    [total_amount] => 6146.41
-    [total_count] => 21
-    [statuses] => pending,approved,paid
-)
-
-[25-Dec-2024 17:57:29 Europe/Berlin] Query: 
-        SELECT 
-            COALESCE(SUM(amount), 0) as total_amount,
-            COUNT(*) as total_count,
-            GROUP_CONCAT(DISTINCT status) as statuses
-        FROM commissions 
-        WHERE status != 'cancelled'
-[26-Dec-2024 05:20:46 Europe/Berlin] Commission Stats: Array
-(
-    [total_amount] => 7459.67
-    [total_count] => 26
-    [statuses] => pending,approved,paid
-)
-
-[26-Dec-2024 05:20:46 Europe/Berlin] Query: 
-        SELECT 
-            COALESCE(SUM(amount), 0) as total_amount,
-            COUNT(*) as total_count,
-            GROUP_CONCAT(DISTINCT status) as statuses
-        FROM commissions 
-        WHERE status != 'cancelled'
-[26-Dec-2024 05:22:17 Europe/Berlin] Commission Stats: Array
-(
-    [total_amount] => 7459.67
-    [total_count] => 26
-    [statuses] => pending,approved,paid
-)
-
-[26-Dec-2024 05:22:17 Europe/Berlin] Query: 
-        SELECT 
-            COALESCE(SUM(amount), 0) as total_amount,
-            COUNT(*) as total_count,
-            GROUP_CONCAT(DISTINCT status) as statuses
-        FROM commissions 
-        WHERE status != 'cancelled'
-[26-Dec-2024 05:23:20 Europe/Berlin] Commission Stats: Array
-(
-    [total_amount] => 7459.67
-    [total_count] => 26
-    [statuses] => pending,approved,paid
-)
-
-[26-Dec-2024 05:23:20 Europe/Berlin] Query: 
+[26-Dec-2024 17:01:24 Europe/Berlin] Query: 
         SELECT 
             COALESCE(SUM(amount), 0) as total_amount,
             COUNT(*) as total_count,
