@@ -37,6 +37,7 @@ try {
         DATE_FORMAT(o.processed_at, '%b %d, %Y %h:%i %p') as formatted_processed_date,
         DATE_FORMAT(o.created_at, '%b %d, %Y %h:%i %p') as formatted_created_date,
         o.metafields,
+        o.discount_codes,
         COALESCE(com.amount, 0) as commission_amount,
         COALESCE(com.status, 'pending') as commission_status,
         COALESCE(com.created_at, '') as commission_date
@@ -53,6 +54,9 @@ try {
     if (!$order) {
         throw new Exception("Order not found");
     }
+
+    // Debug discount codes
+    error_log("Discount Codes from DB: " . print_r($order['discount_codes'], true));
 
     // Decode JSON fields
     $order['shipping_address'] = json_decode($order['shipping_address'], true);

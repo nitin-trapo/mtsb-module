@@ -287,6 +287,10 @@ function viewDetails(orderId) {
             if (response.success) {
                 const order = response.order;
                 
+                // Debug order data
+                console.log('Order Data:', order);
+                console.log('Discount Codes:', order.discount_codes);
+                
                 // Get customer email from metafields
                 let customerEmail = 'N/A';
                 if (order.metafields && order.metafields.customer_email) {
@@ -451,39 +455,24 @@ function viewDetails(orderId) {
                                                 <td class="text-end">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.total_shipping).toFixed(2)}</td>
                                             </tr>
                                         ` : ''}
-                                        ${order.discount_applications && order.discount_applications.length > 0 ? 
-                                            order.discount_applications.map(discount => {
-                                                // Calculate discount amount
-                                                let discountAmount = 0;
-                                                if (discount.target_type === 'shipping_line') {
-                                                    // Calculate percentage or fixed discount for shipping
-                                                    if (discount.value_type === 'percentage') {
-                                                        discountAmount = parseFloat(order.total_shipping) * (parseFloat(discount.value) / 100);
-                                                    } else {
-                                                        discountAmount = parseFloat(discount.value || 0);
-                                                    }
-                                                } else if (discount.value_type === 'percentage') {
-                                                    // Calculate percentage discount based on subtotal
-                                                    discountAmount = parseFloat(order.subtotal_price) * (parseFloat(discount.value) / 100);
-                                                } else {
-                                                    // Use direct value for fixed amount discounts
-                                                    discountAmount = parseFloat(discount.value || 0);
-                                                }
-                                                
-                                                return `
-                                                <tr class="table-light">
-                                                    <td colspan="4" class="text-end">
-                                                        <strong>${discount.code || discount.title || 'Discount'}${discount.value_type === 'percentage' ? ` (${discount.value}%)` : ''}${discount.target_type === 'shipping_line' ? '' : ''}:</strong>
-                                                    </td>
-                                                    <td class="text-end">-${order.currency === 'MYR' ? 'RM' : order.currency} ${discountAmount.toFixed(2)}</td>
-                                                </tr>
-                                                `;
-                                            }).join('') : ''}
-                                        ${order.total_discounts > 0 ? `
+                                        ${order.discount_codes && Array.isArray(order.discount_codes) ? `
                                             <tr class="table-light">
                                                 <td colspan="4" class="text-end"><strong>Total Discounts:</strong></td>
-                                                <td class="text-end">-${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.total_discounts).toFixed(2)}</td>
+                                                <td class="text-end">-${order.currency === 'MYR' ? 'RM' : order.currency} ${
+                                                    order.discount_codes.reduce((total, discount) => total + parseFloat(discount.amount || 0), 0).toFixed(2)
+                                                }</td>
                                             </tr>
+                                            ${order.discount_codes.map(discount => `
+                                                <tr class="table-light">
+                                                    <td colspan="4" class="text-end text-muted">
+                                                        <small>
+                                                            <span class="badge bg-light text-dark border">${discount.code}</span>
+                                                            <span class="ms-2 text-danger">-${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(discount.amount).toFixed(2)}</span>
+                                                        </small>
+                                                    </td>
+                                                    <td></td>
+                                                </tr>
+                                            `).join('')}
                                         ` : ''}
                                         ${order.total_tax > 0 ? `
                                             <tr class="table-light">
