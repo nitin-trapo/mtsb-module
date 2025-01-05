@@ -134,7 +134,7 @@ try {
         throw new Exception('Incomplete mail configuration');
     }
 
-    // Create PDF invoice
+    // Generate PDF invoice
     try {
         logEmailError("Starting PDF generation", [
             'commission_id' => $commission_id
@@ -142,7 +142,7 @@ try {
 
         require_once __DIR__ . '/../generate_invoice.php';
         
-        // Generate the PDF content
+        // Generate the PDF content and save to storage
         $pdf_content = generate_invoice($commission_id);
         
         if (empty($pdf_content)) {
@@ -152,55 +152,23 @@ try {
             throw new Exception('Failed to generate PDF invoice: Empty content');
         }
         
-        logEmailError("PDF content generated successfully", [
-            'commission_id' => $commission_id,
-            'content_length' => strlen($pdf_content)
-        ]);
+        // Get the saved PDF path
+        $storage_dir = __DIR__ . '/../../storage/invoice';
+        $filename = 'commission_' . $commission_id . '.pdf';
+        $filepath = $storage_dir . '/' . $filename;
         
-        // Save PDF to temporary file
-        $temp_dir = sys_get_temp_dir();
-        $pdf_path = $temp_dir . '/commission_invoice_' . $commission_id . '.pdf';
-        
-        logEmailError("Attempting to save PDF", [
-            'pdf_path' => $pdf_path,
-            'temp_dir' => $temp_dir,
-            'content_length' => strlen($pdf_content)
-        ]);
-        
-        $bytes_written = file_put_contents($pdf_path, $pdf_content);
-        
-        if ($bytes_written === false) {
-            logEmailError("Failed to write PDF file", [
-                'pdf_path' => $pdf_path,
-                'error' => error_get_last()
+        if (!file_exists($filepath)) {
+            logEmailError("Generated PDF file not found", [
+                'commission_id' => $commission_id,
+                'filepath' => $filepath
             ]);
-            throw new Exception('Failed to save PDF invoice');
-        }
-        
-        logEmailError("PDF file written successfully", [
-            'pdf_path' => $pdf_path,
-            'bytes_written' => $bytes_written
-        ]);
-        
-        if (!file_exists($pdf_path)) {
-            logEmailError("PDF file not found after saving", [
-                'pdf_path' => $pdf_path
-            ]);
-            throw new Exception('PDF file not found after saving');
-        }
-        
-        $file_size = filesize($pdf_path);
-        if ($file_size === false || $file_size === 0) {
-            logEmailError("PDF file is empty", [
-                'pdf_path' => $pdf_path,
-                'file_size' => $file_size
-            ]);
-            throw new Exception('Generated PDF file is empty');
+            throw new Exception('Generated PDF file not found');
         }
         
         logEmailError("PDF generated and saved successfully", [
-            'pdf_path' => $pdf_path,
-            'file_size' => $file_size
+            'commission_id' => $commission_id,
+            'filepath' => $filepath,
+            'filesize' => filesize($filepath)
         ]);
 
         // Create a new PHPMailer instance
@@ -221,7 +189,7 @@ try {
             $mail->addAddress($commission['agent_email'], $commission['agent_first_name'] . ' ' . $commission['agent_last_name']);
 
             // Attach the PDF
-            $mail->addAttachment($pdf_path, 'commission_invoice_' . $commission_id . '.pdf');
+            $mail->addAttachment($filepath, 'commission_' . $commission_id . '.pdf');
 
             // Content
             $mail->isHTML(true);
@@ -249,8 +217,8 @@ try {
             $mail->send();
             
             // Delete the temporary PDF file
-            if (file_exists($pdf_path)) {
-                unlink($pdf_path);
+            if (file_exists($filepath)) {
+                unlink($filepath);
             }
 
             logEmailError("Email sent successfully", [

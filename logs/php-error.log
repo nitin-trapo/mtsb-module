@@ -1,11 +1,11 @@
-[05-Jan-2025 07:53:11 Europe/Berlin] Commission Stats: Array
+[05-Jan-2025 10:16:26 Europe/Berlin] Commission Stats: Array
 (
-    [total_amount] => 8902.66
+    [total_amount] => 8547.99
     [total_count] => 23
-    [statuses] => pending
+    [statuses] => pending,paid
 )
 
-[05-Jan-2025 07:53:11 Europe/Berlin] Query: 
+[05-Jan-2025 10:16:26 Europe/Berlin] Query: 
         SELECT 
             COALESCE(SUM(amount), 0) as total_amount,
             COUNT(*) as total_count,

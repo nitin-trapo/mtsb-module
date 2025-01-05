@@ -1036,6 +1036,127 @@ class ShopifyAPI {
         }
     }
 
+    public function getOrderById($order_id) {
+        try {
+            $this->logError("Starting order fetch", [
+                'order_id' => $order_id,
+                'timestamp' => date('Y-m-d H:i:s'),
+                'action' => 'getOrderById',
+                'shop_domain' => $this->shop_domain,
+                'api_version' => $this->api_version
+            ]);
+
+            $query = <<<GRAPHQL
+            {
+                order(id: "gid://shopify/Order/{$order_id}") {
+                    id
+                    name
+                    createdAt
+                    totalPriceSet {
+                        shopMoney {
+                            amount
+                            currencyCode
+                        }
+                    }
+                    lineItems {
+                        edges {
+                            node {
+                                id
+                                title
+                                quantity
+                                originalUnitPrice
+                                variant {
+                                    id
+                                    price
+                                }
+                                product {
+                                    id
+                                    title
+                                    productType
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            GRAPHQL;
+
+            $this->logError("Executing GraphQL query", [
+                'query' => $query,
+                'order_id' => $order_id
+            ]);
+
+            $result = $this->makeGraphQLCall($query);
+            
+            $this->logError("GraphQL response received", [
+                'order_id' => $order_id,
+                'has_data' => isset($result['data']),
+                'has_errors' => isset($result['errors']),
+                'response_keys' => array_keys($result),
+                'raw_response' => $result
+            ]);
+
+            if (isset($result['errors'])) {
+                $this->logError("GraphQL query returned errors", [
+                    'order_id' => $order_id,
+                    'errors' => $result['errors']
+                ]);
+                throw new Exception("GraphQL errors: " . json_encode($result['errors']));
+            }
+            
+            if (isset($result['data']['order'])) {
+                $order = $result['data']['order'];
+                
+                // Transform line items from GraphQL format to REST API format
+                $line_items = [];
+                foreach ($order['lineItems']['edges'] as $edge) {
+                    $item = $edge['node'];
+                    $line_items[] = [
+                        'id' => str_replace('gid://shopify/LineItem/', '', $item['id']),
+                        'title' => $item['title'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['variant']['price'] ?? $item['originalUnitPrice'],
+                        'product_id' => str_replace('gid://shopify/Product/', '', $item['product']['id']),
+                        'product_type' => $item['product']['productType']
+                    ];
+                }
+
+                // Build response in REST API format
+                $response = [
+                    'id' => str_replace('gid://shopify/Order/', '', $order['id']),
+                    'name' => $order['name'],
+                    'created_at' => $order['createdAt'],
+                    'total_price' => $order['totalPriceSet']['shopMoney']['amount'],
+                    'currency' => $order['totalPriceSet']['shopMoney']['currencyCode'],
+                    'line_items' => $line_items
+                ];
+
+                $this->logError("Order fetch successful", [
+                    'order_id' => $order_id,
+                    'name' => $order['name'],
+                    'line_items_count' => count($line_items),
+                    'response' => $response
+                ]);
+
+                return $response;
+            }
+
+            $this->logError("Order not found in response", [
+                'order_id' => $order_id,
+                'response_data' => $result['data'] ?? null
+            ]);
+            return null;
+
+        } catch (Exception $e) {
+            $this->logError("Error fetching order by ID", [
+                'order_id' => $order_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+
     private function isJson($string) {
         if (!is_string($string)) {
             return false;

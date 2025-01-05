@@ -1,0 +1,624 @@
+[2025-01-05 10:04:58] Starting commission email process Context: {
+    "commission_id": "403",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 49,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:58] Attempting database connection Context: {
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 76,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:58] Database connection successful Context: {
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 87,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:58] Commission data retrieved successfully Context: {
+    "commission_id": 403,
+    "order_number": "MT-CP1028",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 117,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:58] Starting PDF generation Context: {
+    "commission_id": 403,
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 140,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:58] Getting order details Context: {
+    "commission_id": 403,
+    "order_id": 283,
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 147,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:58] Found local order Context: {
+    "commission_id": 403,
+    "order_id": 283,
+    "shopify_order_id": 5940027883775,
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 166,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:59] Starting commission email process Context: {
+    "commission_id": "403",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 49,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:59] Attempting database connection Context: {
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 76,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:59] Database connection successful Context: {
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 87,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:59] Commission data retrieved successfully Context: {
+    "commission_id": 403,
+    "order_number": "MT-CP1028",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 117,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:59] Starting PDF generation Context: {
+    "commission_id": 403,
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 140,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:59] Getting order details Context: {
+    "commission_id": 403,
+    "order_id": 283,
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 147,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:04:59] Found local order Context: {
+    "commission_id": 403,
+    "order_id": 283,
+    "shopify_order_id": 5940027883775,
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 166,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:09:13] Starting commission email process Context: {
+    "commission_id": "403",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 49,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:09:13] Attempting database connection Context: {
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 76,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:09:13] Database connection successful Context: {
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 87,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:09:13] Commission data retrieved successfully Context: {
+    "commission_id": 403,
+    "order_number": "MT-CP1028",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 117,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:09:13] Starting PDF generation Context: {
+    "commission_id": 403,
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 140,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:09:14] PDF generated and saved successfully Context: {
+    "commission_id": 403,
+    "filepath": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\/..\/..\/storage\/invoice\/commission_403_20250105_100914.pdf",
+    "filesize": 8880,
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 171,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:09:21] Email sent successfully Context: {
+    "commission_id": 403,
+    "to": "nitinpatoliya.my@trapo.com",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 226,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:12:21] Starting commission email process Context: {
+    "commission_id": "403",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 49,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:12:21] Attempting database connection Context: {
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 76,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:12:21] Database connection successful Context: {
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 87,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:12:21] Commission data retrieved successfully Context: {
+    "commission_id": 403,
+    "order_number": "MT-CP1028",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 117,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:12:21] Starting PDF generation Context: {
+    "commission_id": 403,
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 140,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:12:23] PDF generated and saved successfully Context: {
+    "commission_id": 403,
+    "filepath": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\/..\/..\/storage\/invoice\/commission_403.pdf",
+    "filesize": 8880,
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 171,
+            "function": "logEmailError"
+        }
+    ]
+}
+[2025-01-05 10:12:29] Email sent successfully Context: {
+    "commission_id": 403,
+    "to": "nitinpatoliya.my@trapo.com",
+    "request": {
+        "method": "POST",
+        "uri": "\/shopify-agent-module\/admin\/ajax\/send_commission_email.php",
+        "post_data": {
+            "commission_id": "403"
+        },
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\ajax\\send_commission_email.php",
+            "line": 226,
+            "function": "logEmailError"
+        }
+    ]
+}

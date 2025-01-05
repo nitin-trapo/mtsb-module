@@ -204,8 +204,8 @@ try {
                     logError("Using default rule", $rule);
                     return [
                         'rate' => floatval($rule['commission_percentage']),
-                        'rule_type' => 'Default',
-                        'rule_value' => 'All Products',
+                        'rule_type' => 'Default Rule',
+                        'rule_value' => 'Default Rate',
                         'rule_id' => $rule['id']
                     ];
                 }
@@ -214,8 +214,8 @@ try {
             logError("No commission rule found");
             return [
                 'rate' => 0,
-                'rule_type' => 'No Rule',
-                'rule_value' => 'None',
+                'rule_type' => 'Default Rule',
+                'rule_value' => 'Default Rate',
                 'rule_id' => null
             ];
             
@@ -227,85 +227,273 @@ try {
             ]);
             return [
                 'rate' => 0,
-                'rule_type' => 'Error',
-                'rule_value' => $e->getMessage(),
+                'rule_type' => 'Default Rule',
+                'rule_value' => 'Default Rate',
                 'rule_id' => null
             ];
         }
     }
 
     if (!empty($line_items) && is_array($line_items)) {
-        foreach ($line_items as $item) {
-            logError("Processing line item", $item);
-            
-            // Fetch product type from Shopify API
-            $product_type = null;
-            if (isset($item['product_id'])) {
-                $product_type = fetchProductTypeFromShopify($item['product_id']);
-            }
-            
-            // If API fetch fails, fallback to existing method
-            if (empty($product_type)) {
-                $product_type = isset($item['product_type']) ? $item['product_type'] : 'Unknown';
-            }
-            
-            $product_tags = isset($item['tags']) ? explode(',', $item['tags']) : [];
-            
-            // Get commission rate and rule info
-            $commission_info = getCommissionRate($conn, $product_type, $product_tags);
-            logError("Commission info for item", [
-                'item_title' => $item['title'],
-                'product_type' => $product_type,
-                'product_tags' => $product_tags,
-                'commission_info' => $commission_info
+        if (!empty($commission['adjusted_by'])) {
+            logError("Processing adjusted commission", [
+                'commission_id' => $commission['id'],
+                'adjusted_by' => $commission['adjusted_by']
             ]);
             
-            // Calculate commission
-            $item_price = 0;
-            if (isset($item['price_set']['shop_money']['amount'])) {
-                $item_price = floatval($item['price_set']['shop_money']['amount']);
-            } elseif (isset($item['price'])) {
-                $item_price = floatval($item['price']);
+            // For adjusted commissions, calculate commission percentage based on total commission
+            $total_amount = 0;
+            foreach ($line_items as $item) {
+                $item_price = 0;
+                if (isset($item['price_set']['shop_money']['amount'])) {
+                    $item_price = floatval($item['price_set']['shop_money']['amount']);
+                } elseif (isset($item['price'])) {
+                    $item_price = floatval($item['price']);
+                }
+                
+                $item_quantity = isset($item['quantity']) ? intval($item['quantity']) : 0;
+                $item_total = $item_price * $item_quantity;
+                
+                // Apply any discounts
+                if (isset($item['total_discount']) && floatval($item['total_discount']) > 0) {
+                    $item_total -= floatval($item['total_discount']);
+                }
+                
+                $total_amount += $item_total;
             }
             
-            // Get actual quantity and total price from the order item
-            $item_quantity = isset($item['quantity']) ? intval($item['quantity']) : 0;
-            $item_total = $item_price * $item_quantity;
+            // Calculate the commission rate based on total commission
+            $total_commission = floatval($commission['amount']);
+            $commission_rate = ($total_amount > 0) ? ($total_commission / $total_amount * 100) : 0;
             
-            // Apply any discounts if present
-            if (isset($item['total_discount']) && floatval($item['total_discount']) > 0) {
-                $item_total -= floatval($item['total_discount']);
-            }
-            
-            $commission_amount = $item_total * ($commission_info['rate'] / 100);
-            
-            // Store item details with rule information
-            $items_with_rules[] = [
-                'product' => $item['title'],
-                'variant_title' => $item['variant_title'] ?? '',
-                'sku' => $item['sku'] ?? 'N/A',
-                'type' => $product_type ?: 'Not specified',
-                'quantity' => $item_quantity,
-                'price' => $item_price,
-                'total' => $item_total,
-                'rule_type' => $commission_info['rule_type'],
-                'rule_value' => $commission_info['rule_value'],
-                'commission_percentage' => $commission_info['rate'],
-                'commission_amount' => $commission_amount,
-                'rule_id' => $commission_info['rule_id']
-            ];
-            
-            $total_amount += $item_total;
-            $total_commission += $commission_amount;
-            
-            logError("Processed item details", [
-                'item' => end($items_with_rules),
+            logError("Calculated commission rate for adjusted commission", [
                 'total_amount' => $total_amount,
                 'total_commission' => $total_commission,
-                'raw_price' => $item['price'],
-                'raw_quantity' => $item['quantity'],
-                'raw_total_discount' => $item['total_discount'] ?? '0.00'
+                'commission_rate' => $commission_rate
             ]);
+            
+            // Process each item with the calculated rate
+            foreach ($line_items as $item) {
+                logError("Processing line item", [
+                    'item_title' => $item['title'] ?? 'N/A',
+                    'raw_item' => $item
+                ]);
+                
+                // Get product type
+                $product_type = '';
+                
+                // Get product type from Shopify API
+                if (isset($item['product_id'])) {
+                    try {
+                        $shop_domain = SHOPIFY_SHOP_DOMAIN;
+                        $access_token = SHOPIFY_ACCESS_TOKEN;
+                        $api_version = SHOPIFY_API_VERSION;
+                        $url = "https://{$shop_domain}/admin/api/{$api_version}/products/{$item['product_id']}.json";
+                        
+                        $ch = curl_init();
+                        curl_setopt($ch, CURLOPT_URL, $url);
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                            "X-Shopify-Access-Token: {$access_token}",
+                            "Content-Type: application/json"
+                        ]);
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        
+                        $response = curl_exec($ch);
+                        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                        
+                        if ($http_code === 200) {
+                            $product_data = json_decode($response, true);
+                            if (isset($product_data['product']['product_type']) && !empty($product_data['product']['product_type'])) {
+                                $product_type = strtoupper($product_data['product']['product_type']);
+                                logError("Got product type from Shopify API", [
+                                    'product_id' => $item['product_id'],
+                                    'type' => $product_type
+                                ]);
+                            }
+                        } else {
+                            logError("Failed to get product type from Shopify API", [
+                                'product_id' => $item['product_id'],
+                                'http_code' => $http_code,
+                                'response' => $response
+                            ]);
+                        }
+                        
+                        curl_close($ch);
+                    } catch (Exception $e) {
+                        logError("Error fetching from Shopify API", [
+                            'error' => $e->getMessage(),
+                            'product_id' => $item['product_id']
+                        ]);
+                    }
+                }
+                
+                // Special case for Coating and Tint
+                if (empty($product_type) && isset($item['title'])) {
+                    if (stripos($item['title'], 'Coating') !== false) {
+                        $product_type = 'OFFLINE SERVICE';
+                        logError("Got product type from title (Coating)", ['type' => $product_type]);
+                    } elseif (stripos($item['title'], 'Tint') !== false) {
+                        $product_type = 'OFFLINE SERVICE';
+                        logError("Got product type from title (Tint)", ['type' => $product_type]);
+                    }
+                }
+                
+                // If still no match, use default
+                if (empty($product_type)) {
+                    $product_type = 'TRAPO CLASSIC'; // Default product type
+                    logError("Using default product type", ['product_type' => $product_type]);
+                }
+                
+                // Calculate item total
+                $item_price = 0;
+                if (isset($item['price_set']['shop_money']['amount'])) {
+                    $item_price = floatval($item['price_set']['shop_money']['amount']);
+                } elseif (isset($item['price'])) {
+                    $item_price = floatval($item['price']);
+                }
+                
+                $item_quantity = isset($item['quantity']) ? intval($item['quantity']) : 0;
+                $item_total = $item_price * $item_quantity;
+                
+                // Apply any discounts
+                if (isset($item['total_discount']) && floatval($item['total_discount']) > 0) {
+                    $item_total -= floatval($item['total_discount']);
+                }
+                
+                // Calculate commission using the total commission rate
+                $commission_amount = $item_total * ($commission_rate / 100);
+                
+                logError("Final line item details", [
+                    'product' => $item['title'],
+                    'type' => $product_type,
+                    'commission_rate' => $commission_rate,
+                    'commission_amount' => $commission_amount
+                ]);
+                
+                $items_with_rules[] = [
+                    'product' => $item['title'],
+                    'variant_title' => $item['variant_title'] ?? '',
+                    'sku' => $item['sku'] ?? 'N/A',
+                    'type' => $product_type,
+                    'quantity' => $item_quantity,
+                    'price' => $item_price,
+                    'total' => $item_total,
+                    'rule_type' => 'Manual Adjustment',
+                    'rule_value' => number_format($commission_rate, 1) . '% (Adjusted)',
+                    'commission_percentage' => $commission_rate,
+                    'commission_amount' => $commission_amount
+                ];
+            }
+        } else {
+            // For non-adjusted commissions, use commission rules
+            foreach ($line_items as $item) {
+                // Get product type
+                $product_type = '';
+                
+                // Get product type from Shopify API
+                if (isset($item['product_id'])) {
+                    try {
+                        $shop_domain = SHOPIFY_SHOP_DOMAIN;
+                        $access_token = SHOPIFY_ACCESS_TOKEN;
+                        $api_version = SHOPIFY_API_VERSION;
+                        $url = "https://{$shop_domain}/admin/api/{$api_version}/products/{$item['product_id']}.json";
+                        
+                        $ch = curl_init();
+                        curl_setopt($ch, CURLOPT_URL, $url);
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                            "X-Shopify-Access-Token: {$access_token}",
+                            "Content-Type: application/json"
+                        ]);
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        
+                        $response = curl_exec($ch);
+                        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                        
+                        if ($http_code === 200) {
+                            $product_data = json_decode($response, true);
+                            if (isset($product_data['product']['product_type']) && !empty($product_data['product']['product_type'])) {
+                                $product_type = strtoupper($product_data['product']['product_type']);
+                                logError("Got product type from Shopify API", [
+                                    'product_id' => $item['product_id'],
+                                    'type' => $product_type
+                                ]);
+                            }
+                        } else {
+                            logError("Failed to get product type from Shopify API", [
+                                'product_id' => $item['product_id'],
+                                'http_code' => $http_code,
+                                'response' => $response
+                            ]);
+                        }
+                        
+                        curl_close($ch);
+                    } catch (Exception $e) {
+                        logError("Error fetching from Shopify API", [
+                            'error' => $e->getMessage(),
+                            'product_id' => $item['product_id']
+                        ]);
+                    }
+                }
+                
+                // Special case for Coating and Tint
+                if (empty($product_type) && isset($item['title'])) {
+                    if (stripos($item['title'], 'Coating') !== false) {
+                        $product_type = 'OFFLINE SERVICE';
+                        logError("Got product type from title (Coating)", ['type' => $product_type]);
+                    } elseif (stripos($item['title'], 'Tint') !== false) {
+                        $product_type = 'OFFLINE SERVICE';
+                        logError("Got product type from title (Tint)", ['type' => $product_type]);
+                    }
+                }
+                
+                // If still no match, use default
+                if (empty($product_type)) {
+                    $product_type = 'TRAPO CLASSIC'; // Default product type
+                    logError("Using default product type", ['product_type' => $product_type]);
+                }
+                
+                // Get product tags
+                $product_tags = isset($item['tags']) ? explode(',', $item['tags']) : [];
+                
+                // Get commission rate and rule info
+                $commission_info = getCommissionRate($conn, $product_type, $product_tags);
+                
+                // Calculate item total
+                $item_price = 0;
+                if (isset($item['price_set']['shop_money']['amount'])) {
+                    $item_price = floatval($item['price_set']['shop_money']['amount']);
+                } elseif (isset($item['price'])) {
+                    $item_price = floatval($item['price']);
+                }
+                
+                $item_quantity = isset($item['quantity']) ? intval($item['quantity']) : 0;
+                $item_total = $item_price * $item_quantity;
+                
+                // Apply any discounts
+                if (isset($item['total_discount']) && floatval($item['total_discount']) > 0) {
+                    $item_total -= floatval($item['total_discount']);
+                }
+                
+                // Calculate commission based on rules
+                $commission_amount = $item_total * ($commission_info['rate'] / 100);
+                
+                $items_with_rules[] = [
+                    'product' => $item['title'],
+                    'variant_title' => $item['variant_title'] ?? '',
+                    'sku' => $item['sku'] ?? 'N/A',
+                    'type' => $product_type,
+                    'quantity' => $item_quantity,
+                    'price' => $item_price,
+                    'total' => $item_total,
+                    'rule_type' => $commission_info['rule_type'],
+                    'rule_value' => $commission_info['rule_value'],
+                    'commission_percentage' => $commission_info['rate'],
+                    'commission_amount' => $commission_amount
+                ];
+                
+                $total_amount += $item_total;
+                $total_commission += $commission_amount;
+            }
         }
     }
 
@@ -339,7 +527,7 @@ try {
                         <tr>
                             <th>Total Commission:</th>
                             <td>' . $currency_symbol . ' ' . number_format($commission['amount'], 2) . '
-                                <button type="button" class="btn btn-sm btn-primary ms-2" onclick="showAdjustmentForm()">
+                                <button type="button" class="btn btn-sm btn-primary ms-2 adjust-commission" data-commission-id="' . $commission_id . '">
                                     <i class="fas fa-edit me-1"></i>Adjust
                                 </button>
                             </td>
@@ -446,10 +634,8 @@ try {
 
     <!-- Commission Adjustment Form -->
     <div id="adjustmentForm" class="card mb-3" style="display: none;">
-        <div class="card-header bg-primary text-white">
-            <h6 class="mb-0">Adjust Commission</h6>
-        </div>
         <div class="card-body">
+            <h6 class="card-title">Adjust Commission</h6>
             <form id="commissionAdjustmentForm">
                 <input type="hidden" name="commission_id" value="' . $commission_id . '">
                 <div class="mb-3">
@@ -460,10 +646,10 @@ try {
                 <div class="mb-3">
                     <label for="adjustmentReason" class="form-label">Reason for Adjustment</label>
                     <textarea class="form-control" id="adjustmentReason" name="adjustment_reason" 
-                              rows="3" required placeholder="Please provide a reason for this adjustment"></textarea>
+                              rows="3" required></textarea>
                 </div>
                 <div class="text-end">
-                    <button type="button" class="btn btn-secondary" onclick="hideAdjustmentForm()">Cancel</button>
+                    <button type="button" class="btn btn-secondary cancel-adjustment">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
@@ -498,77 +684,81 @@ try {
     </div>
 
     <script>
-        function showAdjustmentForm() {
-            $("#adjustmentForm").slideDown();
+        // Function to handle invoice viewing
+        function viewInvoice(commissionId) {
+            window.open(`generate_invoice.php?commission_id=${commissionId}`, "_blank");
         }
 
-        function hideAdjustmentForm() {
-            $("#adjustmentForm").slideUp();
-        }
-
-        $("#commissionAdjustmentForm").on("submit", function(e) {
-            e.preventDefault();
+        document.querySelector(".send-invoice").addEventListener("click", function() {
+            const commissionId = this.getAttribute("data-commission-id");
+            const button = this;
             
-            const formData = $(this).serialize();
-            const submitBtn = $(this).find("button[type=submit]");
-            const originalText = submitBtn.html();
+            button.disabled = true;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...`;
             
-            submitBtn.prop("disabled", true).html(\'<i class="fas fa-spinner fa-spin"></i> Saving...\');
-            
-            $.post("ajax/adjust_commission.php", formData)
-                .done(function(response) {
-                    if (response.success) {
-                        toastr.success("Commission adjusted successfully!");
-                        location.reload();
-                    } else {
-                        toastr.error(response.error || "Failed to adjust commission");
-                    }
-                })
-                .fail(function() {
-                    toastr.error("Failed to adjust commission");
-                })
-                .always(function() {
-                    submitBtn.prop("disabled", false).html(originalText);
-                });
+            fetch("ajax/send_commission_email.php", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: `commission_id=${commissionId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message);
+                } else {
+                    toastr.error(data.message || "Failed to send invoice");
+                }
+            })
+            .catch(error => {
+                toastr.error("An error occurred while sending the invoice");
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = "Send Invoice";
+            });
         });
 
-        function showPaymentForm() {
-            $("#paymentForm").slideDown();
-        }
+        document.querySelector(".adjust-commission").addEventListener("click", function() {
+            const adjustmentForm = document.getElementById("adjustmentForm");
+            adjustmentForm.style.display = "block";
+        });
 
-        function hidePaymentForm() {
-            $("#paymentForm").slideUp();
-        }
+        document.querySelector(".cancel-adjustment").addEventListener("click", function() {
+            const adjustmentForm = document.getElementById("adjustmentForm");
+            adjustmentForm.style.display = "none";
+        });
 
-        $("#commissionPaymentForm").on("submit", function(e) {
+        document.getElementById("commissionAdjustmentForm").addEventListener("submit", function(e) {
             e.preventDefault();
             
             const formData = new FormData(this);
-            const submitBtn = $(this).find("button[type=submit]");
-            const originalText = submitBtn.html();
+            const submitBtn = this.querySelector("button[type=submit]");
+            const originalText = submitBtn.innerHTML;
             
-            submitBtn.prop("disabled", true).html(\'<i class="fas fa-spinner fa-spin"></i> Saving...\');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
             
-            $.ajax({
-                url: "ajax/mark_commission_paid.php",
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    if (response.success) {
-                        toastr.success("Commission marked as paid successfully!");
-                        location.reload();
-                    } else {
-                        toastr.error(response.error || "Failed to mark commission as paid");
-                    }
-                },
-                error: function() {
-                    toastr.error("Failed to mark commission as paid");
-                },
-                complete: function() {
-                    submitBtn.prop("disabled", false).html(originalText);
+            fetch("ajax/adjust_commission.php", {
+                method: "POST",
+                body: new URLSearchParams(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success("Commission adjusted successfully!");
+                    location.reload();
+                } else {
+                    toastr.error(data.error || "Failed to adjust commission");
                 }
+            })
+            .catch(error => {
+                toastr.error("Failed to adjust commission");
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
             });
         });
     </script>
@@ -628,69 +818,40 @@ try {
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary view-invoice" data-commission-id="' . $commission_id . '">View Invoice</button>
+        <button type="button" class="btn btn-primary" onclick="viewInvoice(' . $commission_id . ')">View Invoice</button>
         <button type="button" class="btn btn-success send-invoice" data-commission-id="' . $commission_id . '">Send Invoice</button>
-        <button type="button" class="btn btn-primary adjust-commission" data-commission-id="' . $commission_id . '">Adjust Commission</button>
     </div>
-    <div id="adjustmentForm" class="card mb-3" style="display: none;">
-        <div class="card-body">
-            <h6 class="card-title">Adjust Commission</h6>
-            <form id="commissionAdjustmentForm">
-                <input type="hidden" name="commission_id" value="' . $commission_id . '">
-                <div class="mb-3">
-                    <label for="adjustedAmount" class="form-label">New Commission Amount (' . $currency_symbol . ')</label>
-                    <input type="number" class="form-control" id="adjustedAmount" name="amount" 
-                           value="' . $commission['amount'] . '" step="0.01" min="0" required>
-                </div>
-                <div class="mb-3">
-                    <label for="adjustmentReason" class="form-label">Reason for Adjustment</label>
-                    <textarea class="form-control" id="adjustmentReason" name="adjustment_reason" 
-                              rows="3" required></textarea>
-                </div>
-                <div class="text-end">
-                    <button type="button" class="btn btn-secondary" onclick="hideAdjustmentForm()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
     <script>
-        function showAdjustmentForm() {
-            $("#adjustmentForm").slideDown();
-        }
-
-        function hideAdjustmentForm() {
-            $("#adjustmentForm").slideUp();
-        }
-
-        $("#commissionAdjustmentForm").on("submit", function(e) {
-            e.preventDefault();
+        document.querySelector(".send-invoice").addEventListener("click", function() {
+            const commissionId = this.getAttribute("data-commission-id");
+            const button = this;
             
-            const formData = $(this).serialize();
-            const submitBtn = $(this).find("button[type=submit]");
-            const originalText = submitBtn.html();
+            button.disabled = true;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...`;
             
-            submitBtn.prop("disabled", true).html(\'<i class="fas fa-spinner fa-spin"></i> Saving...\');
-            
-            $.post("ajax/adjust_commission.php", formData)
-                .done(function(response) {
-                    if (response.success) {
-                        alert("Commission adjusted successfully!");
-                        location.reload();
-                    } else {
-                        alert(response.error || "Failed to adjust commission");
-                    }
-                })
-                .fail(function() {
-                    alert("Failed to adjust commission");
-                })
-                .always(function() {
-                    submitBtn.prop("disabled", false).html(originalText);
-                });
-        });
-
-        document.querySelector(".adjust-commission").addEventListener("click", function() {
-            showAdjustmentForm();
+            fetch("ajax/send_commission_email.php", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: `commission_id=${commissionId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message);
+                } else {
+                    toastr.error(data.message || "Failed to send invoice");
+                }
+            })
+            .catch(error => {
+                toastr.error("An error occurred while sending the invoice");
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = "Send Invoice";
+            });
         });
     </script>';
 
