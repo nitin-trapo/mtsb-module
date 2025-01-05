@@ -761,6 +761,55 @@ try {
                 submitBtn.innerHTML = originalText;
             });
         });
+
+        function showPaymentForm() {
+            $("#paymentForm").slideDown();
+        }
+
+        function hidePaymentForm() {
+            $("#paymentForm").slideUp();
+        }
+
+        $("#commissionPaymentForm").on("submit", function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = $(this).find("button[type=submit]");
+            const originalText = submitBtn.html();
+            
+            submitBtn.prop("disabled", true).html(\'<i class="fas fa-spinner fa-spin"></i> Saving...\');
+            
+            $.ajax({
+                url: "ajax/mark_commission_paid.php",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        const alertHtml = \'<div class="alert alert-success alert-dismissible fade show" role="alert">\'
+                            + \'<i class="fas fa-check-circle me-2"></i>Commission has been marked as paid successfully!\'
+                            + \'<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>\'
+                            + \'</div>\';
+                        $("#paymentForm").before(alertHtml);
+                        
+                        toastr.success("Commission marked as paid successfully!");
+                        
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        toastr.error(response.error || "Failed to mark commission as paid");
+                    }
+                },
+                error: function() {
+                    toastr.error("Failed to mark commission as paid");
+                },
+                complete: function() {
+                    submitBtn.prop("disabled", false).html(originalText);
+                }
+            });
+        });
     </script>
 
     <div class="card">
