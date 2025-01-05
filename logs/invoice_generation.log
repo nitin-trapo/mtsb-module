@@ -6846,3 +6846,1671 @@
         }
     ]
 }
+[2025-01-05 10:29:43] Starting invoice generation Context: {
+    "commission_id": 321,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 158,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:43] Commission ID validated Context: {
+    "commission_id": 321,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 188,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:43] Raw line items data Context: {
+    "line_items": [
+        {
+            "id": 14488846696703,
+            "admin_graphql_api_id": "gid:\/\/shopify\/LineItem\/14488846696703",
+            "attributed_staffs": [],
+            "current_quantity": 1,
+            "fulfillable_quantity": 1,
+            "fulfillment_service": "manual",
+            "fulfillment_status": null,
+            "gift_card": false,
+            "grams": 0,
+            "name": "BMW 4 Series G22 (2020-Present) - Black \/ Black \/ Front + Rear",
+            "price": "275.31",
+            "price_set": {
+                "shop_money": {
+                    "amount": "275.31",
+                    "currency_code": "MYR"
+                },
+                "presentment_money": {
+                    "amount": "275.31",
+                    "currency_code": "MYR"
+                }
+            },
+            "product_exists": true,
+            "product_id": 8882058166527,
+            "properties": [],
+            "quantity": 1,
+            "requires_shipping": true,
+            "sku": "TRC-BMW708-B-B",
+            "taxable": true,
+            "title": "BMW 4 Series G22 (2020-Present)",
+            "total_discount": "0.00",
+            "total_discount_set": {
+                "shop_money": {
+                    "amount": "0.00",
+                    "currency_code": "MYR"
+                },
+                "presentment_money": {
+                    "amount": "0.00",
+                    "currency_code": "MYR"
+                }
+            },
+            "variant_id": 46152058142975,
+            "variant_inventory_management": "shopify",
+            "variant_title": "Black \/ Black \/ Front + Rear",
+            "vendor": "BMW",
+            "tax_lines": [],
+            "duties": [],
+            "discount_allocations": []
+        },
+        {
+            "id": 14488846729471,
+            "admin_graphql_api_id": "gid:\/\/shopify\/LineItem\/14488846729471",
+            "attributed_staffs": [],
+            "current_quantity": 1,
+            "fulfillable_quantity": 1,
+            "fulfillment_service": "manual",
+            "fulfillment_status": null,
+            "gift_card": false,
+            "grams": 0,
+            "name": "Trapo Tint Chroma - (L)",
+            "price": "2530.51",
+            "price_set": {
+                "shop_money": {
+                    "amount": "2530.51",
+                    "currency_code": "MYR"
+                },
+                "presentment_money": {
+                    "amount": "2530.51",
+                    "currency_code": "MYR"
+                }
+            },
+            "product_exists": true,
+            "product_id": 8911012757759,
+            "properties": [],
+            "quantity": 1,
+            "requires_shipping": true,
+            "sku": "OXCT-003-L-WH-CHR",
+            "taxable": true,
+            "title": "Trapo Tint Chroma",
+            "total_discount": "0.00",
+            "total_discount_set": {
+                "shop_money": {
+                    "amount": "0.00",
+                    "currency_code": "MYR"
+                },
+                "presentment_money": {
+                    "amount": "0.00",
+                    "currency_code": "MYR"
+                }
+            },
+            "variant_id": 46251747868927,
+            "variant_inventory_management": null,
+            "variant_title": "(L)",
+            "vendor": "MTSB",
+            "tax_lines": [],
+            "duties": [],
+            "discount_allocations": []
+        },
+        {
+            "id": 14488846762239,
+            "admin_graphql_api_id": "gid:\/\/shopify\/LineItem\/14488846762239",
+            "attributed_staffs": [],
+            "current_quantity": 1,
+            "fulfillable_quantity": 1,
+            "fulfillment_service": "manual",
+            "fulfillment_status": null,
+            "gift_card": false,
+            "grams": 0,
+            "name": "Trapo Car PPF - (L) \/ Full Front",
+            "price": "2902.63",
+            "price_set": {
+                "shop_money": {
+                    "amount": "2902.63",
+                    "currency_code": "MYR"
+                },
+                "presentment_money": {
+                    "amount": "2902.63",
+                    "currency_code": "MYR"
+                }
+            },
+            "product_exists": true,
+            "product_id": 8911073804543,
+            "properties": [],
+            "quantity": 1,
+            "requires_shipping": true,
+            "sku": "OXPPF-002-L-P-HF-PROP-7.5",
+            "taxable": true,
+            "title": "Trapo Car PPF",
+            "total_discount": "0.00",
+            "total_discount_set": {
+                "shop_money": {
+                    "amount": "0.00",
+                    "currency_code": "MYR"
+                },
+                "presentment_money": {
+                    "amount": "0.00",
+                    "currency_code": "MYR"
+                }
+            },
+            "variant_id": 46252004638975,
+            "variant_inventory_management": null,
+            "variant_title": "(L) \/ Full Front",
+            "vendor": "TRAPO\u00ae Car Mat Malaysia",
+            "tax_lines": [],
+            "duties": [],
+            "discount_allocations": []
+        },
+        {
+            "id": 14488846795007,
+            "admin_graphql_api_id": "gid:\/\/shopify\/LineItem\/14488846795007",
+            "attributed_staffs": [],
+            "current_quantity": 1,
+            "fulfillable_quantity": 1,
+            "fulfillment_service": "manual",
+            "fulfillment_status": null,
+            "gift_card": false,
+            "grams": 0,
+            "name": "Trapo Coating Quik Shield - (L)",
+            "price": "707.05",
+            "price_set": {
+                "shop_money": {
+                    "amount": "707.05",
+                    "currency_code": "MYR"
+                },
+                "presentment_money": {
+                    "amount": "707.05",
+                    "currency_code": "MYR"
+                }
+            },
+            "product_exists": true,
+            "product_id": 8911020392703,
+            "properties": [],
+            "quantity": 1,
+            "requires_shipping": true,
+            "sku": "OXCC-012-QS-LARGE",
+            "taxable": true,
+            "title": "Trapo Coating Quik Shield",
+            "total_discount": "0.00",
+            "total_discount_set": {
+                "shop_money": {
+                    "amount": "0.00",
+                    "currency_code": "MYR"
+                },
+                "presentment_money": {
+                    "amount": "0.00",
+                    "currency_code": "MYR"
+                }
+            },
+            "variant_id": 46251757568255,
+            "variant_inventory_management": "shopify",
+            "variant_title": "(L)",
+            "vendor": "MTSB",
+            "tax_lines": [],
+            "duties": [],
+            "discount_allocations": []
+        },
+        {
+            "id": 14488846827775,
+            "admin_graphql_api_id": "gid:\/\/shopify\/LineItem\/14488846827775",
+            "attributed_staffs": [],
+            "current_quantity": 1,
+            "fulfillable_quantity": 1,
+            "fulfillment_service": "manual",
+            "fulfillment_status": null,
+            "gift_card": false,
+            "grams": 0,
+            "name": "TRAPO Diatomite Car Coaster",
+            "price": "22.25",
+            "price_set": {
+                "shop_money": {
+                    "amount": "22.25",
+                    "currency_code": "MYR"
+                },
+                "presentment_money": {
+                    "amount": "22.25",
+                    "currency_code": "MYR"
+                }
+            },
+            "product_exists": true,
+            "product_id": 8912551117055,
+            "properties": [],
+            "quantity": 1,
+            "requires_shipping": true,
+            "sku": "OXTRA-023",
+            "taxable": true,
+            "title": "TRAPO Diatomite Car Coaster",
+            "total_discount": "0.00",
+            "total_discount_set": {
+                "shop_money": {
+                    "amount": "0.00",
+                    "currency_code": "MYR"
+                },
+                "presentment_money": {
+                    "amount": "0.00",
+                    "currency_code": "MYR"
+                }
+            },
+            "variant_id": 46264378589439,
+            "variant_inventory_management": "shopify",
+            "variant_title": null,
+            "vendor": "TRAPO",
+            "tax_lines": [],
+            "duties": [],
+            "discount_allocations": []
+        },
+        {
+            "id": 14488846860543,
+            "admin_graphql_api_id": "gid:\/\/shopify\/LineItem\/14488846860543",
+            "attributed_staffs": [],
+            "current_quantity": 1,
+            "fulfillable_quantity": 1,
+            "fulfillment_service": "manual",
+            "fulfillment_status": null,
+            "gift_card": false,
+            "grams": 0,
+            "name": "TRAPO Rainguard Repellant",
+            "price": "22.25",
+            "price_set": {
+                "shop_money": {
+                    "amount": "22.25",
+                    "currency_code": "MYR"
+                },
+                "presentment_money": {
+                    "amount": "22.25",
+                    "currency_code": "MYR"
+                }
+            },
+            "product_exists": true,
+            "product_id": 8911080456447,
+            "properties": [],
+            "quantity": 1,
+            "requires_shipping": true,
+            "sku": "OXTRA-008",
+            "taxable": true,
+            "title": "TRAPO Rainguard Repellant",
+            "total_discount": "0.00",
+            "total_discount_set": {
+                "shop_money": {
+                    "amount": "0.00",
+                    "currency_code": "MYR"
+                },
+                "presentment_money": {
+                    "amount": "0.00",
+                    "currency_code": "MYR"
+                }
+            },
+            "variant_id": 46252038815999,
+            "variant_inventory_management": "shopify",
+            "variant_title": null,
+            "vendor": "TRAPO",
+            "tax_lines": [],
+            "duties": [],
+            "discount_allocations": []
+        }
+    ],
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 230,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:43] Processing line item Context: {
+    "item_title": "BMW 4 Series G22 (2020-Present)",
+    "raw_item": {
+        "id": 14488846696703,
+        "admin_graphql_api_id": "gid:\/\/shopify\/LineItem\/14488846696703",
+        "attributed_staffs": [],
+        "current_quantity": 1,
+        "fulfillable_quantity": 1,
+        "fulfillment_service": "manual",
+        "fulfillment_status": null,
+        "gift_card": false,
+        "grams": 0,
+        "name": "BMW 4 Series G22 (2020-Present) - Black \/ Black \/ Front + Rear",
+        "price": "275.31",
+        "price_set": {
+            "shop_money": {
+                "amount": "275.31",
+                "currency_code": "MYR"
+            },
+            "presentment_money": {
+                "amount": "275.31",
+                "currency_code": "MYR"
+            }
+        },
+        "product_exists": true,
+        "product_id": 8882058166527,
+        "properties": [],
+        "quantity": 1,
+        "requires_shipping": true,
+        "sku": "TRC-BMW708-B-B",
+        "taxable": true,
+        "title": "BMW 4 Series G22 (2020-Present)",
+        "total_discount": "0.00",
+        "total_discount_set": {
+            "shop_money": {
+                "amount": "0.00",
+                "currency_code": "MYR"
+            },
+            "presentment_money": {
+                "amount": "0.00",
+                "currency_code": "MYR"
+            }
+        },
+        "variant_id": 46152058142975,
+        "variant_inventory_management": "shopify",
+        "variant_title": "Black \/ Black \/ Front + Rear",
+        "vendor": "BMW",
+        "tax_lines": [],
+        "duties": [],
+        "discount_allocations": []
+    },
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 372,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:44] Got product type from Shopify API Context: {
+    "product_id": 8882058166527,
+    "type": "TRAPO CLASSIC",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 403,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:44] Checking product type commission rules Context: {
+    "product_type": "TRAPO CLASSIC",
+    "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 96,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 444,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:44] Found product type specific rule Context: {
+    "id": 13,
+    "rule_type": "product_type",
+    "rule_value": "TRAPO CLASSIC",
+    "commission_percentage": "10.00",
+    "status": "active",
+    "created_at": "2024-12-26 00:31:46",
+    "updated_at": "2024-12-26 00:31:46",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 104,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 444,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:44] Final line item details Context: {
+    "product": "BMW 4 Series G22 (2020-Present)",
+    "type": "TRAPO CLASSIC",
+    "commission_rate": 10,
+    "commission_amount": 27.531,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 484,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:44] Processing line item Context: {
+    "item_title": "Trapo Tint Chroma",
+    "raw_item": {
+        "id": 14488846729471,
+        "admin_graphql_api_id": "gid:\/\/shopify\/LineItem\/14488846729471",
+        "attributed_staffs": [],
+        "current_quantity": 1,
+        "fulfillable_quantity": 1,
+        "fulfillment_service": "manual",
+        "fulfillment_status": null,
+        "gift_card": false,
+        "grams": 0,
+        "name": "Trapo Tint Chroma - (L)",
+        "price": "2530.51",
+        "price_set": {
+            "shop_money": {
+                "amount": "2530.51",
+                "currency_code": "MYR"
+            },
+            "presentment_money": {
+                "amount": "2530.51",
+                "currency_code": "MYR"
+            }
+        },
+        "product_exists": true,
+        "product_id": 8911012757759,
+        "properties": [],
+        "quantity": 1,
+        "requires_shipping": true,
+        "sku": "OXCT-003-L-WH-CHR",
+        "taxable": true,
+        "title": "Trapo Tint Chroma",
+        "total_discount": "0.00",
+        "total_discount_set": {
+            "shop_money": {
+                "amount": "0.00",
+                "currency_code": "MYR"
+            },
+            "presentment_money": {
+                "amount": "0.00",
+                "currency_code": "MYR"
+            }
+        },
+        "variant_id": 46251747868927,
+        "variant_inventory_management": null,
+        "variant_title": "(L)",
+        "vendor": "MTSB",
+        "tax_lines": [],
+        "duties": [],
+        "discount_allocations": []
+    },
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 372,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:44] Got product type from Shopify API Context: {
+    "product_id": 8911012757759,
+    "type": "OFFLINE SERVICE",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 403,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:44] Checking product type commission rules Context: {
+    "product_type": "OFFLINE SERVICE",
+    "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 96,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 444,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:44] Found product type specific rule Context: {
+    "id": 6,
+    "rule_type": "product_type",
+    "rule_value": "OFFLINE SERVICE",
+    "commission_percentage": "10.00",
+    "status": "active",
+    "created_at": "2024-12-11 20:45:45",
+    "updated_at": "2024-12-11 20:45:45",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 104,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 444,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:44] Final line item details Context: {
+    "product": "Trapo Tint Chroma",
+    "type": "OFFLINE SERVICE",
+    "commission_rate": 10,
+    "commission_amount": 253.05100000000002,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 484,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:44] Processing line item Context: {
+    "item_title": "Trapo Car PPF",
+    "raw_item": {
+        "id": 14488846762239,
+        "admin_graphql_api_id": "gid:\/\/shopify\/LineItem\/14488846762239",
+        "attributed_staffs": [],
+        "current_quantity": 1,
+        "fulfillable_quantity": 1,
+        "fulfillment_service": "manual",
+        "fulfillment_status": null,
+        "gift_card": false,
+        "grams": 0,
+        "name": "Trapo Car PPF - (L) \/ Full Front",
+        "price": "2902.63",
+        "price_set": {
+            "shop_money": {
+                "amount": "2902.63",
+                "currency_code": "MYR"
+            },
+            "presentment_money": {
+                "amount": "2902.63",
+                "currency_code": "MYR"
+            }
+        },
+        "product_exists": true,
+        "product_id": 8911073804543,
+        "properties": [],
+        "quantity": 1,
+        "requires_shipping": true,
+        "sku": "OXPPF-002-L-P-HF-PROP-7.5",
+        "taxable": true,
+        "title": "Trapo Car PPF",
+        "total_discount": "0.00",
+        "total_discount_set": {
+            "shop_money": {
+                "amount": "0.00",
+                "currency_code": "MYR"
+            },
+            "presentment_money": {
+                "amount": "0.00",
+                "currency_code": "MYR"
+            }
+        },
+        "variant_id": 46252004638975,
+        "variant_inventory_management": null,
+        "variant_title": "(L) \/ Full Front",
+        "vendor": "TRAPO\u00ae Car Mat Malaysia",
+        "tax_lines": [],
+        "duties": [],
+        "discount_allocations": []
+    },
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 372,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Got product type from Shopify API Context: {
+    "product_id": 8911073804543,
+    "type": "OFFLINE SERVICE",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 403,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Checking product type commission rules Context: {
+    "product_type": "OFFLINE SERVICE",
+    "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 96,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 444,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Found product type specific rule Context: {
+    "id": 6,
+    "rule_type": "product_type",
+    "rule_value": "OFFLINE SERVICE",
+    "commission_percentage": "10.00",
+    "status": "active",
+    "created_at": "2024-12-11 20:45:45",
+    "updated_at": "2024-12-11 20:45:45",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 104,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 444,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Final line item details Context: {
+    "product": "Trapo Car PPF",
+    "type": "OFFLINE SERVICE",
+    "commission_rate": 10,
+    "commission_amount": 290.26300000000003,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 484,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Processing line item Context: {
+    "item_title": "Trapo Coating Quik Shield",
+    "raw_item": {
+        "id": 14488846795007,
+        "admin_graphql_api_id": "gid:\/\/shopify\/LineItem\/14488846795007",
+        "attributed_staffs": [],
+        "current_quantity": 1,
+        "fulfillable_quantity": 1,
+        "fulfillment_service": "manual",
+        "fulfillment_status": null,
+        "gift_card": false,
+        "grams": 0,
+        "name": "Trapo Coating Quik Shield - (L)",
+        "price": "707.05",
+        "price_set": {
+            "shop_money": {
+                "amount": "707.05",
+                "currency_code": "MYR"
+            },
+            "presentment_money": {
+                "amount": "707.05",
+                "currency_code": "MYR"
+            }
+        },
+        "product_exists": true,
+        "product_id": 8911020392703,
+        "properties": [],
+        "quantity": 1,
+        "requires_shipping": true,
+        "sku": "OXCC-012-QS-LARGE",
+        "taxable": true,
+        "title": "Trapo Coating Quik Shield",
+        "total_discount": "0.00",
+        "total_discount_set": {
+            "shop_money": {
+                "amount": "0.00",
+                "currency_code": "MYR"
+            },
+            "presentment_money": {
+                "amount": "0.00",
+                "currency_code": "MYR"
+            }
+        },
+        "variant_id": 46251757568255,
+        "variant_inventory_management": "shopify",
+        "variant_title": "(L)",
+        "vendor": "MTSB",
+        "tax_lines": [],
+        "duties": [],
+        "discount_allocations": []
+    },
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 372,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Got product type from Shopify API Context: {
+    "product_id": 8911020392703,
+    "type": "OFFLINE SERVICE",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 403,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Checking product type commission rules Context: {
+    "product_type": "OFFLINE SERVICE",
+    "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 96,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 444,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Found product type specific rule Context: {
+    "id": 6,
+    "rule_type": "product_type",
+    "rule_value": "OFFLINE SERVICE",
+    "commission_percentage": "10.00",
+    "status": "active",
+    "created_at": "2024-12-11 20:45:45",
+    "updated_at": "2024-12-11 20:45:45",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 104,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 444,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Final line item details Context: {
+    "product": "Trapo Coating Quik Shield",
+    "type": "OFFLINE SERVICE",
+    "commission_rate": 10,
+    "commission_amount": 70.705,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 484,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Processing line item Context: {
+    "item_title": "TRAPO Diatomite Car Coaster",
+    "raw_item": {
+        "id": 14488846827775,
+        "admin_graphql_api_id": "gid:\/\/shopify\/LineItem\/14488846827775",
+        "attributed_staffs": [],
+        "current_quantity": 1,
+        "fulfillable_quantity": 1,
+        "fulfillment_service": "manual",
+        "fulfillment_status": null,
+        "gift_card": false,
+        "grams": 0,
+        "name": "TRAPO Diatomite Car Coaster",
+        "price": "22.25",
+        "price_set": {
+            "shop_money": {
+                "amount": "22.25",
+                "currency_code": "MYR"
+            },
+            "presentment_money": {
+                "amount": "22.25",
+                "currency_code": "MYR"
+            }
+        },
+        "product_exists": true,
+        "product_id": 8912551117055,
+        "properties": [],
+        "quantity": 1,
+        "requires_shipping": true,
+        "sku": "OXTRA-023",
+        "taxable": true,
+        "title": "TRAPO Diatomite Car Coaster",
+        "total_discount": "0.00",
+        "total_discount_set": {
+            "shop_money": {
+                "amount": "0.00",
+                "currency_code": "MYR"
+            },
+            "presentment_money": {
+                "amount": "0.00",
+                "currency_code": "MYR"
+            }
+        },
+        "variant_id": 46264378589439,
+        "variant_inventory_management": "shopify",
+        "variant_title": null,
+        "vendor": "TRAPO",
+        "tax_lines": [],
+        "duties": [],
+        "discount_allocations": []
+    },
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 372,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Got product type from Shopify API Context: {
+    "product_id": 8912551117055,
+    "type": "TRAPO ACCESSORIES",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 403,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Checking product type commission rules Context: {
+    "product_type": "TRAPO ACCESSORIES",
+    "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 96,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 444,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Found product type specific rule Context: {
+    "id": 16,
+    "rule_type": "product_type",
+    "rule_value": "TRAPO ACCESSORIES",
+    "commission_percentage": "15.00",
+    "status": "active",
+    "created_at": "2024-12-26 11:59:18",
+    "updated_at": "2024-12-26 11:59:18",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 104,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 444,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Final line item details Context: {
+    "product": "TRAPO Diatomite Car Coaster",
+    "type": "TRAPO ACCESSORIES",
+    "commission_rate": 15,
+    "commission_amount": 3.3375,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 484,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:45] Processing line item Context: {
+    "item_title": "TRAPO Rainguard Repellant",
+    "raw_item": {
+        "id": 14488846860543,
+        "admin_graphql_api_id": "gid:\/\/shopify\/LineItem\/14488846860543",
+        "attributed_staffs": [],
+        "current_quantity": 1,
+        "fulfillable_quantity": 1,
+        "fulfillment_service": "manual",
+        "fulfillment_status": null,
+        "gift_card": false,
+        "grams": 0,
+        "name": "TRAPO Rainguard Repellant",
+        "price": "22.25",
+        "price_set": {
+            "shop_money": {
+                "amount": "22.25",
+                "currency_code": "MYR"
+            },
+            "presentment_money": {
+                "amount": "22.25",
+                "currency_code": "MYR"
+            }
+        },
+        "product_exists": true,
+        "product_id": 8911080456447,
+        "properties": [],
+        "quantity": 1,
+        "requires_shipping": true,
+        "sku": "OXTRA-008",
+        "taxable": true,
+        "title": "TRAPO Rainguard Repellant",
+        "total_discount": "0.00",
+        "total_discount_set": {
+            "shop_money": {
+                "amount": "0.00",
+                "currency_code": "MYR"
+            },
+            "presentment_money": {
+                "amount": "0.00",
+                "currency_code": "MYR"
+            }
+        },
+        "variant_id": 46252038815999,
+        "variant_inventory_management": "shopify",
+        "variant_title": null,
+        "vendor": "TRAPO",
+        "tax_lines": [],
+        "duties": [],
+        "discount_allocations": []
+    },
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 372,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:46] Got product type from Shopify API Context: {
+    "product_id": 8911080456447,
+    "type": "TRAPO ACCESSORIES",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 403,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:46] Checking product type commission rules Context: {
+    "product_type": "TRAPO ACCESSORIES",
+    "query": "SELECT * FROM commission_rules \n                     WHERE status = 'active' \n                     AND rule_type = 'product_type' \n                     AND LOWER(rule_value) = LOWER(?)\n                     LIMIT 1",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 96,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 444,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:46] Found product type specific rule Context: {
+    "id": 16,
+    "rule_type": "product_type",
+    "rule_value": "TRAPO ACCESSORIES",
+    "commission_percentage": "15.00",
+    "status": "active",
+    "created_at": "2024-12-26 11:59:18",
+    "updated_at": "2024-12-26 11:59:18",
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 104,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 444,
+            "function": "getCommissionRate"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:46] Final line item details Context: {
+    "product": "TRAPO Rainguard Repellant",
+    "type": "TRAPO ACCESSORIES",
+    "commission_rate": 15,
+    "commission_amount": 3.3375,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 484,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}
+[2025-01-05 10:29:46] Final totals Context: {
+    "total_amount": 6460.000000000001,
+    "total_commission": 648.225,
+    "request": {
+        "method": "GET",
+        "uri": "\/shopify-agent-module\/admin\/generate_invoice.php?commission_id=321",
+        "get_data": {
+            "commission_id": "321"
+        },
+        "post_data": [],
+        "session_data": {
+            "user_id": 1,
+            "role": "admin",
+            "name": "System Admin"
+        }
+    },
+    "backtrace": [
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 499,
+            "function": "logError"
+        },
+        {
+            "file": "C:\\xampp\\htdocs\\shopify-agent-module\\admin\\generate_invoice.php",
+            "line": 712,
+            "function": "generate_invoice"
+        }
+    ]
+}

@@ -110,3 +110,38 @@
 [2025-01-05 10:15:10] Got product type from Shopify API Context: {"product_id":8881922736383,"type":"TRAPO ECO"}
 [2025-01-05 10:15:10] Getting commission rate Context: {"product_type":"TRAPO ECO","product_tags":[]}
 [2025-01-05 10:15:10] Found rule by product type Context: {"id":12,"rule_type":"product_type","rule_value":"TRAPO ECO","commission_percentage":"35.00","status":"active","created_at":"2024-12-24 11:31:05","updated_at":"2024-12-26 00:31:26"}
+[2025-01-05 10:29:34] Starting commission details retrieval for ID: 321
+[2025-01-05 10:29:34] Retrieved commission data Context: {"commission_id":321,"agent_name":"Caleon Ng","agent_email":"caleonng68@gmail.com"}
+[2025-01-05 10:29:34] Commission Rules from DB Context: [{"id":6,"rule_type":"product_type","rule_value":"OFFLINE SERVICE","commission_percentage":"10.00","status":"active","created_at":"2024-12-11 20:45:45","updated_at":"2024-12-11 20:45:45"},{"id":12,"rule_type":"product_type","rule_value":"TRAPO ECO","commission_percentage":"35.00","status":"active","created_at":"2024-12-24 11:31:05","updated_at":"2024-12-26 00:31:26"},{"id":13,"rule_type":"product_type","rule_value":"TRAPO CLASSIC","commission_percentage":"10.00","status":"active","created_at":"2024-12-26 00:31:46","updated_at":"2024-12-26 00:31:46"},{"id":14,"rule_type":"product_type","rule_value":"TRAPO HEX","commission_percentage":"10.00","status":"active","created_at":"2024-12-26 00:31:55","updated_at":"2024-12-26 00:31:55"},{"id":15,"rule_type":"product_type","rule_value":"TRAPO HEX ULTIMATE","commission_percentage":"10.00","status":"active","created_at":"2024-12-26 00:32:04","updated_at":"2024-12-26 00:32:04"},{"id":16,"rule_type":"product_type","rule_value":"TRAPO ACCESSORIES","commission_percentage":"15.00","status":"active","created_at":"2024-12-26 11:59:18","updated_at":"2024-12-26 11:59:18"}]
+[2025-01-05 10:29:34] Line items decoded Context: {"count":6}
+[2025-01-05 10:29:35] Got product type from Shopify API Context: {"product_id":8882058166527,"type":"TRAPO CLASSIC"}
+[2025-01-05 10:29:35] Getting commission rate Context: {"product_type":"TRAPO CLASSIC","product_tags":[]}
+[2025-01-05 10:29:35] Found rule by product type Context: {"id":13,"rule_type":"product_type","rule_value":"TRAPO CLASSIC","commission_percentage":"10.00","status":"active","created_at":"2024-12-26 00:31:46","updated_at":"2024-12-26 00:31:46"}
+[2025-01-05 10:29:36] Got product type from Shopify API Context: {"product_id":8911012757759,"type":"OFFLINE SERVICE"}
+[2025-01-05 10:29:36] Getting commission rate Context: {"product_type":"OFFLINE SERVICE","product_tags":[]}
+[2025-01-05 10:29:36] Found rule by product type Context: {"id":6,"rule_type":"product_type","rule_value":"OFFLINE SERVICE","commission_percentage":"10.00","status":"active","created_at":"2024-12-11 20:45:45","updated_at":"2024-12-11 20:45:45"}
+[2025-01-05 10:29:36] Got product type from Shopify API Context: {"product_id":8911073804543,"type":"OFFLINE SERVICE"}
+[2025-01-05 10:29:36] Getting commission rate Context: {"product_type":"OFFLINE SERVICE","product_tags":[]}
+[2025-01-05 10:29:36] Found rule by product type Context: {"id":6,"rule_type":"product_type","rule_value":"OFFLINE SERVICE","commission_percentage":"10.00","status":"active","created_at":"2024-12-11 20:45:45","updated_at":"2024-12-11 20:45:45"}
+[2025-01-05 10:29:37] Got product type from Shopify API Context: {"product_id":8911020392703,"type":"OFFLINE SERVICE"}
+[2025-01-05 10:29:37] Getting commission rate Context: {"product_type":"OFFLINE SERVICE","product_tags":[]}
+[2025-01-05 10:29:37] Found rule by product type Context: {"id":6,"rule_type":"product_type","rule_value":"OFFLINE SERVICE","commission_percentage":"10.00","status":"active","created_at":"2024-12-11 20:45:45","updated_at":"2024-12-11 20:45:45"}
+[2025-01-05 10:29:37] Got product type from Shopify API Context: {"product_id":8912551117055,"type":"TRAPO ACCESSORIES"}
+[2025-01-05 10:29:37] Getting commission rate Context: {"product_type":"TRAPO ACCESSORIES","product_tags":[]}
+[2025-01-05 10:29:37] Found rule by product type Context: {"id":16,"rule_type":"product_type","rule_value":"TRAPO ACCESSORIES","commission_percentage":"15.00","status":"active","created_at":"2024-12-26 11:59:18","updated_at":"2024-12-26 11:59:18"}
+[2025-01-05 10:29:38] Got product type from Shopify API Context: {"product_id":8911080456447,"type":"TRAPO ACCESSORIES"}
+[2025-01-05 10:29:38] Getting commission rate Context: {"product_type":"TRAPO ACCESSORIES","product_tags":[]}
+[2025-01-05 10:29:38] Found rule by product type Context: {"id":16,"rule_type":"product_type","rule_value":"TRAPO ACCESSORIES","commission_percentage":"15.00","status":"active","created_at":"2024-12-26 11:59:18","updated_at":"2024-12-26 11:59:18"}
+[2025-01-05 10:30:56] Starting commission details retrieval for ID: 317
+[2025-01-05 10:30:56] Retrieved commission data Context: {"commission_id":317,"agent_name":"Nitin P","agent_email":"nitinpatoliya.my@trapo.com"}
+[2025-01-05 10:30:56] Commission Rules from DB Context: [{"id":6,"rule_type":"product_type","rule_value":"OFFLINE SERVICE","commission_percentage":"10.00","status":"active","created_at":"2024-12-11 20:45:45","updated_at":"2024-12-11 20:45:45"},{"id":12,"rule_type":"product_type","rule_value":"TRAPO ECO","commission_percentage":"35.00","status":"active","created_at":"2024-12-24 11:31:05","updated_at":"2024-12-26 00:31:26"},{"id":13,"rule_type":"product_type","rule_value":"TRAPO CLASSIC","commission_percentage":"10.00","status":"active","created_at":"2024-12-26 00:31:46","updated_at":"2024-12-26 00:31:46"},{"id":14,"rule_type":"product_type","rule_value":"TRAPO HEX","commission_percentage":"10.00","status":"active","created_at":"2024-12-26 00:31:55","updated_at":"2024-12-26 00:31:55"},{"id":15,"rule_type":"product_type","rule_value":"TRAPO HEX ULTIMATE","commission_percentage":"10.00","status":"active","created_at":"2024-12-26 00:32:04","updated_at":"2024-12-26 00:32:04"},{"id":16,"rule_type":"product_type","rule_value":"TRAPO ACCESSORIES","commission_percentage":"15.00","status":"active","created_at":"2024-12-26 11:59:18","updated_at":"2024-12-26 11:59:18"}]
+[2025-01-05 10:30:56] Line items decoded Context: {"count":3}
+[2025-01-05 10:30:57] Got product type from Shopify API Context: {"product_id":8882078023935,"type":"TRAPO CLASSIC"}
+[2025-01-05 10:30:57] Getting commission rate Context: {"product_type":"TRAPO CLASSIC","product_tags":[]}
+[2025-01-05 10:30:57] Found rule by product type Context: {"id":13,"rule_type":"product_type","rule_value":"TRAPO CLASSIC","commission_percentage":"10.00","status":"active","created_at":"2024-12-26 00:31:46","updated_at":"2024-12-26 00:31:46"}
+[2025-01-05 10:30:57] Got product type from Shopify API Context: {"product_id":8911012757759,"type":"OFFLINE SERVICE"}
+[2025-01-05 10:30:57] Getting commission rate Context: {"product_type":"OFFLINE SERVICE","product_tags":[]}
+[2025-01-05 10:30:57] Found rule by product type Context: {"id":6,"rule_type":"product_type","rule_value":"OFFLINE SERVICE","commission_percentage":"10.00","status":"active","created_at":"2024-12-11 20:45:45","updated_at":"2024-12-11 20:45:45"}
+[2025-01-05 10:30:58] Got product type from Shopify API Context: {"product_id":8911020392703,"type":"OFFLINE SERVICE"}
+[2025-01-05 10:30:58] Getting commission rate Context: {"product_type":"OFFLINE SERVICE","product_tags":[]}
+[2025-01-05 10:30:58] Found rule by product type Context: {"id":6,"rule_type":"product_type","rule_value":"OFFLINE SERVICE","commission_percentage":"10.00","status":"active","created_at":"2024-12-11 20:45:45","updated_at":"2024-12-11 20:45:45"}
