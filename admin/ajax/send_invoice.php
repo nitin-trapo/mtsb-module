@@ -35,8 +35,10 @@ try {
             c.phone as customer_phone,
             DATE_FORMAT(o.processed_at, '%b %d, %Y %h:%i %p') as formatted_processed_date,
             DATE_FORMAT(o.created_at, '%b %d, %Y %h:%i %p') as formatted_created_date,
-            JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[0].code')) as discount_code,
-            CAST(JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[0].amount')) AS DECIMAL(10,2)) as discount_amount
+            JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[0].code')) as discount_code_1,
+            CAST(JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[0].amount')) AS DECIMAL(10,2)) as discount_amount_1,
+            JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[1].code')) as discount_code_2,
+            CAST(JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[1].amount')) AS DECIMAL(10,2)) as discount_amount_2
         FROM orders o
         LEFT JOIN customers c ON o.customer_id = c.id
         WHERE o.id = ?
@@ -169,10 +171,15 @@ try {
                             <span class="amount-label">Subtotal:</span> 
                             <span>' . $order['currency'] . ' ' . number_format($subtotal, 2) . '</span>
                         </div>
-                        ' . (!empty($order['discount_code']) ? '
+                        ' . (!empty($order['discount_code_1']) ? '
                         <div class="amount-row">
-                            <span class="amount-label">Discount (' . htmlspecialchars($order['discount_code']) . '):</span> 
-                            <span>-' . $order['currency'] . ' ' . number_format($order['discount_amount'], 2) . '</span>
+                            <span class="amount-label">Discount (' . htmlspecialchars($order['discount_code_1']) . '):</span> 
+                            <span>-' . $order['currency'] . ' ' . number_format($order['discount_amount_1'], 2) . '</span>
+                        </div>' : '') . '
+                        ' . (!empty($order['discount_code_2']) ? '
+                        <div class="amount-row">
+                            <span class="amount-label">Discount (' . htmlspecialchars($order['discount_code_2']) . '):</span> 
+                            <span>-' . $order['currency'] . ' ' . number_format($order['discount_amount_2'], 2) . '</span>
                         </div>' : '') . '
                         <div class="amount-row">
                             <span class="amount-label">Total Amount:</span> 

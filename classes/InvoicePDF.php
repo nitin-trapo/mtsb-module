@@ -126,19 +126,28 @@ class InvoicePDF extends TCPDF {
             
             // Debug information
             error_log("Subtotal: " . $subtotal);
-            error_log("Discount code: " . ($order['discount_code'] ?? 'none'));
-            error_log("Discount amount: " . ($order['discount_amount'] ?? 0));
+            error_log("Discount code 1: " . ($order['discount_code_1'] ?? 'none'));
+            error_log("Discount amount 1: " . ($order['discount_amount_1'] ?? 0));
+            error_log("Discount code 2: " . ($order['discount_code_2'] ?? 'none'));
+            error_log("Discount amount 2: " . ($order['discount_amount_2'] ?? 0));
             
             // Subtotal
             $this->Cell(135, 6, '', 0, 0);
             $this->Cell(30, 6, 'Subtotal:', 0, 0, 'R');
             $this->Cell(25, 6, $this->formatCurrency($subtotal, $order['currency']), 0, 1, 'R');
 
-            // Discount if applicable
-            if (!empty($order['discount_code']) && floatval($order['discount_amount']) > 0) {
+            // First Discount if applicable
+            if (!empty($order['discount_code_1']) && floatval($order['discount_amount_1']) > 0) {
                 $this->Cell(135, 6, '', 0, 0);
-                $this->Cell(30, 6, 'Discount (' . $order['discount_code'] . '):', 0, 0, 'R');
-                $this->Cell(25, 6, '- ' . $this->formatCurrency(floatval($order['discount_amount']), $order['currency']), 0, 1, 'R');
+                $this->Cell(30, 6, 'Discount (' . $order['discount_code_1'] . '):', 0, 0, 'R');
+                $this->Cell(25, 6, '- ' . $this->formatCurrency(floatval($order['discount_amount_1']), $order['currency']), 0, 1, 'R');
+            }
+
+            // Second Discount if applicable
+            if (!empty($order['discount_code_2']) && floatval($order['discount_amount_2']) > 0) {
+                $this->Cell(135, 6, '', 0, 0);
+                $this->Cell(30, 6, 'Discount (' . $order['discount_code_2'] . '):', 0, 0, 'R');
+                $this->Cell(25, 6, '- ' . $this->formatCurrency(floatval($order['discount_amount_2']), $order['currency']), 0, 1, 'R');
             }
 
             // Shipping if applicable

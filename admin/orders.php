@@ -355,11 +355,11 @@ function viewDetails(orderId) {
                                                       'data-order-id="' + order.id + '" ' +
                                                       'onclick="calculateCommission(' + order.id + ')">' +
                                                       'Calculate Commission</button>'
-                                                    : `<div class="text-end">
-                                                        <span class="badge bg-primary">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.base_commission).toFixed(2)}</span>
+                                                    : `<div>
+                                                        <span class="badge bg-primary text-end">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.base_commission).toFixed(2)}</span>
                                                         ${parseFloat(order.commission_discount) > 0 
-                                                            ? `<br><small class="text-danger fw-bold">-${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.commission_discount).toFixed(2)}</small>
-                                                               <br><small class="text-success fw-bold">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.actual_commission).toFixed(2)}</small>`
+                                                            ? `<br><small class="text-danger fw-bold">Total Discount: -${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.commission_discount).toFixed(2)}</small>
+                                                               <br><small class="text-success fw-bold">Commission: ${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.actual_commission).toFixed(2)}</small>`
                                                             : ''
                                                         }
                                                        </div>`
