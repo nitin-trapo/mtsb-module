@@ -37,18 +37,16 @@ try {
         throw new Exception("Database connection failed");
     }
 
-    // Check if this is a refresh request
-    $is_refresh = isset($_POST['refresh']) && $_POST['refresh'] === 'true';
-
-    // Get orders based on whether this is a refresh or new calculation
+    // Get all orders that need commission calculation
+    $is_refresh = isset($_GET['refresh']) && $_GET['refresh'] == 1;
+    
     $query = "
-        SELECT o.*, c.first_name, c.last_name, c.email
+        SELECT o.*, c.id as agent_id 
         FROM orders o
         LEFT JOIN customers c ON o.customer_id = c.id
         LEFT JOIN commissions cm ON o.id = cm.order_id
-        WHERE " . ($is_refresh ? "1=1" : "cm.id IS NULL") . "
         AND o.customer_id IS NOT NULL
-        ORDER BY o.created_at DESC
+        " . (!$is_refresh ? "AND cm.id IS NULL" : "") . "
     ";
 
     $stmt = $conn->prepare($query);
@@ -57,17 +55,31 @@ try {
     }
 
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    logError("Fetched orders", ['count' => count($orders)]);
-
+    
     if (empty($orders)) {
         header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'message' => $is_refresh ? 'No orders found to refresh' : 'No new orders found for commission calculation']);
+        echo json_encode([
+            'success' => true,
+            'message' => 'No ' . ($is_refresh ? 'orders found to refresh' : 'new orders found for commission calculation')
+        ]);
         exit;
     }
-
+    
     $errors = [];
     $processed_orders = 0;
     $total_commissions = 0;
+
+    // If refreshing, first delete existing commissions
+    if ($is_refresh) {
+        $delete_stmt = $conn->prepare("DELETE FROM commissions WHERE order_id IN (SELECT id FROM orders WHERE financial_status = 'paid')");
+        if (!$delete_stmt->execute()) {
+            throw new Exception("Failed to delete existing commissions");
+        }
+        
+        logError("Existing commissions deleted for refresh", [
+            'orders_count' => count($orders)
+        ]);
+    }
 
     foreach ($orders as $order) {
         try {
@@ -83,8 +95,8 @@ try {
                 'items_count' => count($line_items)
             ]);
 
-            $total_commission = 0;
-            $total_amount = 0;
+            $order_total = 0;
+            $commission_amount = 0;
 
             if (!empty($line_items) && is_array($line_items)) {
                 foreach ($line_items as $item) {
@@ -191,8 +203,8 @@ try {
                         $item_total = max(0, $item_total);
                         
                         $commission = $item_total * ($rate / 100);
-                        $total_commission += $commission;
-                        $total_amount += $item_total;
+                        $commission_amount += $commission;
+                        $order_total += $item_total;
 
                         logError("Commission calculated", [
                             'order_id' => $order['id'],
@@ -209,29 +221,72 @@ try {
                 }
             }
 
+            // Process discount codes if present
+            $final_commission_amount = $commission_amount;
+            $total_discount = 0;
+            if (!empty($order['discount_codes'])) {
+                $discount_codes = json_decode($order['discount_codes'], true);
+                if (is_array($discount_codes)) {
+                    foreach ($discount_codes as $discount) {
+                        if ($discount['type'] === 'percentage') {
+                            // For percentage discounts, apply directly to commission amount
+                            $discount_amount = floatval($discount['amount']);
+                            $total_discount += $discount_amount;
+                        }
+                    }
+                    
+                    // Calculate final commission after all percentage discounts
+                    $final_commission_amount = $commission_amount - $total_discount;
+                }
+            }
+
+            // Ensure commission amount is not negative
+            $final_commission_amount = max(0, $final_commission_amount);
+
             // Update commission in database
             try {
                 $stmt = $conn->prepare("
-                    INSERT INTO commissions 
-                    (order_id, agent_id, amount, status, created_at, updated_at)
-                    VALUES (?, ?, ?, 'pending', NOW(), NOW())
-                    ON DUPLICATE KEY UPDATE 
-                    amount = VALUES(amount),
-                    status = VALUES(status),
-                    updated_at = NOW()
+                    INSERT INTO commissions (
+                        order_id, 
+                        agent_id, 
+                        amount,
+                        total_discount,
+                        actual_commission,
+                        status,
+                        created_at,
+                        updated_at
+                    ) VALUES (
+                        :order_id,
+                        :agent_id,
+                        :actual_commission,
+                        :total_discount,
+                        :amount,
+                        'pending',
+                        NOW(),
+                        NOW()
+                    )
                 ");
                 
-                if (!$stmt->execute([$order['id'], $order['customer_id'], $total_commission])) {
+                if (!$stmt->execute([
+                    ':order_id' => $order['id'],
+                    ':agent_id' => $order['agent_id'],
+                    ':amount' => $commission_amount,
+                    ':total_discount' => $total_discount,
+                    ':actual_commission' => $final_commission_amount
+                ])) {
                     throw new Exception("Failed to update commission");
                 }
                 
-                logError("Commission Updated", [
+                logError("Commission calculated successfully", [
                     'order_id' => $order['id'],
-                    'total_commission' => $total_commission
+                    'base_commission' => $commission_amount,
+                    'total_discount' => $total_discount,
+                    'actual_commission' => $final_commission_amount,
+                    'discount_codes' => $order['discount_codes']
                 ]);
                 
                 $processed_orders++;
-                $total_commissions += $total_commission;
+                $total_commissions += $final_commission_amount;
                 
             } catch (Exception $e) {
                 logError("Database Update Error", [
@@ -251,12 +306,13 @@ try {
     }
 
     // After processing all orders
+    header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
         'message' => "Successfully processed $processed_orders orders with total commissions of $total_commissions",
         'processed_orders' => $processed_orders,
         'total_commissions' => $total_commissions,
-        'errors' => [] // Add any errors if needed
+        'errors' => $errors
     ]);
     exit;
 } catch (Exception $e) {
@@ -264,6 +320,7 @@ try {
         'error' => $e->getMessage()
     ]);
     
+    header('Content-Type: application/json');
     echo json_encode([
         'success' => false,
         'message' => "Failed to calculate commissions: " . $e->getMessage(),

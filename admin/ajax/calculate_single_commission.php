@@ -170,6 +170,7 @@ try {
     // Process line items and calculate commission
     $line_items = json_decode($order['line_items'], true);
     $total_commission = 0;
+    $order_total = 0;
     $processed_items = [];
 
     if (!empty($line_items) && is_array($line_items)) {
@@ -189,11 +190,7 @@ try {
                     
                 $item_quantity = isset($item['quantity']) ? intval($item['quantity']) : 0;
                 $item_total = $item_price * $item_quantity;
-                
-                // Apply any discounts
-                if (isset($item['total_discount']) && floatval($item['total_discount']) > 0) {
-                    $item_total -= floatval($item['total_discount']);
-                }
+                $order_total += $item_total;
                 
                 $commission = $item_total * ($rate['rate'] / 100);
                 $total_commission += $commission;
@@ -214,26 +211,65 @@ try {
         }
     }
 
+    // Process discount codes if present
+    $final_commission_amount = $total_commission;
+    $total_discount = 0;
+    if (!empty($order['discount_codes'])) {
+        $discount_codes = json_decode($order['discount_codes'], true);
+        if (is_array($discount_codes)) {
+            foreach ($discount_codes as $discount) {
+                if ($discount['type'] === 'percentage') {
+                    // For percentage discounts, apply directly to commission amount
+                    $discount_amount = floatval($discount['amount']);
+                    $total_discount += $discount_amount;
+                }
+            }
+            
+            // Calculate final commission after all percentage discounts
+            $final_commission_amount = $total_commission - $total_discount;
+        }
+    }
+
+    // Ensure commission amount is not negative
+    $final_commission_amount = max(0, $final_commission_amount);
+
     // Save commission to database
     $stmt = $conn->prepare("
-        INSERT INTO commissions (order_id, agent_id, amount, status, created_at, updated_at)
-        VALUES (?, ?, ?, 'pending', NOW(), NOW())
-        ON DUPLICATE KEY UPDATE amount = ?, updated_at = NOW()
+        INSERT INTO commissions (
+            order_id, 
+            agent_id, 
+            amount,
+            total_discount,
+            actual_commission,
+            status, 
+            created_at, 
+            updated_at
+        ) VALUES (
+            ?, ?, ?, ?, ?, 'pending', NOW(), NOW()
+        ) ON DUPLICATE KEY UPDATE 
+            actual_commission = VALUES(amount),
+            total_discount = VALUES(total_discount),
+            amount = VALUES(actual_commission),
+            updated_at = NOW()
     ");
     
     $stmt->execute([
         $order_id,
-        $order['customer_id'], // Use customer_id as agent_id
-        $total_commission,
+        $order['customer_id'],
+        $final_commission_amount,
+        $total_discount,
         $total_commission
     ]);
 
     echo json_encode([
         'success' => true,
         'message' => 'Commission calculated successfully',
-        'commission_amount' => $total_commission,
+        'base_commission' => $total_commission,
+        'total_discount' => $total_discount,
+        'final_commission' => $final_commission_amount,
         'currency' => $order['currency'],
-        'processed_items' => $processed_items
+        'processed_items' => $processed_items,
+        'discount_codes' => $order['discount_codes']
     ]);
 
 } catch (Exception $e) {

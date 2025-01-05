@@ -804,12 +804,20 @@ try {
     }
 
     $html .= '
-                        <tr class="table-info fw-bold">
-                            <td colspan="4" class="text-end">Totals:</td>
-                            <td class="text-end">' . $currency_symbol . ' ' . number_format($total_amount, 2) . '</td>
-                            <td>Overall Rate:</td>
-                            <td class="text-end">' . number_format($overall_rate, 1) . '%</td>
-                            <td class="text-end">' . $currency_symbol . ' ' . number_format($commission['amount'], 2) . '</td>
+                        <tr class="table-info">
+                            <td colspan="4" class="text-end fw-bold">Totals:</td>
+                            <td class="text-end fw-bold">' . $currency_symbol . ' ' . number_format($total_amount, 2) . '</td>
+                            <td class="text-end fw-bold">Overall Rate:</td>
+                            <td class="text-end fw-bold">' . number_format($overall_rate, 1) . '%</td>
+                            <td class="text-end fw-bold">' . $currency_symbol . ' ' . number_format($commission['actual_commission'], 2) . '</td>
+                        </tr>
+                        <tr class="table-light">
+                            <td colspan="6" class="text-end fw-bold">Total Discount:</td>
+                            <td colspan="2" class="text-end fw-bold text-danger">-' . $currency_symbol . ' ' . number_format($commission['total_discount'], 2) . '</td>
+                        </tr>
+                        <tr class="table-light">
+                            <td colspan="6" class="text-end fw-bold">Final Commission:</td>
+                            <td colspan="2" class="text-end fw-bold fs-5 text-success">' . $currency_symbol . ' ' . number_format($commission['amount'], 2) . '</td>
                         </tr>
                     </tbody>
                 </table>

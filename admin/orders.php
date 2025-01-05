@@ -72,8 +72,14 @@ try {
             DATE_FORMAT(o.created_at, '%b %d, %Y %h:%i %p') as formatted_date,
             COALESCE(a.commission_rate, 0) as agent_commission_rate,
             o.customer_id,
-            COALESCE(com.amount, 0) as commission_amount,
-            COALESCE(com.status, 'pending') as commission_status
+            COALESCE(com.amount, 0) as base_commission,
+            COALESCE(com.total_discount, 0) as total_discount,
+            COALESCE(com.actual_commission, 0) as actual_commission,
+            COALESCE(com.status, '') as commission_status,
+            CASE 
+                WHEN com.id IS NULL THEN 'Not Calculated'
+                ELSE com.status
+            END as commission_calculation_status
         FROM orders o
         LEFT JOIN customers c ON o.customer_id = c.id
         LEFT JOIN customers a ON o.customer_id = a.id
@@ -165,17 +171,27 @@ include 'includes/header.php';
                                         <td class="text-end" data-sort="<?php echo $order['total_price']; ?>">
                                             <?php echo $currency_symbol . number_format($order['total_price'], 2); ?>
                                         </td>
-                                        <td class="text-end" data-sort="<?php echo $order['commission_amount']; ?>">
-                                            <?php if ($order['commission_amount'] > 0): ?>
-                                                <span class="badge <?php 
-                                                    echo $order['commission_status'] === 'paid' ? 'bg-success' : 
-                                                        ($order['commission_status'] === 'approved' ? 'bg-warning' : 'bg-primary'); 
-                                                ?>" data-bs-toggle="tooltip" 
-                                                   title="Status: <?php echo ucfirst($order['commission_status']); ?>">
-                                                    RM <?php echo number_format($order['commission_amount'], 2); ?>
-                                                </span>
+                                        <td>
+                                            <?php if ($order['commission_calculation_status'] === 'Not Calculated'): ?>
+                                                <button type="button" class="btn btn-sm btn-warning calculate-commission" 
+                                                        data-order-id="<?php echo $order['id']; ?>"
+                                                        onclick="calculateCommission(<?php echo $order['id']; ?>)">
+                                                    Calculate Commission
+                                                </button>
                                             <?php else: ?>
-                                                <span class="badge bg-secondary">Not calculated</span>
+                                                <?php 
+                                                    if ($order['total_discount'] > 0) {
+                                                        echo '<div class="text-end">';
+                                                        echo '<span class="badge bg-primary">' . $currency_symbol . number_format($order['base_commission'], 2) . '</span>';
+                                                        echo '<br><small class="text-muted fw-bold">Commission: ' . $currency_symbol . number_format($order['actual_commission'], 2) . '</small>';
+                                                        echo '<br><small class="text-danger fw-bold">Discount: ' . $currency_symbol . number_format($order['total_discount'], 2) . '</small>';
+                                                        echo '</div>';
+                                                    } else {
+                                                        echo '<div class="text-end">';
+                                                        echo '<span class="badge bg-secondary">' . $currency_symbol . number_format($order['base_commission'], 2) . '</span>';
+                                                        echo '</div>';
+                                                    }
+                                                ?>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center">
@@ -196,15 +212,6 @@ include 'includes/header.php';
                                                 <button type="button" class="btn btn-sm btn-info" onclick="viewDetails(<?php echo $order['id']; ?>)">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </button>
-                                                <?php
-                                                    // Debug output
-                                                    
-                                                    if (!empty($order['customer_id']) && $order['commission_amount'] == 0): 
-                                                ?>
-                                                    <button type="button" class="btn btn-sm btn-warning" onclick="calculateCommission(<?php echo $order['id']; ?>)">
-                                                        <i class="fas fa-calculator me-1"></i>Calculate
-                                                    </button>
-                                                <?php endif; ?>
                                             </div>
                                         </td>
                                     </tr>
@@ -343,22 +350,28 @@ function viewDetails(orderId) {
                                         <tr>
                                             <th width="35%">Commission Amount:</th>
                                             <td>
-                                                ${parseFloat(order.commission_amount) > 0 
-                                                    ? `<span class="badge bg-${order.commission_status === 'paid' ? 'success' : 'info'}">
-                                                        ${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.commission_amount).toFixed(2)}
-                                                       </span>`
-                                                    : '<span class="badge bg-secondary">Not calculated</span>'
+                                                ${order.commission_calculation_status === 'Not Calculated' 
+                                                    ? '<button type="button" class="btn btn-sm btn-warning calculate-commission" ' +
+                                                      'data-order-id="' + order.id + '" ' +
+                                                      'onclick="calculateCommission(' + order.id + ')">' +
+                                                      'Calculate Commission</button>'
+                                                    : `<div class="text-end">
+                                                        <span class="badge bg-primary">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.base_commission).toFixed(2)}</span>
+                                                        ${parseFloat(order.commission_discount) > 0 
+                                                            ? `<br><small class="text-danger fw-bold">-${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.commission_discount).toFixed(2)}</small>
+                                                               <br><small class="text-success fw-bold">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.actual_commission).toFixed(2)}</small>`
+                                                            : ''
+                                                        }
+                                                       </div>`
                                                 }
                                             </td>
                                         </tr>
                                         <tr>
                                             <th>Commission Status:</th>
                                             <td>
-                                                ${parseFloat(order.commission_amount) > 0 
-                                                    ? `<span class="badge bg-${order.commission_status === 'paid' ? 'success' : 'info'}">
-                                                        ${order.commission_status.toUpperCase()}
-                                                       </span>`
-                                                    : '<span class="badge bg-secondary">N/A</span>'
+                                                ${order.commission_calculation_status === 'Not Calculated' 
+                                                    ? '<span class="badge bg-secondary">Not Calculated</span>'
+                                                    : `<span class="badge bg-${order.commission_status === 'paid' ? 'success' : 'info'}">${order.commission_status.toUpperCase()}</span>`
                                                 }
                                             </td>
                                         </tr>

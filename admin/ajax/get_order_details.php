@@ -38,9 +38,15 @@ try {
         DATE_FORMAT(o.created_at, '%b %d, %Y %h:%i %p') as formatted_created_date,
         o.metafields,
         o.discount_codes,
-        COALESCE(com.amount, 0) as commission_amount,
+        COALESCE(com.amount, 0) as base_commission,
+        COALESCE(com.total_discount, 0) as commission_discount,
+        COALESCE(com.actual_commission, 0) as actual_commission,
         COALESCE(com.status, 'pending') as commission_status,
-        COALESCE(com.created_at, '') as commission_date
+        COALESCE(com.created_at, '') as commission_date,
+        CASE 
+            WHEN com.id IS NULL THEN 'Not Calculated'
+            ELSE 'Calculated'
+        END as commission_calculation_status
     FROM orders o
     LEFT JOIN customers c ON o.customer_id = c.id
     LEFT JOIN customers a ON o.agent_id = a.id
@@ -164,9 +170,12 @@ try {
             'currency' => $order['currency'],
             'financial_status' => $order['financial_status'],
             'fulfillment_status' => $order['fulfillment_status'],
-            'commission_amount' => floatval($order['commission_amount']),
+            'base_commission' => floatval($order['base_commission']),
+            'commission_discount' => floatval($order['commission_discount']),
+            'actual_commission' => floatval($order['actual_commission']),
             'commission_status' => $order['commission_status'],
             'commission_date' => $order['commission_date'] ? date('M d, Y h:i A', strtotime($order['commission_date'])) : '',
+            'commission_calculation_status' => $order['commission_calculation_status'],
             'metafields' => $order['metafields']
         ]
     ]);
