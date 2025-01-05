@@ -79,11 +79,13 @@ try {
             o.metafields,
             CONCAT(a.first_name, ' ', a.last_name) as agent_name,
             a.email as agent_email,
-            u.name as adjusted_by_name
+            u.name as adjusted_by_name,
+            p.name as paid_by_name
         FROM commissions c
         LEFT JOIN orders o ON c.order_id = o.id
         LEFT JOIN customers a ON c.agent_id = a.id
         LEFT JOIN users u ON c.adjusted_by = u.id
+        LEFT JOIN users p ON c.paid_by = p.id
         WHERE c.id = ?
     ";
 
@@ -344,11 +346,17 @@ try {
                         </tr>
                         <tr>
                             <th>Status:</th>
-                            <td><span class="badge ' . 
+                            <td>
+                                <span class="badge ' . 
                                 ($commission['status'] === 'paid' ? 'bg-success' : 
                                 ($commission['status'] === 'approved' ? 'bg-warning' : 
                                 ($commission['status'] === 'pending' ? 'bg-info' : 'bg-primary'))) . 
-                                ' text-white">' . ucfirst($commission['status']) . '</span></td>
+                                ' text-white">' . ucfirst($commission['status']) . '</span>
+                                ' . ($commission['status'] !== 'paid' ? '
+                                <button type="button" class="btn btn-sm btn-success ms-2" onclick="showPaymentForm()">
+                                    <i class="fas fa-money-bill me-1"></i>Mark as Paid
+                                </button>' : '') . '
+                            </td>
                         </tr>
                         <tr>
                             <th>Created Date:</th>
@@ -399,6 +407,39 @@ try {
             </div>';
     }
 
+    // Show payment details if commission is paid
+    if ($commission['status'] === 'paid') {
+        $html .= '
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">Payment Information</h6>
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Paid By:</th>
+                            <td>' . htmlspecialchars($commission['paid_by_name']) . '</td>
+                        </tr>
+                        <tr>
+                            <th>Paid At:</th>
+                            <td>' . date('M d, Y h:i A', strtotime($commission['paid_at'])) . '</td>
+                        </tr>
+                        <tr>
+                            <th>Payment Note:</th>
+                            <td>' . nl2br(htmlspecialchars($commission['payment_note'])) . '</td>
+                        </tr>
+                        <tr>
+                            <th>Payment Receipt:</th>
+                            <td>
+                                <a href="../assets/uploads/receipts/' . htmlspecialchars($commission['payment_receipt']) . '" 
+                                   class="btn btn-sm btn-primary" target="_blank">
+                                    <i class="fas fa-download me-1"></i>View Receipt
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>';
+    }
+
     $html .= '
         </div>
     </div>
@@ -424,6 +465,33 @@ try {
                 <div class="text-end">
                     <button type="button" class="btn btn-secondary" onclick="hideAdjustmentForm()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Form -->
+    <div id="paymentForm" class="card mb-3" style="display: none;">
+        <div class="card-header bg-success text-white">
+            <h6 class="mb-0">Mark Commission as Paid</h6>
+        </div>
+        <div class="card-body">
+            <form id="commissionPaymentForm" enctype="multipart/form-data">
+                <input type="hidden" name="commission_id" value="' . $commission_id . '">
+                <div class="mb-3">
+                    <label for="paymentNote" class="form-label">Payment Note</label>
+                    <textarea class="form-control" id="paymentNote" name="payment_note" 
+                              rows="3" required placeholder="Enter payment details or notes"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="paymentReceipt" class="form-label">Payment Receipt (PDF or Image)</label>
+                    <input type="file" class="form-control" id="paymentReceipt" name="payment_receipt" 
+                           accept=".pdf,.jpg,.jpeg,.png" required>
+                    <small class="text-muted">Accepted formats: PDF, JPG, JPEG, PNG</small>
+                </div>
+                <div class="text-end">
+                    <button type="button" class="btn btn-secondary" onclick="hidePaymentForm()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Payment</button>
                 </div>
             </form>
         </div>
@@ -463,10 +531,48 @@ try {
                     submitBtn.prop("disabled", false).html(originalText);
                 });
         });
-    </script>';
 
-   
-    $html .= '
+        function showPaymentForm() {
+            $("#paymentForm").slideDown();
+        }
+
+        function hidePaymentForm() {
+            $("#paymentForm").slideUp();
+        }
+
+        $("#commissionPaymentForm").on("submit", function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = $(this).find("button[type=submit]");
+            const originalText = submitBtn.html();
+            
+            submitBtn.prop("disabled", true).html(\'<i class="fas fa-spinner fa-spin"></i> Saving...\');
+            
+            $.ajax({
+                url: "ajax/mark_commission_paid.php",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success("Commission marked as paid successfully!");
+                        location.reload();
+                    } else {
+                        toastr.error(response.error || "Failed to mark commission as paid");
+                    }
+                },
+                error: function() {
+                    toastr.error("Failed to mark commission as paid");
+                },
+                complete: function() {
+                    submitBtn.prop("disabled", false).html(originalText);
+                }
+            });
+        });
+    </script>
+
     <div class="card">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Commission Details</h5>
