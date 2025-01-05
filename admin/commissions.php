@@ -39,20 +39,22 @@ if (isset($_POST['action']) && $_POST['action'] == 'update_amount') {
 }
 
 // Get all commissions with related details
-$stmt = $conn->query("
+$query = "
     SELECT 
         cm.*,
         o.order_number,
         o.total_price as order_amount,
         c.first_name as agent_first_name,
         c.last_name as agent_last_name,
-        c.email as agent_email
+        c.email as agent_email,
+        CONCAT(c.first_name, ' ', c.last_name) as agent_name,
+        cm.adjustment_reason
     FROM commissions cm
     LEFT JOIN orders o ON cm.order_id = o.id
     LEFT JOIN customers c ON cm.agent_id = c.id
     ORDER BY cm.created_at DESC
-");
-$commissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+";
+$commissions = $conn->query($query)->fetchAll(PDO::FETCH_ASSOC);
 
 // Calculate totals
 $totals = [
@@ -134,17 +136,32 @@ include 'includes/header.php';
                         <tr>
                             <td><?php echo $commission['order_number']; ?></td>
                             <td>
-                                <?php echo $commission['agent_first_name'] . ' ' . $commission['agent_last_name']; ?>
-                                <br>
+                                <?php echo $commission['agent_name']; ?><br>
                                 <small class="text-muted"><?php echo $commission['agent_email']; ?></small>
                             </td>
                             <td>RM <?php echo number_format($commission['order_amount'], 2); ?></td>
-                            <td>RM <?php echo number_format($commission['amount'], 2); ?></td>
                             <td>
-                                <span class="badge bg-<?php 
-                                    echo $commission['status'] === 'paid' ? 'success' : 
-                                        ($commission['status'] === 'approved' ? 'warning' : 'primary'); 
-                                ?>">
+                                <div>
+                                    RM <?php echo number_format($commission['amount'], 2); ?>
+                                    <?php if (!empty($commission['adjustment_reason'])): ?>
+                                        <span class="badge bg-info" title="This commission was adjusted">
+                                            <i class="fas fa-edit"></i>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge <?php 
+                                    if ($commission['status'] === 'paid') {
+                                        echo 'bg-success';
+                                    } elseif ($commission['status'] === 'approved') {
+                                        echo 'bg-warning';
+                                    } elseif ($commission['status'] === 'pending') {
+                                        echo 'bg-info';
+                                    } else {
+                                        echo 'bg-primary';
+                                    }
+                                ?> text-white">
                                     <?php echo ucfirst($commission['status']); ?>
                                 </span>
                             </td>

@@ -73,17 +73,17 @@ try {
         SELECT 
             c.*,
             o.order_number,
-            o.line_items,
             o.total_price as order_amount,
             o.currency,
-            c.status as commission_status,
-            COALESCE(a.first_name, '') as agent_first_name,
-            COALESCE(a.last_name, '') as agent_last_name,
-            COALESCE(a.email, '') as agent_email,
-            a.id as agent_id
+            o.line_items,
+            o.metafields,
+            CONCAT(a.first_name, ' ', a.last_name) as agent_name,
+            a.email as agent_email,
+            u.name as adjusted_by_name
         FROM commissions c
         LEFT JOIN orders o ON c.order_id = o.id
         LEFT JOIN customers a ON c.agent_id = a.id
+        LEFT JOIN users u ON c.adjusted_by = u.id
         WHERE c.id = ?
     ";
 
@@ -92,14 +92,14 @@ try {
     $commission = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$commission) {
-        throw new Exception('Commission not found');
+        echo json_encode(['success' => false, 'error' => 'Commission not found']);
+        exit;
     }
 
     // Log the retrieved data for debugging
     logError("Retrieved commission data", [
         'commission_id' => $commission_id,
-        'agent_first_name' => $commission['agent_first_name'] ?? null,
-        'agent_last_name' => $commission['agent_last_name'] ?? null,
+        'agent_name' => $commission['agent_name'] ?? null,
         'agent_email' => $commission['agent_email'] ?? null
     ]);
 
@@ -318,65 +318,159 @@ try {
     $currency = $commission['currency'] ?? 'MYR';
     $currency_symbol = $currency === 'MYR' ? 'RM' : $currency;
     
-    // Build the HTML response with improved layout
-    $response = '
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Order Information</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <table class="table table-borderless mb-0">
+    // Format the HTML for commission details
+    $html = '
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">Commission Information</h6>
+                    <table class="table table-sm">
                         <tr>
-                            <td><strong>Order Number:</strong></td>
-                            <td>' . htmlspecialchars($commission['order_number']) . '</td>
+                            <th>Order Number:</th>
+                            <td>#' . htmlspecialchars($commission['order_number']) . '</td>
                         </tr>
                         <tr>
-                            <td><strong>Order Amount:</strong></td>
+                            <th>Order Amount:</th>
                             <td>' . $currency_symbol . ' ' . number_format($commission['order_amount'], 2) . '</td>
                         </tr>
                         <tr>
-                            <td><strong>Status:</strong></td>
+                            <th>Total Commission:</th>
+                            <td>' . $currency_symbol . ' ' . number_format($commission['amount'], 2) . '
+                                <button type="button" class="btn btn-sm btn-primary ms-2" onclick="showAdjustmentForm()">
+                                    <i class="fas fa-edit me-1"></i>Adjust
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
                             <td><span class="badge ' . 
-                                (($commission['commission_status'] == 'paid') ? 'bg-success' : 
-                                ($commission['commission_status'] == 'approved' ? 'bg-info' : 'bg-warning')) . '">' 
-                                . ucfirst(htmlspecialchars($commission['commission_status'] ?? 'pending')) . '</span></td>
-                        </tr>
-                    </table>
-                </div>
-                <div class="col-md-6">
-                    <table class="table table-borderless mb-0">
-                        <tr>
-                            <td><strong>Agent Name:</strong></td>
-                            <td>' . (
-                                !empty($commission['agent_first_name']) || !empty($commission['agent_last_name']) 
-                                    ? htmlspecialchars(trim($commission['agent_first_name'] . ' ' . $commission['agent_last_name']))
-                                    : 'N/A'
-                            ) . '</td>
+                                ($commission['status'] === 'paid' ? 'bg-success' : 
+                                ($commission['status'] === 'approved' ? 'bg-warning' : 
+                                ($commission['status'] === 'pending' ? 'bg-info' : 'bg-primary'))) . 
+                                ' text-white">' . ucfirst($commission['status']) . '</span></td>
                         </tr>
                         <tr>
-                            <td><strong>Agent Email:</strong></td>
-                            <td>' . (
-                                !empty($commission['agent_email']) 
-                                    ? htmlspecialchars($commission['agent_email'])
-                                    : 'N/A'
-                            ) . '</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Commission Date:</strong></td>
-                            <td>' . date('d M Y H:i', strtotime($commission['created_at'])) . '</td>
+                            <th>Created Date:</th>
+                            <td>' . date('M d, Y h:i A', strtotime($commission['created_at'])) . '</td>
                         </tr>
                     </table>
                 </div>
             </div>
         </div>
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">Agent Information</h6>
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Agent Name:</th>
+                            <td>' . htmlspecialchars($commission['agent_name']) . '</td>
+                        </tr>
+                        <tr>
+                            <th>Agent Email:</th>
+                            <td>' . htmlspecialchars($commission['agent_email']) . '</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>';
+
+    // Show adjustment details if commission was adjusted
+    if (!empty($commission['adjusted_by'])) {
+        $html .= '
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">Adjustment Information</h6>
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Adjusted By:</th>
+                            <td>' . htmlspecialchars($commission['adjusted_by_name']) . '</td>
+                        </tr>
+                        <tr>
+                            <th>Adjusted At:</th>
+                            <td>' . date('M d, Y h:i A', strtotime($commission['adjusted_at'])) . '</td>
+                        </tr>
+                        <tr>
+                            <th>Reason:</th>
+                            <td>' . nl2br(htmlspecialchars($commission['adjustment_reason'])) . '</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>';
+    }
+
+    $html .= '
+        </div>
     </div>
 
+    <!-- Commission Adjustment Form -->
+    <div id="adjustmentForm" class="card mb-3" style="display: none;">
+        <div class="card-header bg-primary text-white">
+            <h6 class="mb-0">Adjust Commission</h6>
+        </div>
+        <div class="card-body">
+            <form id="commissionAdjustmentForm">
+                <input type="hidden" name="commission_id" value="' . $commission_id . '">
+                <div class="mb-3">
+                    <label for="adjustedAmount" class="form-label">New Commission Amount (' . $currency_symbol . ')</label>
+                    <input type="number" class="form-control" id="adjustedAmount" name="amount" 
+                           value="' . $commission['amount'] . '" step="0.01" min="0" required>
+                </div>
+                <div class="mb-3">
+                    <label for="adjustmentReason" class="form-label">Reason for Adjustment</label>
+                    <textarea class="form-control" id="adjustmentReason" name="adjustment_reason" 
+                              rows="3" required placeholder="Please provide a reason for this adjustment"></textarea>
+                </div>
+                <div class="text-end">
+                    <button type="button" class="btn btn-secondary" onclick="hideAdjustmentForm()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showAdjustmentForm() {
+            $("#adjustmentForm").slideDown();
+        }
+
+        function hideAdjustmentForm() {
+            $("#adjustmentForm").slideUp();
+        }
+
+        $("#commissionAdjustmentForm").on("submit", function(e) {
+            e.preventDefault();
+            
+            const formData = $(this).serialize();
+            const submitBtn = $(this).find("button[type=submit]");
+            const originalText = submitBtn.html();
+            
+            submitBtn.prop("disabled", true).html(\'<i class="fas fa-spinner fa-spin"></i> Saving...\');
+            
+            $.post("ajax/adjust_commission.php", formData)
+                .done(function(response) {
+                    if (response.success) {
+                        toastr.success("Commission adjusted successfully!");
+                        location.reload();
+                    } else {
+                        toastr.error(response.error || "Failed to adjust commission");
+                    }
+                })
+                .fail(function() {
+                    toastr.error("Failed to adjust commission");
+                })
+                .always(function() {
+                    submitBtn.prop("disabled", false).html(originalText);
+                });
+        });
+    </script>';
+
+   
+    $html .= '
     <div class="card">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Commission Details</h5>
-            <span class="badge bg-light text-dark">Total Commission: ' . $currency_symbol . ' ' . number_format($total_commission, 2) . '</span>
+            <span class="badge bg-light text-dark">Total Commission: ' . $currency_symbol . ' ' . number_format($commission['amount'], 2) . '</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -397,7 +491,7 @@ try {
 
     foreach ($items_with_rules as $item) {
         $discount = isset($item['discount']) ? floatval($item['discount']) : 0;
-        $response .= '
+        $html .= '
             <tr>
                 <td>' . htmlspecialchars($item['product']) . 
                     ($item['variant_title'] ? '<br><small class="text-muted">Variant: ' . htmlspecialchars($item['variant_title']) . '</small>' : '') . 
@@ -413,13 +507,13 @@ try {
             </tr>';
     }
 
-    $response .= '
+    $html .= '
                         <tr class="table-info fw-bold">
                             <td colspan="4" class="text-end">Totals:</td>
                             <td class="text-end">' . $currency_symbol . ' ' . number_format($total_amount, 2) . '</td>
                             <td>Overall Rate:</td>
                             <td class="text-end">' . number_format($overall_rate, 1) . '%</td>
-                            <td class="text-end">' . $currency_symbol . ' ' . number_format($total_commission, 2) . '</td>
+                            <td class="text-end">' . $currency_symbol . ' ' . number_format($commission['amount'], 2) . '</td>
                         </tr>
                     </tbody>
                 </table>
@@ -430,51 +524,74 @@ try {
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary view-invoice" data-commission-id="' . $commission_id . '">View Invoice</button>
         <button type="button" class="btn btn-success send-invoice" data-commission-id="' . $commission_id . '">Send Invoice</button>
+        <button type="button" class="btn btn-primary adjust-commission" data-commission-id="' . $commission_id . '">Adjust Commission</button>
+    </div>
+    <div id="adjustmentForm" class="card mb-3" style="display: none;">
+        <div class="card-body">
+            <h6 class="card-title">Adjust Commission</h6>
+            <form id="commissionAdjustmentForm">
+                <input type="hidden" name="commission_id" value="' . $commission_id . '">
+                <div class="mb-3">
+                    <label for="adjustedAmount" class="form-label">New Commission Amount (' . $currency_symbol . ')</label>
+                    <input type="number" class="form-control" id="adjustedAmount" name="amount" 
+                           value="' . $commission['amount'] . '" step="0.01" min="0" required>
+                </div>
+                <div class="mb-3">
+                    <label for="adjustmentReason" class="form-label">Reason for Adjustment</label>
+                    <textarea class="form-control" id="adjustmentReason" name="adjustment_reason" 
+                              rows="3" required></textarea>
+                </div>
+                <div class="text-end">
+                    <button type="button" class="btn btn-secondary" onclick="hideAdjustmentForm()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
     </div>
     <script>
-        document.querySelector(".view-invoice").addEventListener("click", function() {
-            const commissionId = this.getAttribute("data-commission-id");
-            window.open(`generate_invoice.php?commission_id=${commissionId}`, "_blank");
+        function showAdjustmentForm() {
+            $("#adjustmentForm").slideDown();
+        }
+
+        function hideAdjustmentForm() {
+            $("#adjustmentForm").slideUp();
+        }
+
+        $("#commissionAdjustmentForm").on("submit", function(e) {
+            e.preventDefault();
+            
+            const formData = $(this).serialize();
+            const submitBtn = $(this).find("button[type=submit]");
+            const originalText = submitBtn.html();
+            
+            submitBtn.prop("disabled", true).html(\'<i class="fas fa-spinner fa-spin"></i> Saving...\');
+            
+            $.post("ajax/adjust_commission.php", formData)
+                .done(function(response) {
+                    if (response.success) {
+                        alert("Commission adjusted successfully!");
+                        location.reload();
+                    } else {
+                        alert(response.error || "Failed to adjust commission");
+                    }
+                })
+                .fail(function() {
+                    alert("Failed to adjust commission");
+                })
+                .always(function() {
+                    submitBtn.prop("disabled", false).html(originalText);
+                });
         });
 
-        document.querySelector(".send-invoice").addEventListener("click", function() {
-            const commissionId = this.getAttribute("data-commission-id");
-            const button = this;
-            
-            // Disable button and show loading state
-            button.disabled = true;
-            button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...`;
-            
-            fetch("ajax/send_commission_email.php", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: `commission_id=${commissionId}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    toastr.success(data.message);
-                } else {
-                    toastr.error(data.message || "Failed to send invoice");
-                }
-            })
-            .catch(error => {
-                toastr.error("An error occurred while sending the invoice");
-            })
-            .finally(() => {
-                // Reset button state
-                button.disabled = false;
-                button.innerHTML = "Send Invoice";
-            });
+        document.querySelector(".adjust-commission").addEventListener("click", function() {
+            showAdjustmentForm();
         });
     </script>';
 
     header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
-        'html' => $response
+        'html' => $html
     ]);
 
 } catch (Exception $e) {
