@@ -1,4 +1,9 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', '../logs/php-error.log');
+
 session_start();
 require_once '../../config/database.php';
 require_once '../../config/shopify_config.php';
@@ -6,20 +11,18 @@ require_once '../../includes/functions.php';
 require_once '../../classes/ShopifyAPI.php';
 
 // Set error logging
-ini_set('display_errors', 0);
-error_reporting(E_ALL);
 $logFile = __DIR__ . '/../../logs/commission_calculation.log';
 
 function logError($message, $context = []) {
     global $logFile;
     $timestamp = date('Y-m-d H:i:s');
-    $contextStr = !empty($context) ? ' Context: ' . json_encode($context) : '';
-    $logMessage = "[{$timestamp}] {$message}{$contextStr}\n";
+    $logMessage = "[$timestamp] $message";
+    if (!empty($context)) {
+        $logMessage .= " Context: " . json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+    $logMessage .= "\n";
     error_log($logMessage, 3, $logFile);
 }
-
-// Set JSON header
-header('Content-Type: application/json');
 
 try {
     // Check if user is logged in and is admin
@@ -29,6 +32,10 @@ try {
 
     $db = new Database();
     $conn = $db->getConnection();
+
+    if (!$conn) {
+        throw new Exception("Database connection failed");
+    }
 
     // Check if this is a refresh request
     $is_refresh = isset($_POST['refresh']) && $_POST['refresh'] === 'true';
@@ -45,88 +52,93 @@ try {
     ";
 
     $stmt = $conn->prepare($query);
-    $stmt->execute();
-    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to fetch orders");
+    }
 
-    $response = [
-        'success' => true,
-        'message' => '',
-        'processed_orders' => [],
-        'total_commission' => 0,
-        'skipped_orders' => 0,
-        'errors' => []
-    ];
+    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    logError("Fetched orders", ['count' => count($orders)]);
 
     if (empty($orders)) {
-        $response['message'] = $is_refresh ? 'No orders found to refresh' : 'No new orders found for commission calculation';
-        echo json_encode($response);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => $is_refresh ? 'No orders found to refresh' : 'No new orders found for commission calculation']);
         exit;
     }
 
+    $errors = [];
+    $processed_orders = 0;
+    $total_commissions = 0;
+
     foreach ($orders as $order) {
         try {
-            $line_items = json_decode($order['line_items'], true);
+            logError("Processing order", ['order_id' => $order['id']]);
+            
+            $line_items = isset($order['line_items']) ? json_decode($order['line_items'], true) : [];
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception("Invalid line items JSON: " . json_last_error_msg());
+            }
+            
+            logError("Line items decoded", [
+                'order_id' => $order['id'],
+                'items_count' => count($line_items)
+            ]);
+
             $total_commission = 0;
-            $processed_items = [];
+            $total_amount = 0;
 
             if (!empty($line_items) && is_array($line_items)) {
                 foreach ($line_items as $item) {
-                    // Comprehensive product type identification
-                    $product_type = '';
-                    $shopify_api = new ShopifyAPI();
-                    
-                    // Debug logging for line item details
-                    logError("Line Item Raw Details", [
-                        'item_name' => $item['name'] ?? 'N/A',
-                        'product_id' => $item['product_id'] ?? 'N/A',
-                        'full_item_details' => json_encode($item)
-                    ]);
-                    
-                    // Try to get product type from Shopify API
+                    // Initialize product type with default value
+                    $product_type = 'TRAPO CLASSIC';
+
+                    // Get product type from Shopify API
                     if (isset($item['product_id'])) {
                         try {
-                            $product_details = $shopify_api->getProductById($item['product_id']);
+                            $shop_domain = SHOPIFY_SHOP_DOMAIN;
+                            $access_token = SHOPIFY_ACCESS_TOKEN;
+                            $api_version = SHOPIFY_API_VERSION;
+                            $url = "https://{$shop_domain}/admin/api/{$api_version}/products/{$item['product_id']}.json";
+
+                            $ch = curl_init();
+                            curl_setopt($ch, CURLOPT_URL, $url);
+                            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                                "X-Shopify-Access-Token: {$access_token}",
+                                "Content-Type: application/json"
+                            ]);
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                             
-                            if ($product_details && !empty($product_details['product_type'])) {
-                                $product_type = $product_details['product_type'];
+                            $response = curl_exec($ch);
+                            if ($response === false) {
+                                throw new Exception("Curl error: " . curl_error($ch));
+                            }
+                            
+                            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                            curl_close($ch);
+                            
+                            if ($http_code === 200) {
+                                $product_data = json_decode($response, true);
+                                if (json_last_error() !== JSON_ERROR_NONE) {
+                                    throw new Exception("Invalid API response JSON: " . json_last_error_msg());
+                                }
                                 
-                                logError("Product Type from API", [
-                                    'product_id' => $item['product_id'],
-                                    'identified_type' => $product_type
-                                ]);
+                                if (isset($product_data['product']['product_type']) && !empty($product_data['product']['product_type'])) {
+                                    $product_type = strtoupper($product_data['product']['product_type']);
+                                    logError("Got product type from Shopify API", [
+                                        'product_id' => $item['product_id'],
+                                        'type' => $product_type
+                                    ]);
+                                }
                             }
                         } catch (Exception $e) {
-                            logError("API Product Type Fetch Error", [
-                                'product_id' => $item['product_id'],
-                                'error' => $e->getMessage()
+                            logError("Error fetching from Shopify API", [
+                                'error' => $e->getMessage(),
+                                'product_id' => $item['product_id']
                             ]);
                         }
                     }
-                    
-                    // Fallback to manual mapping if no API result
-                    if (empty($product_type)) {
-                        $product_type_map = [
-                            'BYD' => 'TRAPO CLASSIC',
-                            'Trapo Tint' => 'OFFLINE SERVICE',
-                            'Trapo Coating' => 'OFFLINE SERVICE',
-                            'Ceramic Coating' => 'OFFLINE SERVICE',
-                            'Paint Protection Film' => 'OFFLINE SERVICE',
-                            'Windscreen Replacement' => 'OFFLINE SERVICE',
-                            'Detailing' => 'OFFLINE SERVICE'
-                        ];
-                        
-                        foreach ($product_type_map as $key => $mapped_type) {
-                            if (stripos($item['name'], $key) !== false) {
-                                $product_type = $mapped_type;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    // Final fallback
-                    if (empty($product_type)) {
-                        $product_type = 'OTHERS';
-                    }
+
+                    // Get product tags
+                    $product_tags = isset($item['tags']) ? explode(',', $item['tags']) : [];
                     
                     // Log commission rule matching
                     $stmt = $conn->prepare("
@@ -140,10 +152,13 @@ try {
                         ORDER BY rule_type = 'product_type' DESC
                         LIMIT 1
                     ");
-                    $stmt->execute([$product_type]);
+                    
+                    if (!$stmt->execute([$product_type])) {
+                        throw new Exception("Failed to fetch commission rule");
+                    }
+                    
                     $rule = $stmt->fetch(PDO::FETCH_ASSOC);
                     
-                    // Detailed logging for rule matching
                     logError("Commission Rule Matching", [
                         'product_type' => $product_type,
                         'matched_rule' => $rule ? json_encode($rule) : 'No rule found',
@@ -154,7 +169,7 @@ try {
                     if ($rule) {
                         $rate = floatval($rule['commission_percentage']);
                         
-                        // More robust price extraction
+                        // Get item price
                         $item_price = 0;
                         if (isset($item['price_set']['shop_money']['amount'])) {
                             $item_price = floatval($item['price_set']['shop_money']['amount']);
@@ -165,7 +180,7 @@ try {
                         $item_quantity = isset($item['quantity']) ? intval($item['quantity']) : 0;
                         $item_total = $item_price * $item_quantity;
                         
-                        // More comprehensive discount handling
+                        // Handle discounts
                         $total_discount = 0;
                         if (isset($item['total_discount']) && floatval($item['total_discount']) > 0) {
                             $total_discount = floatval($item['total_discount']);
@@ -177,81 +192,82 @@ try {
                         
                         $commission = $item_total * ($rate / 100);
                         $total_commission += $commission;
+                        $total_amount += $item_total;
 
-                        // Enhanced logging
-                        logError("Commission Calculation Details", [
+                        logError("Commission calculated", [
                             'order_id' => $order['id'],
-                            'product' => $item['name'],
+                            'product' => $item['name'] ?? 'Unknown',
                             'product_type' => $product_type,
-                            'rule_type' => $rule['rule_type'],
+                            'price' => $item_price,
+                            'quantity' => $item_quantity,
+                            'discount' => $total_discount,
+                            'final_total' => $item_total,
                             'commission_rate' => $rate,
-                            'item_price' => $item_price,
-                            'item_quantity' => $item_quantity,
-                            'total_discount' => $total_discount,
-                            'item_total_after_discount' => $item_total,
-                            'calculated_commission' => $commission
+                            'commission_amount' => $commission
                         ]);
                     }
                 }
             }
 
-            if ($total_commission > 0) {
-                // Save commission
+            // Update commission in database
+            try {
                 $stmt = $conn->prepare("
-                    INSERT INTO commissions (order_id, agent_id, amount, status, created_at, updated_at)
+                    INSERT INTO commissions 
+                    (order_id, agent_id, amount, status, created_at, updated_at)
                     VALUES (?, ?, ?, 'pending', NOW(), NOW())
-                    ON DUPLICATE KEY UPDATE amount = ?, updated_at = NOW()
+                    ON DUPLICATE KEY UPDATE 
+                    amount = VALUES(amount),
+                    status = VALUES(status),
+                    updated_at = NOW()
                 ");
                 
-                $stmt->execute([
-                    $order['id'],
-                    $order['customer_id'],
-                    $total_commission,
-                    $total_commission
-                ]);
-
-                $response['processed_orders'][] = [
+                if (!$stmt->execute([$order['id'], $order['customer_id'], $total_commission])) {
+                    throw new Exception("Failed to update commission");
+                }
+                
+                logError("Commission Updated", [
                     'order_id' => $order['id'],
-                    'order_number' => $order['order_number'],
-                    'customer_name' => trim($order['first_name'] . ' ' . $order['last_name']),
-                    'commission_amount' => $total_commission
-                ];
-                $response['total_commission'] += $total_commission;
+                    'total_commission' => $total_commission
+                ]);
+                
+                $processed_orders++;
+                $total_commissions += $total_commission;
+                
+            } catch (Exception $e) {
+                logError("Database Update Error", [
+                    'order_id' => $order['id'],
+                    'error' => $e->getMessage()
+                ]);
+                throw $e;
             }
 
         } catch (Exception $e) {
-            $response['errors'][] = [
-                'order_id' => $order['id'],
-                'error' => $e->getMessage()
-            ];
-            logError("Error processing order", [
-                'order_id' => $order['id'],
+            logError("Order Processing Error", [
+                'order_id' => $order['id'] ?? 'unknown',
                 'error' => $e->getMessage()
             ]);
+            $errors[] = "Error processing order " . ($order['id'] ?? 'unknown') . ": " . $e->getMessage();
         }
     }
 
-    $total_orders = count($orders);
-    $processed_count = count($response['processed_orders']);
-    $skipped_count = count($response['errors']);
-    $no_commission_count = $total_orders - $processed_count - $skipped_count;
-
-    $response['message'] = sprintf(
-        'Successfully processed %d out of %d orders. %d orders had no eligible commission items. %d orders had errors. Total commission: RM %.2f',
-        $processed_count,
-        $total_orders,
-        $no_commission_count,
-        $skipped_count,
-        $response['total_commission']
-    );
-
-    echo json_encode($response);
-
+    // After processing all orders
+    echo json_encode([
+        'success' => true,
+        'message' => "Successfully processed $processed_orders orders with total commissions of $total_commissions",
+        'processed_orders' => $processed_orders,
+        'total_commissions' => $total_commissions,
+        'errors' => [] // Add any errors if needed
+    ]);
+    exit;
 } catch (Exception $e) {
-    logError("Error in bulk commission calculation", ['error' => $e->getMessage()]);
-    http_response_code(500);
+    logError("Failed to calculate commissions", [
+        'error' => $e->getMessage()
+    ]);
+    
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => "Failed to calculate commissions: " . $e->getMessage(),
+        'errors' => [$e->getMessage()]
     ]);
+    exit;
 }

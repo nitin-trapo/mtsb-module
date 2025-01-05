@@ -86,7 +86,7 @@ try {
     // Log successful database connection
     logEmailError("Database connection successful");
 
-    // Get commission details with agent email
+    // Get commission details with agent email and payment receipt path
     $query = "
         SELECT 
             c.*,
@@ -94,7 +94,8 @@ try {
             o.currency,
             a.email as agent_email,
             a.first_name as agent_first_name,
-            a.last_name as agent_last_name
+            a.last_name as agent_last_name,
+            c.payment_receipt
         FROM commissions c
         LEFT JOIN orders o ON c.order_id = o.id
         LEFT JOIN customers a ON c.agent_id = a.id
@@ -190,6 +191,26 @@ try {
 
             // Attach the PDF
             $mail->addAttachment($filepath, 'commission_' . $commission_id . '.pdf');
+
+            // Attach payment receipt if available
+            if (!empty($commission['payment_receipt'])) {
+                $receipt_path = __DIR__ . '/../../assets/uploads/receipts/' . $commission['payment_receipt'];
+                if (file_exists($receipt_path)) {
+                    // Get the original file extension from the stored filename
+                    $original_filename = $commission['payment_receipt'];
+                    $mail->addAttachment($receipt_path, $original_filename);
+                    logEmailError("Payment receipt attached successfully", [
+                        'commission_id' => $commission_id,
+                        'filename' => $original_filename
+                    ]);
+                } else {
+                    logEmailError("Payment receipt file not found", [
+                        'commission_id' => $commission_id,
+                        'receipt_path' => $receipt_path,
+                        'filename' => $commission['payment_receipt']
+                    ]);
+                }
+            }
 
             // Content
             $mail->isHTML(true);

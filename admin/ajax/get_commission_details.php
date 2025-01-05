@@ -820,40 +820,7 @@ try {
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary" onclick="viewInvoice(' . $commission_id . ')">View Invoice</button>
         <button type="button" class="btn btn-success send-invoice" data-commission-id="' . $commission_id . '">Send Invoice</button>
-    </div>
-
-    <script>
-        document.querySelector(".send-invoice").addEventListener("click", function() {
-            const commissionId = this.getAttribute("data-commission-id");
-            const button = this;
-            
-            button.disabled = true;
-            button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...`;
-            
-            fetch("ajax/send_commission_email.php", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: `commission_id=${commissionId}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    toastr.success(data.message);
-                } else {
-                    toastr.error(data.message || "Failed to send invoice");
-                }
-            })
-            .catch(error => {
-                toastr.error("An error occurred while sending the invoice");
-            })
-            .finally(() => {
-                button.disabled = false;
-                button.innerHTML = "Send Invoice";
-            });
-        });
-    </script>';
+    </div>';
 
     header('Content-Type: application/json');
     echo json_encode([

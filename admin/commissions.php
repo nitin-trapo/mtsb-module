@@ -59,12 +59,13 @@ $commissions = $conn->query($query)->fetchAll(PDO::FETCH_ASSOC);
 // Calculate totals
 $totals = [
     'pending' => 0,
-    'approved' => 0,
     'paid' => 0
 ];
 
 foreach ($commissions as $commission) {
-    $totals[$commission['status']] += $commission['amount'];
+    if (isset($totals[$commission['status']])) {
+        $totals[$commission['status']] += $commission['amount'];
+    }
 }
 
 // Set page title
@@ -80,9 +81,9 @@ include 'includes/header.php';
             <h2>Manage Commissions</h2>
         </div>
         <div class="col text-end">
-            <button type="button" class="btn btn-success me-2" id="refreshAllCommissions">
+            <!--<button type="button" class="btn btn-success me-2" id="refreshAllCommissions">
                 <i class="fas fa-sync-alt"></i> Refresh All Commissions
-            </button>
+            </button>-->
             <button type="button" class="btn btn-primary" id="calculateAllCommissions">
                 Calculate All Commissions
             </button>
@@ -90,24 +91,16 @@ include 'includes/header.php';
     </div>
 
     <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card bg-primary text-white">
+        <div class="col-md-6">
+            <div class="card bg-info text-white">
                 <div class="card-body">
                     <h5 class="card-title">Pending Commissions</h5>
                     <h3>RM <?php echo number_format($totals['pending'], 2); ?></h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Approved Commissions</h5>
-                    <h3>RM <?php echo number_format($totals['approved'], 2); ?></h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-info text-white">
                 <div class="card-body">
                     <h5 class="card-title">Paid Commissions</h5>
                     <h3>RM <?php echo number_format($totals['paid'], 2); ?></h3>
@@ -158,8 +151,10 @@ include 'includes/header.php';
                                         echo 'bg-warning';
                                     } elseif ($commission['status'] === 'pending') {
                                         echo 'bg-info';
-                                    } else {
+                                    } elseif ($commission['status'] === 'calculated') {
                                         echo 'bg-primary';
+                                    } else {
+                                        echo 'bg-secondary';
                                     }
                                 ?> text-white">
                                     <?php echo ucfirst($commission['status']); ?>
@@ -257,7 +252,7 @@ include 'includes/header.php';
                 success: function(response) {
                     if (response.success) {
                         alert(response.message);
-                        if (response.processed_orders.length > 0) {
+                        if (response.processed_orders > 0) {
                             // Refresh the page to show new commissions
                             setTimeout(function() {
                                 window.location.reload();
