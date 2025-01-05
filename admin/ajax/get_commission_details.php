@@ -471,13 +471,16 @@ try {
         });
     </script>';
 
-    echo $response;
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'html' => $response
+    ]);
 
 } catch (Exception $e) {
-    http_response_code(500);
-    echo '<div class="alert alert-danger mb-0">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            Error: ' . htmlspecialchars($e->getMessage()) . '
-          </div>';
-    logError("Error occurred", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage()
+    ]);
 }

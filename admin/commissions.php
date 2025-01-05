@@ -139,22 +139,14 @@ include 'includes/header.php';
                                 <small class="text-muted"><?php echo $commission['agent_email']; ?></small>
                             </td>
                             <td>RM <?php echo number_format($commission['order_amount'], 2); ?></td>
+                            <td>RM <?php echo number_format($commission['amount'], 2); ?></td>
                             <td>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text">RM</span>
-                                    <input type="number" class="form-control form-control-sm commission-amount" 
-                                           value="<?php echo $commission['amount']; ?>" 
-                                           onchange="updateAmount(<?php echo $commission['id']; ?>, this.value)"
-                                           step="0.01" min="0">
-                                </div>
-                            </td>
-                            <td>
-                                <select class="form-select form-select-sm" 
-                                        onchange="updateStatus(<?php echo $commission['id']; ?>, this.value)">
-                                    <option value="pending" <?php echo $commission['status'] == 'pending' ? 'selected' : ''; ?>>Pending</option>
-                                    <option value="approved" <?php echo $commission['status'] == 'approved' ? 'selected' : ''; ?>>Approved</option>
-                                    <option value="paid" <?php echo $commission['status'] == 'paid' ? 'selected' : ''; ?>>Paid</option>
-                                </select>
+                                <span class="badge bg-<?php 
+                                    echo $commission['status'] === 'paid' ? 'success' : 
+                                        ($commission['status'] === 'approved' ? 'warning' : 'primary'); 
+                                ?>">
+                                    <?php echo ucfirst($commission['status']); ?>
+                                </span>
                             </td>
                             <td><?php echo date('M d, Y', strtotime($commission['created_at'])); ?></td>
                             <td>
@@ -268,34 +260,39 @@ include 'includes/header.php';
         });
     });
 
-    function updateAmount(commissionId, amount) {
-        $.post('commissions.php', {
-            action: 'update_amount',
-            commission_id: commissionId,
-            amount: amount
-        }, function(response) {
-            if (!response.success) {
-                alert('Error updating amount');
-            }
-        });
-    }
-
-    function updateStatus(commissionId, status) {
-        $.post('ajax/update_commission_status.php', {
-            commission_id: commissionId,
-            status: status,
-            action: 'update_status'
-        })
-        .done(function(response) {
-            if (response.success) {
-                alert('Commission status updated successfully');
-            } else {
-                alert(response.error || 'Failed to update commission status');
-            }
-        })
-        .fail(function() {
-            alert('Failed to update commission status');
-        });
+    function viewDetails(commissionId) {
+        const modal = $('#commissionModal');
+        const modalBody = modal.find('.modal-body');
+        
+        // Show loading spinner
+        modalBody.html(`
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary mb-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div>Loading commission details...</div>
+            </div>
+        `);
+        
+        modal.modal('show');
+        
+        $.get('ajax/get_commission_details.php', { id: commissionId })
+            .done(function(response) {
+                if (response.success) {
+                    modalBody.html(response.html);
+                } else {
+                    modalBody.html(
+                        '<div class="alert alert-danger">' + 
+                        (response.error || 'Failed to load commission details') + 
+                        '</div>'
+                    );
+                }
+            })
+            .fail(function() {
+                modalBody.html(
+                    '<div class="alert alert-danger">Failed to load commission details</div>'
+                );
+            });
     }
 
     function deleteCommission(commissionId) {
@@ -318,29 +315,6 @@ include 'includes/header.php';
         .fail(function() {
             alert('Failed to delete commission');
         });
-    }
-
-    function viewDetails(commissionId) {
-        const modal = $('#commissionModal');
-        modal.modal('show');
-        
-        $.get('ajax/get_commission_details.php', { commission_id: commissionId })
-            .done(function(response) {
-                if (response.success) {
-                    modal.find('.modal-body').html(response.html);
-                } else {
-                    modal.find('.modal-body').html(
-                        '<div class="alert alert-danger">' + 
-                        (response.error || 'Failed to load commission details') + 
-                        '</div>'
-                    );
-                }
-            })
-            .fail(function() {
-                modal.find('.modal-body').html(
-                    '<div class="alert alert-danger">Failed to load commission details</div>'
-                );
-            });
     }
 </script>
 
