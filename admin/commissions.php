@@ -160,9 +160,12 @@ include 'includes/header.php';
                             <td>
                                 <button type="button" class="btn btn-sm btn-info" 
                                         onclick="viewDetails(<?php echo $commission['id']; ?>)">
-                                    View
+                                    <i class="fas fa-eye me-1"></i>View
                                 </button>
-            
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                        onclick="deleteCommission(<?php echo $commission['id']; ?>)">
+                                    <i class="fas fa-trash me-1"></i>Delete
+                                </button>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -215,18 +218,18 @@ include 'includes/header.php';
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        toastr.success(response.message);
+                        alert(response.message);
                         setTimeout(function() {
                             window.location.reload();
                         }, 1000);
                     } else {
-                        toastr.error(response.message || 'Failed to refresh commissions');
+                        alert(response.message || 'Failed to refresh commissions');
                         btn.prop('disabled', false)
                            .html('<i class="fas fa-sync-alt"></i> Refresh All Commissions');
                     }
                 },
                 error: function(xhr) {
-                    toastr.error('Error refreshing commissions');
+                    alert('Error refreshing commissions');
                     btn.prop('disabled', false)
                        .html('<i class="fas fa-sync-alt"></i> Refresh All Commissions');
                 }
@@ -244,7 +247,7 @@ include 'includes/header.php';
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        toastr.success(response.message);
+                        alert(response.message);
                         if (response.processed_orders.length > 0) {
                             // Refresh the page to show new commissions
                             setTimeout(function() {
@@ -252,11 +255,11 @@ include 'includes/header.php';
                             }, 1500);
                         }
                     } else {
-                        toastr.error(response.message || 'Failed to calculate commissions');
+                        alert(response.message || 'Failed to calculate commissions');
                     }
                 },
                 error: function(xhr) {
-                    toastr.error('Error calculating commissions');
+                    alert('Error calculating commissions');
                 },
                 complete: function() {
                     btn.prop('disabled', false).text('Calculate All Commissions');
@@ -278,35 +281,66 @@ include 'includes/header.php';
     }
 
     function updateStatus(commissionId, status) {
-        $.post('commissions.php', {
-            action: 'update_status',
+        $.post('ajax/update_commission_status.php', {
             commission_id: commissionId,
-            status: status
-        }, function(response) {
+            status: status,
+            action: 'update_status'
+        })
+        .done(function(response) {
             if (response.success) {
-                location.reload(); // Reload page after successful status update
+                alert('Commission status updated successfully');
             } else {
-                alert('Error updating status');
+                alert(response.error || 'Failed to update commission status');
             }
+        })
+        .fail(function() {
+            alert('Failed to update commission status');
+        });
+    }
+
+    function deleteCommission(commissionId) {
+        if (!confirm('Are you sure you want to delete this commission? This action cannot be undone.')) {
+            return;
+        }
+
+        $.post('ajax/delete_commission.php', {
+            commission_id: commissionId
+        })
+        .done(function(response) {
+            if (response.success) {
+                alert('Commission deleted successfully');
+                // Reload the page to refresh the commission list
+                location.reload();
+            } else {
+                alert(response.error || 'Failed to delete commission');
+            }
+        })
+        .fail(function() {
+            alert('Failed to delete commission');
         });
     }
 
     function viewDetails(commissionId) {
-        const modal = new bootstrap.Modal(document.getElementById('commissionModal'));
-        $('#commissionModal .modal-body').html('<div class="text-center p-4"><div class="spinner-border" role="status"></div><p class="mt-2">Loading commission details...</p></div>');
-        modal.show();
+        const modal = $('#commissionModal');
+        modal.modal('show');
         
-        $.get('ajax/get_commission_details.php', { id: commissionId })
+        $.get('ajax/get_commission_details.php', { commission_id: commissionId })
             .done(function(response) {
-                $('#commissionModal .modal-body').html(response);
+                if (response.success) {
+                    modal.find('.modal-body').html(response.html);
+                } else {
+                    modal.find('.modal-body').html(
+                        '<div class="alert alert-danger">' + 
+                        (response.error || 'Failed to load commission details') + 
+                        '</div>'
+                    );
+                }
             })
-            .fail(function(xhr, status, error) {
-                $('#commissionModal .modal-body').html('<div class="alert alert-danger m-3">Error loading commission details: ' + error + '</div>');
+            .fail(function() {
+                modal.find('.modal-body').html(
+                    '<div class="alert alert-danger">Failed to load commission details</div>'
+                );
             });
-    }
-
-    function generateInvoice(commissionId) {
-        window.location.href = 'generate_invoice.php?commission_id=' + commissionId;
     }
 </script>
 

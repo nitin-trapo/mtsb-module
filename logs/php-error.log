@@ -1,0 +1,14 @@
+[05-Jan-2025 07:53:11 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 8902.66
+    [total_count] => 23
+    [statuses] => pending
+)
+
+[05-Jan-2025 07:53:11 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'

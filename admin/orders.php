@@ -71,11 +71,12 @@ try {
             DATE_FORMAT(o.created_at, '%Y-%m-%d %H:%i:%s') as sort_date,
             DATE_FORMAT(o.created_at, '%b %d, %Y %h:%i %p') as formatted_date,
             COALESCE(a.commission_rate, 0) as agent_commission_rate,
+            o.customer_id,
             COALESCE(com.amount, 0) as commission_amount,
             COALESCE(com.status, 'pending') as commission_status
         FROM orders o
         LEFT JOIN customers c ON o.customer_id = c.id
-        LEFT JOIN customers a ON o.agent_id = a.id
+        LEFT JOIN customers a ON o.customer_id = a.id
         LEFT JOIN commissions com ON o.id = com.order_id
         ORDER BY o.created_at DESC
     ");
@@ -191,14 +192,20 @@ include 'includes/header.php';
                                             <?php echo $order['formatted_date']; ?>
                                         </td>
                                         <td class="text-end">
-                                            <button type="button" class="btn btn-sm btn-info" onclick="viewDetails(<?php echo $order['id']; ?>)">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <?php if ($order['customer_id']): ?>
-                                            <button type="button" class="btn btn-sm btn-success" onclick="calculateCommission(<?php echo $order['id']; ?>)">
-                                                <i class="fas fa-calculator"></i>
-                                            </button>
-                                            <?php endif; ?>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-info" onclick="viewDetails(<?php echo $order['id']; ?>)">
+                                                    <i class="fas fa-eye me-1"></i>View
+                                                </button>
+                                                <?php
+                                                    // Debug output
+                                                    
+                                                    if (!empty($order['customer_id']) && $order['commission_amount'] == 0): 
+                                                ?>
+                                                    <button type="button" class="btn btn-sm btn-warning" onclick="calculateCommission(<?php echo $order['id']; ?>)">
+                                                        <i class="fas fa-calculator me-1"></i>Calculate
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -517,15 +524,42 @@ function viewDetails(orderId) {
 function formatAddress(address) {
     if (!address) return 'N/A';
     
-    return `
-        <address>
-            ${address.name}<br>
-            ${address.address1}<br>
-            ${address.address2 ? address.address2 + '<br>' : ''}
-            ${address.city}, ${address.province_code} ${address.zip}<br>
-            ${address.country}
-        </address>
-    `;
+    const parts = [];
+    if (address.address1) parts.push(address.address1);
+    if (address.address2) parts.push(address.address2);
+    if (address.city) parts.push(address.city);
+    if (address.province) parts.push(address.province);
+    if (address.country) parts.push(address.country);
+    if (address.zip) parts.push(address.zip);
+    
+    return parts.join(', ');
+}
+
+function calculateCommission(orderId) {
+    if (!confirm('Are you sure you want to calculate commission for this order?')) {
+        return;
+    }
+
+    const btn = $(`.btn[onclick="calculateCommission(${orderId})"]`);
+    const originalHtml = btn.html();
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Calculating...');
+
+    $.post('ajax/calculate_single_commission.php', {
+        order_id: orderId
+    })
+    .done(function(response) {
+        if (response.success) {
+            alert('Commission calculated successfully!');
+            location.reload();
+        } else {
+            alert(response.error || 'Failed to calculate commission');
+            btn.prop('disabled', false).html(originalHtml);
+        }
+    })
+    .fail(function() {
+        alert('Failed to calculate commission');
+        btn.prop('disabled', false).html(originalHtml);
+    });
 }
 
 function formatCurrency(amount, currency) {
@@ -569,57 +603,6 @@ function getFulfillmentStatusColor(status) {
         'cancelled': 'secondary'
     };
     return colors[status.toLowerCase()] || 'light';
-}
-
-function calculateCommission(orderId) {
-    if (!confirm('Are you sure you want to calculate commission for this order?')) {
-        return;
-    }
-
-    $.ajax({
-        url: 'ajax/calculate_single_commission.php',
-        type: 'POST',
-        data: { order_id: orderId },
-        beforeSend: function() {
-            // Show loading state
-            $(`button[onclick="calculateCommission(${orderId})"]`)
-                .prop('disabled', true)
-                .html('<i class="fas fa-spinner fa-spin"></i>');
-        },
-        success: function(response) {
-            if (response.success) {
-                // Show success message with details
-                let message = 'Commission calculated successfully!\n\n';
-                message += `Total Commission: RM ${response.commission_amount.toFixed(2)}\n\n`;
-                message += 'Processed Items:\n';
-                response.processed_items.forEach(item => {
-                    message += `${item.title}: RM ${item.commission.toFixed(2)} (${item.rate}%)\n`;
-                });
-                alert(message);
-                
-                // Refresh the page to show updated data
-                location.reload();
-            } else {
-                alert('Error: ' + (response.message || 'Failed to calculate commission'));
-            }
-        },
-        error: function(xhr) {
-            let errorMessage = 'Failed to calculate commission';
-            try {
-                const response = JSON.parse(xhr.responseText);
-                errorMessage = response.message || errorMessage;
-            } catch (e) {
-                console.error('Error parsing error response:', e);
-            }
-            alert('Error: ' + errorMessage);
-        },
-        complete: function() {
-            // Reset button state
-            $(`button[onclick="calculateCommission(${orderId})"]`)
-                .prop('disabled', false)
-                .html('<i class="fas fa-calculator"></i>');
-        }
-    });
 }
 
 $(document).ready(function() {
