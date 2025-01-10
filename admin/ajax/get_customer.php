@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once '../../config/database.php';
 require_once '../../includes/functions.php';
 
@@ -20,11 +21,7 @@ try {
     $conn = $db->getConnection();
     
     $stmt = $conn->prepare("
-        SELECT id, shopify_customer_id, email, first_name, last_name, 
-               phone, is_agent, status, bank_name, bank_account_number, 
-               bank_account_header
-        FROM customers 
-        WHERE id = ?
+        SELECT * FROM customers WHERE id = ?
     ");
     
     $stmt->execute([$_GET['customer_id']]);

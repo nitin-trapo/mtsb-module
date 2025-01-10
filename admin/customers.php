@@ -177,75 +177,106 @@ include 'includes/header.php';
 <div class="modal fade" id="editCustomerModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-primary text-white py-2">
                 <h5 class="modal-title">Edit Customer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-3">
                 <form id="editCustomerForm">
                     <input type="hidden" id="editCustomerId" name="customer_id">
                     
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="editFirstName" name="first_name">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="editLastName" name="last_name">
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Phone</label>
-                            <input type="text" class="form-control" id="editPhone" name="phone">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" id="editEmail" name="email" readonly>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Bank Name</label>
-                            <input type="text" class="form-control" id="editBankName" name="bank_name">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Bank Account Number</label>
-                            <input type="text" class="form-control" id="editBankAccountNumber" name="bank_account_number">
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
+                    <div class="row g-2">
+                        <!-- Personal Information -->
                         <div class="col-md-12">
-                            <label class="form-label">Bank Statement Header</label>
-                            <input type="text" class="form-control" id="editBankAccountHeader" name="bank_account_header">
+                            <div class="card mb-2">
+                                <div class="card-header py-1">
+                                    <h6 class="mb-0">Personal Information</h6>
+                                </div>
+                                <div class="card-body p-2">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label small mb-1">First Name</label>
+                                            <input type="text" class="form-control form-control-sm" id="editFirstName" name="first_name" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small mb-1">Last Name</label>
+                                            <input type="text" class="form-control form-control-sm" id="editLastName" name="last_name" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small mb-1">Email</label>
+                                            <input type="email" class="form-control form-control-sm" id="editEmail" disabled>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small mb-1">Phone</label>
+                                            <input type="text" class="form-control form-control-sm" id="editPhone" name="phone">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Agent Status</label>
-                            <select class="form-select" id="editIsAgent" name="is_agent">
-                                <option value="0">Not Agent</option>
-                                <option value="1">Agent</option>
-                            </select>
+                        <!-- Status Information -->
+                        <div class="col-md-12">
+                            <div class="card mb-2">
+                                <div class="card-header py-1">
+                                    <h6 class="mb-0">Status Information</h6>
+                                </div>
+                                <div class="card-body p-2">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label small mb-1">Account Status</label>
+                                            <select class="form-select form-select-sm" id="editStatus" name="status" required>
+                                                <option value="active">Active</option>
+                                                <option value="inactive">Inactive</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small mb-1">Agent Status</label>
+                                            <div class="form-check form-switch mt-2">
+                                                <input type="checkbox" class="form-check-input" id="editIsAgent" name="is_agent">
+                                                <label class="form-check-label small" for="editIsAgent">Is Agent</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Status</label>
-                            <select class="form-select" id="editStatus" name="status">
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
+
+                        <!-- Bank Information -->
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header py-1">
+                                    <h6 class="mb-0">Bank Information</h6>
+                                </div>
+                                <div class="card-body p-2">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label small mb-1">Bank Name</label>
+                                            <input type="text" class="form-control form-control-sm" id="editBankName" name="bank_name">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small mb-1">Account Number</label>
+                                            <input type="text" class="form-control form-control-sm" id="editBankAccountNumber" name="bank_account_number">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label small mb-1">Bank Statement URL</label>
+                                            <input type="text" class="form-control form-control-sm" id="editBankAccountHeader" name="bank_account_header">
+                                            <div class="form-text small">Enter the URL for the bank statement document</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="saveCustomer()">Save Changes</button>
+            <div class="modal-footer py-1">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="saveCustomer()">
+                    <i class="fas fa-save me-1"></i>Save Changes
+                </button>
             </div>
         </div>
     </div>
@@ -374,16 +405,14 @@ function editCustomer(customerId) {
                 $('#editCustomerId').val(customer.id);
                 $('#editFirstName').val(customer.first_name);
                 $('#editLastName').val(customer.last_name);
-                $('#editPhone').val(customer.phone);
                 $('#editEmail').val(customer.email);
+                $('#editPhone').val(customer.phone);
+                $('#editIsAgent').prop('checked', customer.is_agent == 1);
+                $('#editStatus').val(customer.status);
                 $('#editBankName').val(customer.bank_name);
                 $('#editBankAccountNumber').val(customer.bank_account_number);
                 $('#editBankAccountHeader').val(customer.bank_account_header);
-                $('#editIsAgent').val(customer.is_agent);
-                $('#editStatus').val(customer.status);
-                
-                // Show the modal
-                new bootstrap.Modal(document.getElementById('editCustomerModal')).show();
+                $('#editCustomerModal').modal('show');
             } else {
                 alert('Error loading customer details: ' + response.message);
             }
@@ -395,13 +424,22 @@ function editCustomer(customerId) {
 }
 
 function saveCustomer() {
-    const formData = $('#editCustomerForm').serialize();
+    const formData = {
+        customer_id: $('#editCustomerId').val(),
+        first_name: $('#editFirstName').val(),
+        last_name: $('#editLastName').val(),
+        phone: $('#editPhone').val(),
+        is_agent: $('#editIsAgent').is(':checked') ? 1 : 0,
+        status: $('#editStatus').val(),
+        bank_name: $('#editBankName').val(),
+        bank_account_number: $('#editBankAccountNumber').val(),
+        bank_account_header: $('#editBankAccountHeader').val()
+    };
     
     $.ajax({
         url: 'ajax/update_customer.php',
         method: 'POST',
         data: formData,
-        dataType: 'json',
         success: function(response) {
             if (response.success) {
                 // Hide modal
@@ -448,6 +486,40 @@ function formatCurrency(amount) {
         currency: '<?php echo $store_currency; ?>'
     }).format(amount);
 }
+
+$('#editCustomerForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        customer_id: $('#editCustomerId').val(),
+        first_name: $('#editFirstName').val(),
+        last_name: $('#editLastName').val(),
+        phone: $('#editPhone').val(),
+        is_agent: $('#editIsAgent').is(':checked') ? 1 : 0,
+        status: $('#editStatus').val(),
+        bank_name: $('#editBankName').val(),
+        bank_account_number: $('#editBankAccountNumber').val(),
+        bank_account_header: $('#editBankAccountHeader').val()
+    };
+    
+    $.ajax({
+        url: 'ajax/update_customer.php',
+        method: 'POST',
+        data: formData,
+        success: function(response) {
+            if (response.success) {
+                alert('Customer updated successfully');
+                $('#editCustomerModal').modal('hide');
+                location.reload(); // Refresh to show updated data
+            } else {
+                alert('Error updating customer: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Error updating customer');
+        }
+    });
+});
 </script>
 
 <?php include 'includes/footer.php'; ?>

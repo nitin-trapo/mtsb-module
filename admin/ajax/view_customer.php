@@ -41,6 +41,21 @@ try {
         exit;
     }
 
+    // Parse bank statement header if exists
+    $bankStatementInfo = null;
+    if (!empty($customer['bank_account_header'])) {
+        $bankStatementInfo = json_decode($customer['bank_account_header'], true);
+    }
+
+    // Get file icon based on extension
+    $fileIcon = '';
+    $fileUrl = '';
+    if ($bankStatementInfo && isset($bankStatementInfo['url'])) {
+        $fileUrl = $bankStatementInfo['url'];
+        $extension = strtolower(pathinfo($fileUrl, PATHINFO_EXTENSION));
+        $fileIcon = getFileIcon($extension);
+    }
+
     // Get recent orders
     $stmt = $conn->prepare("
         SELECT 
@@ -83,11 +98,11 @@ try {
             </tr>
             <tr>
                 <th>Email:</th>
-                <td><?php echo htmlspecialchars($customer['email']); ?></td>
+                <td><?php echo !empty($customer['email']) ? htmlspecialchars($customer['email']) : 'N/A'; ?></td>
             </tr>
             <tr>
                 <th>Phone:</th>
-                <td><?php echo htmlspecialchars($customer['phone'] ?: 'N/A'); ?></td>
+                <td><?php echo !empty($customer['phone']) ? htmlspecialchars($customer['phone']) : 'N/A'; ?></td>
             </tr>
             <tr>
                 <th>Total Orders:</th>
@@ -101,7 +116,7 @@ try {
                 <th>Status:</th>
                 <td>
                     <span class="badge bg-<?php echo $customer['status'] === 'active' ? 'success' : 'warning'; ?>">
-                        <?php echo ucfirst($customer['status']); ?>
+                        <?php echo !empty($customer['status']) ? ucfirst($customer['status']) : 'N/A'; ?>
                     </span>
                 </td>
             </tr>
@@ -113,13 +128,29 @@ try {
                     </span>
                 </td>
             </tr>
-            <?php if ($customer['is_agent']): ?>
-            <tr>
-                <th>Commission Rate:</th>
-                <td><?php echo $customer['commission_rate']; ?>%</td>
-            </tr>
+            <?php if ($customer['is_agent'] == 1): ?>
             <?php endif; ?>
-
+            <tr>
+                <th>Bank Name:</th>
+                <td><?php echo !empty($customer['bank_name']) ? htmlspecialchars($customer['bank_name']) : 'N/A'; ?></td>
+            </tr>
+            <tr>
+                <th>Account Number:</th>
+                <td><?php echo !empty($customer['bank_account_number']) ? htmlspecialchars($customer['bank_account_number']) : 'N/A'; ?></td>
+            </tr>
+            <tr>
+                <th>Statement:</th>
+                <td>
+                    <?php if ($fileUrl): ?>
+                        <a href="<?php echo htmlspecialchars($fileUrl); ?>" target="_blank" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="<?php echo $fileIcon; ?> me-2"></i>View Statement
+                        </a>
+                    <?php else: ?>
+                        N/A
+                    <?php endif; ?>
+                </td>
+            </tr>
         </table>
     </div>
 
@@ -166,4 +197,23 @@ try {
         'error' => $e->getMessage()
     ]);
 }
-?>
+
+function getFileIcon($extension) {
+    switch ($extension) {
+        case 'pdf':
+            return 'fas fa-file-pdf';
+        case 'jpg':
+        case 'jpeg':
+        case 'png':
+        case 'gif':
+            return 'fas fa-file-image';
+        case 'doc':
+        case 'docx':
+            return 'fas fa-file-word';
+        case 'xls':
+        case 'xlsx':
+            return 'fas fa-file-excel';
+        default:
+            return 'fas fa-file';
+    }
+}

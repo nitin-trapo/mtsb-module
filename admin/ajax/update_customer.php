@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once '../../config/database.php';
 require_once '../../includes/functions.php';
 
@@ -37,7 +38,7 @@ try {
         $_POST['first_name'],
         $_POST['last_name'],
         $_POST['phone'],
-        $_POST['is_agent'],
+        isset($_POST['is_agent']) ? 1 : 0,
         $_POST['status'],
         $_POST['bank_name'],
         $_POST['bank_account_number'],
