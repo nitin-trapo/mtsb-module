@@ -26,3 +26,159 @@
             GROUP_CONCAT(DISTINCT status) as statuses
         FROM commissions 
         WHERE status != 'cancelled'
+[05-Jan-2025 16:28:04 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 7987.09
+    [total_count] => 29
+    [statuses] => pending,paid
+)
+
+[05-Jan-2025 16:28:04 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[09-Jan-2025 08:23:58 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 7987.09
+    [total_count] => 29
+    [statuses] => pending,paid
+)
+
+[09-Jan-2025 08:23:58 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[10-Jan-2025 15:25:18 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 7987.09
+    [total_count] => 29
+    [statuses] => pending,paid
+)
+
+[10-Jan-2025 15:25:18 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[10-Jan-2025 15:27:14 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 7987.09
+    [total_count] => 29
+    [statuses] => pending,paid
+)
+
+[10-Jan-2025 15:27:14 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[10-Jan-2025 15:27:17 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 7987.09
+    [total_count] => 29
+    [statuses] => pending,paid
+)
+
+[10-Jan-2025 15:27:17 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[10-Jan-2025 15:27:33 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 7987.09
+    [total_count] => 29
+    [statuses] => pending,paid
+)
+
+[10-Jan-2025 15:27:33 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[10-Jan-2025 15:30:54 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 7987.09
+    [total_count] => 29
+    [statuses] => pending,paid
+)
+
+[10-Jan-2025 15:30:54 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[10-Jan-2025 15:30:58 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 7987.09
+    [total_count] => 29
+    [statuses] => pending,paid
+)
+
+[10-Jan-2025 15:30:58 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[10-Jan-2025 15:31:04 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 7987.09
+    [total_count] => 29
+    [statuses] => pending,paid
+)
+
+[10-Jan-2025 15:31:04 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[10-Jan-2025 15:32:20 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 7987.09
+    [total_count] => 29
+    [statuses] => pending,paid
+)
+
+[10-Jan-2025 15:32:20 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
+[10-Jan-2025 15:34:17 Europe/Berlin] PHP Warning:  include(includes/sidebar.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\shopify-agent-module\admin\profile.php on line 107
+[10-Jan-2025 15:34:17 Europe/Berlin] PHP Warning:  include(): Failed opening 'includes/sidebar.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\shopify-agent-module\admin\profile.php on line 107
+[10-Jan-2025 15:35:10 Europe/Berlin] Commission Stats: Array
+(
+    [total_amount] => 7987.09
+    [total_count] => 29
+    [statuses] => pending,paid
+)
+
+[10-Jan-2025 15:35:10 Europe/Berlin] Query: 
+        SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COUNT(*) as total_count,
+            GROUP_CONCAT(DISTINCT status) as statuses
+        FROM commissions 
+        WHERE status != 'cancelled'
