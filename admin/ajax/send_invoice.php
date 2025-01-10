@@ -9,14 +9,40 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-// Check if user is logged in and is admin
-if (!is_logged_in() || !is_admin()) {
+// Set up logging
+$logDir = __DIR__ . '/../../logs';
+if (!file_exists($logDir)) {
+    mkdir($logDir, 0777, true);
+}
+$logFile = $logDir . '/invoice_sending.log';
+
+function logInvoiceMessage($message, $context = []) {
+    global $logFile;
+    try {
+        $timestamp = date('Y-m-d H:i:s');
+        $contextStr = !empty($context) ? ' Context: ' . json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '';
+        $logMessage = "[{$timestamp}] {$message}{$contextStr}\n";
+        error_log($logMessage, 3, $logFile);
+    } catch (Exception $e) {
+        error_log("Failed to write to invoice log: " . $e->getMessage());
+    }
+}
+
+// Check for webhook request
+$isWebhook = isset($_POST['webhook_request']) || 
+             isset($_SERVER['HTTP_X_WEBHOOK_REQUEST']) || 
+             (isset($_SERVER['HTTP_USER_AGENT']) && $_SERVER['HTTP_USER_AGENT'] === 'Shopify Webhook');
+
+// Only check session for non-webhook requests
+if (!$isWebhook && (!is_logged_in() || !is_admin())) {
+    logInvoiceMessage("Unauthorized access attempt", ['ip' => $_SERVER['REMOTE_ADDR']]);
     header('Content-Type: application/json');
     echo json_encode(['error' => 'Unauthorized access']);
     exit;
 }
 
 if (!isset($_POST['order_id'])) {
+    logInvoiceMessage("Missing order_id parameter");
     header('Content-Type: application/json');
     echo json_encode(['error' => 'Order ID is required']);
     exit;
@@ -26,6 +52,11 @@ $db = new Database();
 $conn = $db->getConnection();
 
 try {
+    logInvoiceMessage("Starting invoice generation", [
+        'order_id' => $_POST['order_id'],
+        'is_webhook' => $isWebhook
+    ]);
+    
     $stmt = $conn->prepare("
         SELECT 
             o.*,
@@ -48,6 +79,7 @@ try {
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$order) {
+        logInvoiceMessage("Order not found", ['order_id' => $_POST['order_id']]);
         header('Content-Type: application/json');
         echo json_encode(['error' => 'Order not found']);
         exit;
@@ -86,6 +118,7 @@ try {
         $primary_email = $metafields_customer_email ?: $order['customer_email'];
         
         if (empty($primary_email)) {
+            logInvoiceMessage("No valid email found for sending invoice", ['order_id' => $_POST['order_id']]);
             header('Content-Type: application/json');
             echo json_encode(['error' => 'No valid email found for sending invoice']);
             exit;
@@ -217,6 +250,7 @@ try {
         ");
         $stmt->execute([$order['id'], $primary_email]);
         
+        logInvoiceMessage("Invoice sent successfully to " . $primary_email, ['order_id' => $_POST['order_id']]);
         header('Content-Type: application/json');
         echo json_encode([
             'success' => true,
@@ -240,6 +274,7 @@ try {
             'Mailer Error: ' . $e->getMessage()
         ]);
         
+        logInvoiceMessage("Failed to send invoice email: " . $e->getMessage(), ['order_id' => $_POST['order_id']]);
         error_log("Failed to send invoice email: " . $e->getMessage());
         header('Content-Type: application/json');
         echo json_encode([
@@ -248,10 +283,12 @@ try {
     }
     
 } catch (PDOException $e) {
+    logInvoiceMessage("Database error while sending invoice: " . $e->getMessage(), ['order_id' => $_POST['order_id']]);
     error_log("Database error while sending invoice: " . $e->getMessage());
     header('Content-Type: application/json');
     echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
 } catch (Exception $e) {
+    logInvoiceMessage("General error while sending invoice: " . $e->getMessage(), ['order_id' => $_POST['order_id']]);
     error_log("General error while sending invoice: " . $e->getMessage());
     header('Content-Type: application/json');
     echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
