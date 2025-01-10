@@ -526,7 +526,7 @@ try {
                         </tr>
                         <tr>
                             <th>Total Commission:</th>
-                            <td>' . $currency_symbol . ' ' . number_format($commission['amount'], 2) . '
+                            <td>' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['amount'] : $commission['actual_commission'], 2) . '
                                 <button type="button" class="btn btn-sm btn-primary ms-2 adjust-commission" data-commission-id="' . $commission_id . '">
                                     <i class="fas fa-edit me-1"></i>Adjust
                                 </button>
@@ -858,7 +858,7 @@ try {
                             <td class="text-end fw-bold">' . $currency_symbol . ' ' . number_format($total_amount, 2) . '</td>
                             <td class="text-end fw-bold">Overall Rate:</td>
                             <td class="text-end fw-bold">' . number_format($overall_rate, 1) . '%</td>
-                            <td class="text-end fw-bold">' . $currency_symbol . ' ' . number_format($commission['actual_commission'], 2) . '</td>
+                            <td class="text-end fw-bold">' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['amount'] : $commission['actual_commission'], 2) . '</td>
                         </tr>
                         <tr class="table-light">
                             <td colspan="6" class="text-end fw-bold">Total Discount:</td>
@@ -866,7 +866,7 @@ try {
                         </tr>
                         <tr class="table-light">
                             <td colspan="6" class="text-end fw-bold">Final Commission:</td>
-                            <td colspan="2" class="text-end fw-bold fs-5 text-success">' . $currency_symbol . ' ' . number_format($commission['amount'], 2) . '</td>
+                            <td colspan="2" class="text-end fw-bold fs-5 text-success">' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['amount'] : $commission['actual_commission'], 2) . '</td>
                         </tr>
                     </tbody>
                 </table>
