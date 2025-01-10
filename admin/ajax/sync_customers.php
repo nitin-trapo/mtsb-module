@@ -41,19 +41,24 @@ try {
         $missing_customers = [];
     }
     
-    // Start sync
+    // Start sync log entry
     $stmt = $conn->prepare("
         INSERT INTO sync_logs 
-        (sync_type, status, started_at, items_synced)
-        VALUES ('customers', 'running', NOW(), 0)
+        (sync_type, status, started_at) 
+        VALUES 
+        ('customers', 'running', NOW())
     ");
     $stmt->execute();
-    $sync_id = $conn->lastInsertId();
+    $syncLogId = $conn->lastInsertId();
+    
+    $itemsSynced = 0;
+    $hasError = false;
+    $errorMessage = '';
     
     // Return sync_id immediately
     echo json_encode([
         'success' => true,
-        'sync_id' => $sync_id,
+        'sync_id' => $syncLogId,
         'message' => 'Customer sync started'
     ]);
     
@@ -82,12 +87,15 @@ try {
                         $synced = $shopify->syncCustomer($shopify_customer);
                         if ($synced) {
                             $total_synced++;
+                            $itemsSynced++;
                             error_log("Successfully synced customer: ID={$customer['shopify_customer_id']}");
                         } else {
                             error_log("Failed to sync customer: ID={$customer['shopify_customer_id']} (already exists or invalid data)");
                         }
                     } catch (Exception $e) {
                         error_log("Error during customer sync: ID={$customer['shopify_customer_id']}, Error: " . $e->getMessage());
+                        $hasError = true;
+                        $errorMessage = $e->getMessage();
                     }
                 } else {
                     error_log("Customer not found in Shopify: ID={$customer['shopify_customer_id']}");
@@ -95,6 +103,8 @@ try {
             }
         } catch (Exception $e) {
             error_log("Error processing customer ID {$customer['shopify_customer_id']}: " . $e->getMessage());
+            $hasError = true;
+            $errorMessage = $e->getMessage();
             continue;
         }
     }
@@ -103,40 +113,41 @@ try {
     try {
         $synced_count = $shopify->syncCustomers();
         $total_synced += $synced_count;
-        
-        // Update final sync status
-        $stmt = $conn->prepare("
-            UPDATE sync_logs 
-            SET status = 'success',
-                items_synced = ?,
-                completed_at = NOW()
-            WHERE id = ?
-        ");
-        $stmt->execute([$total_synced, $sync_id]);
+        $itemsSynced += $synced_count;
         
     } catch (Exception $e) {
         // Log error
         error_log("Error in customer sync: " . $e->getMessage());
-        
-        if (isset($sync_id)) {
-            try {
-                $stmt = $conn->prepare("
-                    UPDATE sync_logs 
-                    SET status = 'failed',
-                        error_message = ?,
-                        completed_at = NOW()
-                    WHERE id = ?
-                ");
-                $stmt->execute([$e->getMessage(), $sync_id]);
-            } catch (Exception $logError) {
-                error_log("Failed to update sync log: " . $logError->getMessage());
-            }
-        }
+        $hasError = true;
+        $errorMessage = $e->getMessage();
+    }
+    
+    // Update sync log
+    if ($hasError) {
+        $stmt = $conn->prepare("
+            UPDATE sync_logs 
+            SET status = 'failed',
+                items_synced = ?,
+                completed_at = NOW(),
+                error_message = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([$itemsSynced, $errorMessage, $syncLogId]);
+    } else {
+        $stmt = $conn->prepare("
+            UPDATE sync_logs 
+            SET status = 'success',
+                items_synced = ?,
+                completed_at = NOW(),
+                error_message = NULL
+            WHERE id = ?
+        ");
+        $stmt->execute([$itemsSynced, $syncLogId]);
     }
     
 } catch (Exception $e) {
     // Log error
-    if (isset($sync_id)) {
+    if (isset($syncLogId)) {
         $stmt = $conn->prepare("
             UPDATE sync_logs 
             SET status = 'failed',
@@ -144,7 +155,7 @@ try {
                 completed_at = NOW()
             WHERE id = ?
         ");
-        $stmt->execute([$e->getMessage(), $sync_id]);
+        $stmt->execute([$e->getMessage(), $syncLogId]);
     }
     
     // Only send error response if we haven't sent the initial response

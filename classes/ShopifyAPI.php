@@ -364,67 +364,151 @@ class ShopifyAPI {
     }
 
     public function syncCustomer($customer) {
-        if (empty($customer['id'])) {
-            $this->logError("Cannot sync customer: missing ID", ['customer' => $customer]);
-            return false;
-        }
-
         try {
-            // Check if customer exists
-            $stmt = $this->db->prepare("SELECT id FROM customers WHERE shopify_customer_id = ?");
-            $stmt->execute([$customer['id']]);
-            if ($stmt->fetch()) {
-                $this->logError("Customer already exists", ['shopify_customer_id' => $customer['id']]);
-                return false;
+            error_log("Starting customer sync for ID {$customer['id']} with data: " . json_encode($customer));
+            
+            // Get customer metafields
+            $metafields = $this->getCustomerMetafields($customer['id']);
+            error_log("Processing metafields for customer {$customer['id']}: " . json_encode($metafields));
+            
+            // Extract bank details from metafields
+            $bankName = '';
+            $bankAccountNumber = '';
+            $bankAccountHeader = '';
+            
+            foreach ($metafields as $metafield) {
+                error_log("Processing metafield: " . json_encode($metafield));
+                switch ($metafield['key']) {
+                    case 'bank_name_e':
+                        $bankName = $metafield['value'];
+                        error_log("Found bank name: {$bankName}");
+                        break;
+                    case 'bank_account_no':
+                        $bankAccountNumber = $metafield['value'];
+                        error_log("Found bank account number: {$bankAccountNumber}");
+                        break;
+                    case 'bank_statement_header':
+                        $bankAccountHeader = $metafield['value'];
+                        error_log("Found bank statement header: {$bankAccountHeader}");
+                        break;
+                }
             }
 
-            // Prepare customer data
-            $customer_data = [
-                'shopify_customer_id' => $customer['id'],
-                'email' => $customer['email'] ?? '',
-                'first_name' => $customer['first_name'] ?? '',
-                'last_name' => $customer['last_name'] ?? '',
-                'phone' => $customer['phone'] ?? '',
+            // Extract phone from default address if not in main customer data
+            $phone = $customer['phone'] ?? null;
+            if (empty($phone) && !empty($customer['default_address']['phone'])) {
+                $phone = $customer['default_address']['phone'];
+                error_log("Using phone from default address: {$phone}");
+            }
+
+            // Begin transaction
+            $this->db->beginTransaction();
+
+            // Check if customer exists
+            $stmt = $this->db->prepare("
+                SELECT id FROM customers 
+                WHERE shopify_customer_id = ?
+            ");
+            $stmt->execute([$customer['id']]);
+            $existingCustomer = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $customerData = [
+                'email' => $customer['email'] ?? null,
+                'first_name' => $customer['first_name'] ?? null,
+                'last_name' => $customer['last_name'] ?? null,
+                'phone' => $phone,
+                'accepts_marketing' => $customer['accepts_marketing'] ?? false,
                 'total_spent' => $customer['total_spent'] ?? 0,
                 'orders_count' => $customer['orders_count'] ?? 0,
-                'verified_email' => isset($customer['verified_email']) ? (int)$customer['verified_email'] : 0,
-                'tax_exempt' => isset($customer['tax_exempt']) ? (int)$customer['tax_exempt'] : 0,
-                'tags' => $customer['tags'] ?? '',
-                'default_address' => json_encode($customer['default_address'] ?? null),
+                'tags' => json_encode($customer['tags'] ?? ''),
                 'addresses' => json_encode($customer['addresses'] ?? []),
-                'created_at' => $customer['created_at'] ?? date('Y-m-d H:i:s'),
-                'updated_at' => $customer['updated_at'] ?? date('Y-m-d H:i:s')
+                'default_address' => json_encode($customer['default_address'] ?? null),
+                'tax_exempt' => $customer['tax_exempt'] ?? false,
+                'verified_email' => $customer['verified_email'] ?? false,
+                'bank_name' => $bankName,
+                'bank_account_number' => $bankAccountNumber,
+                'bank_account_header' => $bankAccountHeader
             ];
 
-            $this->logError("Attempting to insert customer", [
-                'shopify_customer_id' => $customer['id'],
-                'email' => $customer['email'] ?? 'no email'
-            ]);
+            error_log("Prepared customer data for database: " . json_encode($customerData));
 
-            // Insert new customer
-            $columns = implode(', ', array_keys($customer_data));
-            $values = ':' . implode(', :', array_keys($customer_data));
-            $stmt = $this->db->prepare("
-                INSERT INTO customers ({$columns})
-                VALUES ({$values})
-            ");
-            
-            $stmt->execute($customer_data);
-            
-            $this->logError("Successfully synced customer", [
-                'shopify_customer_id' => $customer['id'],
-                'email' => $customer['email'] ?? 'no email'
-            ]);
-            
+            if ($existingCustomer) {
+                // Update existing customer
+                $stmt = $this->db->prepare("
+                    UPDATE customers SET 
+                    email = ?,
+                    first_name = ?,
+                    last_name = ?,
+                    phone = ?,
+                    accepts_marketing = ?,
+                    total_spent = ?,
+                    orders_count = ?,
+                    tags = ?,
+                    addresses = ?,
+                    default_address = ?,
+                    tax_exempt = ?,
+                    verified_email = ?,
+                    bank_name = ?,
+                    bank_account_number = ?,
+                    bank_account_header = ?,
+                    last_sync_at = NOW()
+                    WHERE shopify_customer_id = ?
+                ");
+
+                $params = array_values($customerData);
+                $params[] = $customer['id'];
+                $result = $stmt->execute($params);
+                
+                error_log("Updated customer {$customer['id']} - Result: " . ($result ? 'success' : 'failed'));
+                error_log("Updated data: " . json_encode($customerData));
+                
+            } else {
+                // Insert new customer
+                $stmt = $this->db->prepare("
+                    INSERT INTO customers (
+                        shopify_customer_id, email, first_name, last_name,
+                        phone, accepts_marketing, total_spent, orders_count,
+                        tags, addresses, default_address, tax_exempt,
+                        verified_email, bank_name, bank_account_number,
+                        bank_account_header, last_sync_at
+                    ) VALUES (
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
+                    )
+                ");
+
+                $params = [$customer['id']];
+                $params = array_merge($params, array_values($customerData));
+                $result = $stmt->execute($params);
+                
+                error_log("Inserted new customer {$customer['id']} - Result: " . ($result ? 'success' : 'failed'));
+                error_log("Inserted data: " . json_encode($customerData));
+            }
+
+            $this->db->commit();
             return true;
 
         } catch (Exception $e) {
-            $this->logError("Error syncing customer", [
-                'shopify_customer_id' => $customer['id'] ?? 'unknown',
-                'error' => $e->getMessage(),
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            $this->logError("Error syncing customer: " . $e->getMessage(), [
+                'customer_id' => $customer['id'] ?? 'unknown',
                 'trace' => $e->getTraceAsString()
             ]);
-            throw $e;
+            return false;
+        }
+    }
+
+    public function getCustomerMetafields($customerId) {
+        try {
+            $response = $this->makeApiCall("customers/{$customerId}/metafields.json");
+            error_log("Metafields response for customer {$customerId}: " . json_encode($response));
+            return $response['metafields'] ?? [];
+        } catch (Exception $e) {
+            $this->logError("Error fetching customer metafields: " . $e->getMessage(), [
+                'customer_id' => $customerId
+            ]);
+            return [];
         }
     }
 
@@ -458,7 +542,7 @@ class ShopifyAPI {
 
                 // Check for next page using Link header
                 $link_header = $this->getLastResponseHeader('Link');
-                if ($link_header && preg_match('/<([^>]*)>; rel="next"/', $link_header, $matches)) {
+                if ($link_header && preg_match('/<(.+?)>; rel="next"/', $link_header, $matches)) {
                     $endpoint = parse_url($matches[1], PHP_URL_QUERY);
                 } else {
                     break;
@@ -928,31 +1012,16 @@ class ShopifyAPI {
         }
     }
 
-    public function getCustomerById($shopify_customer_id) {
+    public function getCustomerById($customerId) {
         try {
-            $this->logError("Fetching customer", ['shopify_customer_id' => $shopify_customer_id]);
-            
-            $endpoint = "customers/{$shopify_customer_id}.json";
-            $response = $this->makeApiCall($endpoint);
-            
-            if (!empty($response['customer'])) {
-                $this->logError("Found customer", [
-                    'shopify_customer_id' => $shopify_customer_id,
-                    'email' => $response['customer']['email'] ?? 'no email'
-                ]);
-                return $response['customer'];
-            }
-            
-            $this->logError("Customer not found", ['shopify_customer_id' => $shopify_customer_id]);
-            return null;
-            
+            $response = $this->makeApiCall("customers/{$customerId}.json");
+            error_log("Raw customer data from Shopify for ID {$customerId}: " . json_encode($response));
+            return $response['customer'] ?? null;
         } catch (Exception $e) {
-            $this->logError("Error fetching customer by ID", [
-                'shopify_customer_id' => $shopify_customer_id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            $this->logError("Error fetching customer: " . $e->getMessage(), [
+                'customer_id' => $customerId
             ]);
-            throw $e;
+            return null;
         }
     }
 
