@@ -92,6 +92,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error_message = "An error occurred while updating password";
             }
         }
+    } elseif (isset($_POST['clear_database'])) {
+        $result = clear_database();
+        if ($result['success']) {
+            $success_message = $result['message'];
+        } else {
+            $error_message = $result['message'];
+        }
+    } elseif (isset($_POST['clear_logs'])) {
+        $result = clear_logs();
+        if ($result['success']) {
+            $success_message = $result['message'];
+        } else {
+            $error_message = $result['message'];
+        }
     }
 }
 
@@ -164,6 +178,47 @@ include 'includes/header.php';
                                                     <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
                                                 </div>
                                                 <button type="submit" name="change_password" class="btn btn-primary">Change Password</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Section -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-3">Database Management</h6>
+                                            <p class="text-muted">Clear all data except user accounts. This action cannot be undone.</p>
+                                            <form method="POST" onsubmit="return confirm('Are you sure you want to clear the database? This action cannot be undone.');">
+                                                <button type="submit" name="clear_database" class="btn btn-danger">
+                                                    <i class="fas fa-database me-2"></i>Clear Database
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-3">Log Management</h6>
+                                            <p class="text-muted">Clear all log files. This action cannot be undone.</p>
+                                            <form method="POST" onsubmit="return confirm('Are you sure you want to clear all log files? This action cannot be undone.');">
+                                                <button type="submit" name="clear_logs" class="btn btn-warning">
+                                                    <i class="fas fa-file-alt me-2"></i>Clear Logs
+                                                </button>
                                             </form>
                                         </div>
                                     </div>

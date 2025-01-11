@@ -137,4 +137,75 @@ function get_status_color($status) {
             return 'primary';
     }
 }
+
+// Database and Log Management Functions
+function clear_database() {
+    try {
+        $db = new Database();
+        $pdo = $db->getConnection();
+        
+        // Temporarily disable foreign key checks
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
+        
+        // List of tables to clear (excluding users table)
+        $tables = [
+            'invoices',          // Clear child tables first
+            'order_items',
+            'product_metadata',
+            'product_tags',
+            'product_variants',
+            'commissions',
+            'commission_rules',
+            'customers',
+            'email_logs',
+            'orders',
+            'products',
+            'product_types',
+            'sync_logs'
+        ];
+        
+        foreach ($tables as $table) {
+            try {
+                $stmt = $pdo->prepare("TRUNCATE TABLE $table");
+                $stmt->execute();
+            } catch (PDOException $e) {
+                // Log the error but continue with other tables
+                error_log("Error truncating table $table: " . $e->getMessage());
+            }
+        }
+        
+        // Re-enable foreign key checks
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+        
+        return ['success' => true, 'message' => 'Database cleared successfully'];
+    } catch (PDOException $e) {
+        // Re-enable foreign key checks in case of error
+        try {
+            $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+        } catch (PDOException $ex) {
+            // Ignore any errors while re-enabling foreign key checks
+        }
+        return ['success' => false, 'message' => 'Error clearing database: ' . $e->getMessage()];
+    }
+}
+
+function clear_logs() {
+    try {
+        $log_dir = __DIR__ . '/../logs/';
+        $log_files = glob($log_dir . '*.log');
+        $deleted_count = 0;
+        
+        foreach ($log_files as $file) {
+            if (is_file($file)) {
+                // Instead of deleting, we'll clear the content
+                file_put_contents($file, '');
+                $deleted_count++;
+            }
+        }
+        
+        return ['success' => true, 'message' => "Cleared $deleted_count log files successfully"];
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => 'Error clearing logs: ' . $e->getMessage()];
+    }
+}
 ?>

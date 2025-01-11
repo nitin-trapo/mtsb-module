@@ -1,0 +1,33 @@
+[2025-01-11 05:37:37] Starting product types sync 
+[2025-01-11 05:37:37] Sync started {"sync_id":"3"}
+[2025-01-11 05:37:37] Fetching product types from Shopify 
+[2025-01-11 05:37:37] Product types fetched {"count":11}
+[2025-01-11 05:37:37] Product types inserted {"count":11}
+[2025-01-11 05:37:37] Sync completed successfully {"sync_id":"3","items_synced":11}
+[2025-01-11 05:37:41] Starting product tags sync 
+[2025-01-11 05:37:41] Sync started {"sync_id":"4"}
+[2025-01-11 05:38:11] Retrieved product tags {"count":214,"sample_tags":["15-off","15-off-new","1997-2007","1999-2003","2-seater"]}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"Audi_A3_2014-present (8V)","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'Audi_A3_2014-present (8V)' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"Audi_A3_2014-present (Sportback)","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'Audi_A3_2014-present (Sportback)' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"Audi_A4_2016-present (B9)","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'Audi_A4_2016-present (B9)' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"Audi_Q5_2012-present (Facelift 8R)","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'Audi_Q5_2012-present (Facelift 8R)' for key 'tag_name'"}
+[2025-01-11 05:38:11] Progress updated {"sync_id":"4","new_tags":50,"skipped_tags":0,"total_processed":50,"batch_sample":[{"name":"15-off","slug":"tag_15off"},{"name":"15-off-new","slug":"tag_15offnew"},{"name":"1997-2007","slug":"tag_19972007"},{"name":"1999-2003","slug":"tag_19992003"},{"name":"2-seater","slug":"tag_2seater"}]}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"brand:Audi","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'brand:Audi' for key 'tag_name'"}
+[2025-01-11 05:38:11] Progress updated {"sync_id":"4","new_tags":100,"skipped_tags":0,"total_processed":100,"batch_sample":[{"name":"Audi_Q7_2008-2015 (5 Seater 4L)","slug":"tag_audi_q7_20082015_5_seater_4l"},{"name":"Audi_Q7_2008-2015 (7Seater 4L)","slug":"tag_audi_q7_20082015_7seater_4l"},{"name":"Audi_R8","slug":"tag_audi_r8"},{"name":"Audi_R8_2013-Present (Type 42)","slug":"tag_audi_r8_2013present_type_42"},{"name":"Audi_RS5","slug":"tag_audi_rs5"}]}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year: 2019-present (FY)","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year: 2019-present (FY)' for key 'tag_name'"}
+[2025-01-11 05:38:11] Progress updated {"sync_id":"4","new_tags":150,"skipped_tags":0,"total_processed":150,"batch_sample":[{"name":"model:A7","slug":"tag_modela7"},{"name":"model:A7\/RS7","slug":"tag_modela7rs7"},{"name":"model:A8","slug":"tag_modela8"},{"name":"model:A8 L","slug":"tag_modela8_l"},{"name":"model:DB11","slug":"tag_modeldb11"}]}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2010-2017-","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'tag_year20102017' for key 'idx_tag_slug'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2012-present (Facelift 8R)","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2012-present (Facelift 8R)' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2013-present","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2013-present' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2013-present (4G)","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2013-present (4G)' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2014-present (8V)","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2014-present (8V)' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2014-present (Sportback)","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2014-present (Sportback)' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2015-present","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2015-present' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2016-present","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2016-present' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2016-present (7 Seater)","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2016-present (7 Seater)' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2016-present (B9)","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2016-present (B9)' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2017-present","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2017-present' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2018-present","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2018-present' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2019-present","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2019-present' for key 'tag_name'"}
+[2025-01-11 05:38:11] Error syncing tag {"tag":"year:2020-present","error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'year:2020-present' for key 'tag_name'"}
+[2025-01-11 05:38:11] Sync completed successfully {"sync_id":"4","new_tags":194,"skipped_tags":0,"deleted_tags":0,"summary":"Added 194 new tags, skipped 0 existing tags, deleted 0 obsolete tags"}
