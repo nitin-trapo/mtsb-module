@@ -1,5 +1,6 @@
 # Configuration files
 config/shopify_config.php
+config/mail.php
 
 # Logs
 logs/
