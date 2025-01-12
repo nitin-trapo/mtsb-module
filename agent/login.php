@@ -6,6 +6,18 @@ if (headers_sent($filename, $linenum)) {
 // Start output buffering
 ob_start();
 session_start();
+
+// Set timezone to India
+date_default_timezone_set('Asia/Kolkata');
+
+// Reset session if requested
+if (isset($_GET['reset']) || isset($_POST['reset'])) {
+    session_unset();
+    session_destroy();
+    header('Location: login.php');
+    exit;
+}
+
 require_once '../config/database.php';
 require_once '../config/tables.php';
 require_once '../config/shopify_config.php';
@@ -25,7 +37,7 @@ if (!file_exists(dirname($log_file))) {
 
 function write_log($message, $type = 'INFO') {
     global $log_file;
-    $date = date('Y-m-d H:i:s');
+    $date = (new DateTime('now', new DateTimeZone('Asia/Kolkata')))->format('Y-m-d H:i:s');
     $log_message = "[{$date}] [{$type}] {$message}" . PHP_EOL;
     file_put_contents($log_file, $log_message, FILE_APPEND);
 }
@@ -46,249 +58,294 @@ if (is_logged_in() && is_agent()) {
 }
 
 $error = '';
+$success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = sanitize_input($_POST['email']);
-    $password = $_POST['password'];
-
-    write_log("Login attempt for email: " . $email);
-
     $db = new Database();
     $conn = $db->getConnection();
-
-    try {
-        // First check if user exists
-        $query = "SELECT * FROM " . TABLE_USERS . " WHERE email = ?";
-        $stmt = $conn->prepare($query);
-        $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$user) {
-            // New user - create account
-            write_log("Creating new user account for: " . $email);
-            
-            // Generate reset token
-            $token = bin2hex(random_bytes(32));
-            $token_expiry = date('Y-m-d H:i:s', strtotime('+24 hours'));
-            
-            // Insert new user with reset token
-            $insert_query = "INSERT INTO " . TABLE_USERS . " 
-                           (email, role, status, password_status, reset_token, reset_token_expiry, created_at) 
-                           VALUES (?, 'agent', 'active', 'unset', ?, ?, NOW())";
-            $insert_stmt = $conn->prepare($insert_query);
-            $insert_stmt->execute([$email, $token, $token_expiry]);
-            
-            $userId = $conn->lastInsertId();
-            write_log("Created new user with ID: " . $userId);
-            
-            // Send password setup email
-            $mail = new PHPMailer(true);
+    
+    if (!$conn) {
+        $error = "Database connection failed";
+        write_log("Database connection failed", 'ERROR');
+    } else {
+        if (isset($_POST['resend_otp']) && isset($_SESSION['login_email'])) {
+            $email = $_SESSION['login_email'];
+            write_log("Resend OTP request for email: " . $email);
             
             try {
-                // Server settings
-                $mail->isSMTP();
-                $mail->Host = $mail_config['host'];
-                $mail->SMTPAuth = true;
-                $mail->Username = $mail_config['username'];
-                $mail->Password = $mail_config['password'];
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port = $mail_config['port'];
-                
-                // Recipients
-                $mail->setFrom($mail_config['from_email'], $mail_config['from_name']);
-                $mail->addAddress($email);
-                
-                // Content
-                $mail->isHTML(true);
-                $mail->Subject = "Set Up Your Agent Account Password";
-                
-                // HTML Message
-                $reset_link = BASE_URL . "/agent/reset-password.php?token=" . $token . "&email=" . urlencode($email);
-                $htmlMessage = "
-                <html>
-                <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-                    <h2>Welcome to our Agent Portal!</h2>
-                    <p>Hello,</p>
-                    <p>Please click the button below to set up your password:</p>
-                    <p style='margin: 25px 0;'>
-                        <a href='{$reset_link}' 
-                           style='background-color: #007bff; 
-                                  color: white; 
-                                  padding: 10px 20px; 
-                                  text-decoration: none; 
-                                  border-radius: 5px;
-                                  display: inline-block;'>
-                            Set Up Password
-                        </a>
-                    </p>
-                    <p>Or copy and paste this link in your browser:</p>
-                    <p>{$reset_link}</p>
-                    <p>This link will expire in 24 hours.</p>
-                    <p>Best regards,<br>Agent Portal Team</p>
-                </body>
-                </html>";
-                
-                $mail->Body = $htmlMessage;
-                $mail->send();
-                
-                write_log("Password setup email sent to: " . $email);
-                $_SESSION['success_message'] = 'Please check your email to set your password.';
-                header('Location: login.php');
-                exit();
-                
+                // Check if user exists and is active agent
+                $query = "SELECT * FROM " . TABLE_CUSTOMERS . " WHERE email = ? AND status = 'active' AND is_agent = 1";
+                $stmt = $conn->prepare($query);
+                $stmt->execute([$email]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($user) {
+                    // Generate new OTP
+                    $otp = sprintf("%06d", mt_rand(100000, 999999));
+                    
+                    // Set expiry time 5 minutes from now
+                    $current_time = new DateTime('now', new DateTimeZone('Asia/Kolkata'));
+                    $expiry_time = clone $current_time;
+                    $expiry_time->modify('+5 minutes');
+                    $otp_expiry = $expiry_time->format('Y-m-d H:i:s');
+                    
+                    write_log("Generated new OTP at: " . $current_time->format('Y-m-d H:i:s'));
+                    write_log("OTP will expire at: " . $expiry_time->format('Y-m-d H:i:s'));
+                    
+                    // First clear any existing OTP
+                    $clear_query = "UPDATE " . TABLE_CUSTOMERS . " 
+                                  SET otp = NULL, otp_expiry = NULL 
+                                  WHERE id = ?";
+                    $clear_stmt = $conn->prepare($clear_query);
+                    $clear_stmt->execute([$user['id']]);
+                    
+                    // Hash OTP and store in database
+                    $hashed_otp = password_hash($otp, PASSWORD_DEFAULT);
+                    $update_query = "UPDATE " . TABLE_CUSTOMERS . " 
+                                   SET otp = ?, otp_expiry = ? 
+                                   WHERE id = ?";
+                    $update_stmt = $conn->prepare($update_query);
+                    $update_stmt->execute([$hashed_otp, $otp_expiry, $user['id']]);
+                    
+                    // Send new OTP via email
+                    $mail = new PHPMailer(true);
+                    
+                    try {
+                        $mail->isSMTP();
+                        $mail->Host = $mail_config['host'];
+                        $mail->SMTPAuth = true;
+                        $mail->Username = $mail_config['username'];
+                        $mail->Password = $mail_config['password'];
+                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                        $mail->Port = $mail_config['port'];
+                        
+                        $mail->setFrom($mail_config['from_email'], $mail_config['from_name']);
+                        $mail->addAddress($email);
+                        
+                        $mail->isHTML(true);
+                        $mail->Subject = 'New Login OTP for Agent Portal';
+                        $mail->Body = "
+                            <html>
+                            <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                                <h2>Agent Portal Login OTP</h2>
+                                <p>Hello {$user['first_name']},</p>
+                                <p>Your new OTP for login is: <b style='font-size: 24px; color: #007bff;'>{$otp}</b></p>
+                                <p>This OTP will expire in 5 minutes.</p>
+                                <p>If you didn't request this OTP, please ignore this email.</p>
+                                <p>Best regards,<br>Agent Portal Team</p>
+                            </body>
+                            </html>";
+                        
+                        $mail->send();
+                        $success = "New OTP has been sent to your email address.";
+                        write_log("New OTP sent to: " . $email);
+                        
+                    } catch (Exception $e) {
+                        $error = "Failed to send new OTP. Please try again.";
+                        write_log("Failed to send new OTP to {$email}: " . $mail->ErrorInfo, 'ERROR');
+                    }
+                } else {
+                    $error = "Invalid email or you don't have agent access.";
+                    write_log("Resend OTP failed - Invalid email or not an agent: " . $email, 'ERROR');
+                    unset($_SESSION['login_email']);
+                }
             } catch (Exception $e) {
-                write_log("Failed to send password setup email: " . $e->getMessage(), 'ERROR');
-                $_SESSION['error_message'] = 'Failed to send password setup email. Please try again later.';
-                header('Location: login.php');
-                exit();
+                $error = "An error occurred. Please try again.";
+                write_log("Resend OTP error for {$email}: " . $e->getMessage(), 'ERROR');
             }
-        } else {
-            // Existing user - verify password if status is set
-            if ($user['password_status'] === 'set') {
-                write_log("Verifying password for user: " . $email);
-                
-                if (!password_verify($password, $user['password'])) {
-                    write_log("Password verification failed for user: " . $email);
-                    $_SESSION['error_message'] = 'Invalid email or password.';
-                    header('Location: login.php');
-                    exit();
-                }
-                
-                // Password verified, proceed with login
-                write_log("Login successful for user: " . $email);
-                
-                // Get customer details from customers table
-                $customer_query = "SELECT * FROM " . TABLE_CUSTOMERS . " WHERE email = ? AND is_agent = 1";
-                $customer_stmt = $conn->prepare($customer_query);
-                $customer_stmt->execute([$email]);
-                $customer = $customer_stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if (!$customer) {
-                    // Customer record not found, create one
-                    write_log("Creating customer record for agent: " . $email);
-                    $insert_customer = "INSERT INTO " . TABLE_CUSTOMERS . " 
-                                     (email, first_name, last_name, is_agent, status, created_at) 
-                                     VALUES (?, ?, ?, 1, 'active', NOW())";
-                    $insert_stmt = $conn->prepare($insert_customer);
-                    $insert_stmt->execute([$email, '', '']); // Empty names for now, can be updated in profile
-                    
-                    // Get the newly created customer record
-                    $customer_stmt->execute([$email]);
-                    $customer = $customer_stmt->fetch(PDO::FETCH_ASSOC);
-                }
-                
-                write_log("Customer data retrieved: " . print_r($customer, true));
-                
-                // Set up session variables
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['role'] = $user['role'];
-                $_SESSION['name'] = $user['name'];
-                $_SESSION['email'] = $user['email'];
-                $_SESSION['customer_id'] = $customer['id'];
-                
-                write_log("Redirecting user to dashboard");
-                
-                // Debug information
-                write_log("Current BASE_URL: " . BASE_URL);
-                write_log("Session variables set: " . print_r($_SESSION, true));
-                
-                // Clear all output buffers
-                while (ob_get_level()) {
-                    ob_end_clean();
-                }
-                
-                // Use explicit path for redirection
-                $dashboard_path = dirname($_SERVER['PHP_SELF']) . '/dashboard.php';
-                write_log("Redirecting to: " . $dashboard_path);
-                
-                header("Location: " . $dashboard_path, true, 302);
-                exit();
+        } elseif (isset($_POST['email'])) {
+            $email = filter_var(sanitize_input($_POST['email']), FILTER_VALIDATE_EMAIL);
+            if (!$email) {
+                $error = "Invalid email format";
+                write_log("Invalid email format attempt: " . $_POST['email'], 'WARNING');
             } else {
-                // Password not set, send setup email
-                write_log("Password not set for existing user: " . $email . ". Sending setup email.");
-                
-                // Generate new reset token
-                $token = bin2hex(random_bytes(32));
-                $token_expiry = date('Y-m-d H:i:s', strtotime('+24 hours'));
-                
-                // Update user with new reset token
-                $update_query = "UPDATE " . TABLE_USERS . " 
-                               SET reset_token = ?, 
-                                   reset_token_expiry = ? 
-                               WHERE id = ?";
-                $update_stmt = $conn->prepare($update_query);
-                $update_stmt->execute([$token, $token_expiry, $user['id']]);
-                
-                // Send password setup email
-                $mail = new PHPMailer(true);
-                
+                write_log("Login attempt for email: " . $email);
+
                 try {
-                    $mail->isSMTP();
-                    $mail->Host = $mail_config['host'];
-                    $mail->SMTPAuth = true;
-                    $mail->Username = $mail_config['username'];
-                    $mail->Password = $mail_config['password'];
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                    $mail->Port = $mail_config['port'];
-                    
-                    $mail->setFrom($mail_config['from_email'], $mail_config['from_name']);
-                    $mail->addAddress($email);
-                    
-                    $mail->isHTML(true);
-                    $mail->Subject = "Set Up Your Agent Account Password";
-                    
-                    $reset_link = BASE_URL . "/agent/reset-password.php?token=" . $token . "&email=" . urlencode($email);
-                    $htmlMessage = "
-                    <html>
-                    <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-                        <h2>Welcome to our Agent Portal!</h2>
-                        <p>Hello,</p>
-                        <p>Please click the button below to set up your password:</p>
-                        <p style='margin: 25px 0;'>
-                            <a href='{$reset_link}' 
-                               style='background-color: #007bff; 
-                                      color: white; 
-                                      padding: 10px 20px; 
-                                      text-decoration: none; 
-                                      border-radius: 5px;
-                                      display: inline-block;'>
-                                Set Up Password
-                            </a>
-                        </p>
-                        <p>Or copy and paste this link in your browser:</p>
-                        <p>{$reset_link}</p>
-                        <p>This link will expire in 24 hours.</p>
-                        <p>Best regards,<br>Agent Portal Team</p>
-                    </body>
-                    </html>";
-                    
-                    $mail->Body = $htmlMessage;
-                    $mail->send();
-                    
-                    write_log("Password setup email sent to: " . $email);
-                    $_SESSION['success_message'] = 'Please check your email to set your password.';
-                    header('Location: login.php');
-                    exit();
+                    // Check if email exists in customers table and verify status and is_agent
+                    $query = "SELECT * FROM " . TABLE_CUSTOMERS . " WHERE email = ? AND status = 'active' AND is_agent = 1";
+                    $stmt = $conn->prepare($query);
+                    $stmt->execute([$email]);
+                    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if ($user) {
+                        // Generate OTP
+                        $otp = sprintf("%06d", mt_rand(100000, 999999));
+                        
+                        // Set expiry time 5 minutes from now
+                        $current_time = new DateTime('now', new DateTimeZone('Asia/Kolkata'));
+                        $expiry_time = clone $current_time;
+                        $expiry_time->modify('+5 minutes');
+                        $otp_expiry = $expiry_time->format('Y-m-d H:i:s');
+                        
+                        write_log("Generated new OTP at: " . $current_time->format('Y-m-d H:i:s'));
+                        write_log("OTP will expire at: " . $expiry_time->format('Y-m-d H:i:s'));
+                        
+                        // First clear any existing OTP
+                        $clear_query = "UPDATE " . TABLE_CUSTOMERS . " 
+                                      SET otp = NULL, otp_expiry = NULL 
+                                      WHERE id = ?";
+                        $clear_stmt = $conn->prepare($clear_query);
+                        $clear_stmt->execute([$user['id']]);
+                        
+                        // Hash OTP and store in database
+                        $hashed_otp = password_hash($otp, PASSWORD_DEFAULT);
+                        $update_query = "UPDATE " . TABLE_CUSTOMERS . " 
+                                       SET otp = ?, otp_expiry = ? 
+                                       WHERE id = ?";
+                        $update_stmt = $conn->prepare($update_query);
+                        $update_stmt->execute([$hashed_otp, $otp_expiry, $user['id']]);
+                        
+                        // Store email in session for verification
+                        $_SESSION['login_email'] = $email;
+                        
+                        // Send OTP via email
+                        $mail = new PHPMailer(true);
+                        
+                        try {
+                            // Server settings
+                            $mail->isSMTP();
+                            $mail->Host = $mail_config['host'];
+                            $mail->SMTPAuth = true;
+                            $mail->Username = $mail_config['username'];
+                            $mail->Password = $mail_config['password'];
+                            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                            $mail->Port = $mail_config['port'];
+                            
+                            // Recipients
+                            $mail->setFrom($mail_config['from_email'], $mail_config['from_name']);
+                            $mail->addAddress($email);
+                            
+                            // Content
+                            $mail->isHTML(true);
+                            $mail->Subject = 'Login OTP for Agent Portal';
+                            $mail->Body = "
+                                <html>
+                                <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                                    <h2>Agent Portal Login OTP</h2>
+                                    <p>Hello {$user['first_name']},</p>
+                                    <p>Your OTP for login is: <b style='font-size: 24px; color: #007bff;'>{$otp}</b></p>
+                                    <p>This OTP will expire in 5 minutes.</p>
+                                    <p>If you didn't request this OTP, please ignore this email.</p>
+                                    <p>Best regards,<br>Agent Portal Team</p>
+                                </body>
+                                </html>";
+                            
+                            $mail->send();
+                            $success = "OTP has been sent to your email address.";
+                            write_log("OTP sent to: " . $email);
+                            
+                        } catch (Exception $e) {
+                            $error = "Failed to send OTP. Please try again.";
+                            write_log("Failed to send OTP to {$email}: " . $mail->ErrorInfo, 'ERROR');
+                        }
+                        
+                    } else {
+                        $error = "Invalid email or you don't have agent access.";
+                        write_log("Login failed - Invalid email or not an agent: " . $email, 'ERROR');
+                        sleep(1); // Add delay to prevent brute force
+                    }
                     
                 } catch (Exception $e) {
-                    write_log("Failed to send password setup email: " . $e->getMessage(), 'ERROR');
-                    $_SESSION['error_message'] = 'Failed to send password setup email. Please try again later.';
-                    header('Location: login.php');
-                    exit();
+                    $error = "An error occurred. Please try again.";
+                    write_log("Login error for {$email}: " . $e->getMessage(), 'ERROR');
                 }
             }
-        }
-        
-    } catch (Exception $e) {
-        $error = $e->getMessage();
-        write_log("Login failed for agent {$email}: " . $error, 'ERROR');
-        if (isset($response)) {
-            write_log("Last response: " . $response, 'DEBUG');
+        } elseif (isset($_POST['otp'])) {
+            if (isset($_SESSION['login_email'])) {
+                $input_otp = sanitize_input($_POST['otp']);
+                $email = $_SESSION['login_email'];
+
+                try {
+                    // Get user data with OTP
+                    $current_time = new DateTime('now', new DateTimeZone('Asia/Kolkata'));
+                    $current_timestamp = $current_time->format('Y-m-d H:i:s');
+                    write_log("Verifying OTP at time: " . $current_timestamp);
+                    
+                    // First get the user details
+                    $query = "SELECT * FROM " . TABLE_CUSTOMERS . " 
+                             WHERE email = ? AND status = 'active' AND is_agent = 1";
+                    $stmt = $conn->prepare($query);
+                    $stmt->execute([$email]);
+                    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if ($user) {
+                        write_log("Found user: " . $user['email']);
+                        
+                        if ($user['otp'] === null || $user['otp_expiry'] === null) {
+                            $error = "No active OTP found. Please request a new one.";
+                            write_log("No active OTP for user: " . $email);
+                            unset($_SESSION['login_email']);
+                        } else {
+                            // Convert expiry time to DateTime object
+                            $expiry_time = new DateTime($user['otp_expiry'], new DateTimeZone('Asia/Kolkata'));
+                            write_log("OTP expiry time: " . $expiry_time->format('Y-m-d H:i:s'));
+                            write_log("Current time: " . $current_time->format('Y-m-d H:i:s'));
+                            
+                            if ($current_time < $expiry_time) {
+                                if (password_verify($input_otp, $user['otp'])) {
+                                    // OTP verified, clear it from database
+                                    $clear_query = "UPDATE " . TABLE_CUSTOMERS . " 
+                                                  SET otp = NULL, otp_expiry = NULL 
+                                                  WHERE id = ?";
+                                    $clear_stmt = $conn->prepare($clear_query);
+                                    $clear_stmt->execute([$user['id']]);
+                                    
+                                    // Set login session
+                                    $_SESSION['user_id'] = $user['id'];
+                                    $_SESSION['role'] = 'agent';  // Changed from is_agent to role
+                                    $_SESSION['user_email'] = $user['email'];
+                                    $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
+                                    
+                                    // Clear email from session
+                                    unset($_SESSION['login_email']);
+                                    
+                                    write_log("Successful login for: " . $user['email'] . " with role: " . $_SESSION['role']);
+                                    
+                                    // Clean output buffer
+                                    ob_clean();
+                                    
+                                    // Redirect with absolute path
+                                    $dashboard_url = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/dashboard.php";
+                                    write_log("Redirecting to: " . $dashboard_url);
+                                    
+                                    header("Location: " . $dashboard_url);
+                                    exit();
+                                } else {
+                                    $error = "Invalid OTP. Please try again.";
+                                    write_log("Invalid OTP attempt for: " . $email . ". Input OTP: " . $input_otp);
+                                }
+                            } else {
+                                $error = "OTP has expired. Click 'Request New OTP' to get a new code.";
+                                write_log("OTP expired. Expiry: " . $expiry_time->format('Y-m-d H:i:s') . 
+                                        ", Current: " . $current_time->format('Y-m-d H:i:s'));
+                                
+                                // Clear expired OTP
+                                $clear_query = "UPDATE " . TABLE_CUSTOMERS . " 
+                                              SET otp = NULL, otp_expiry = NULL 
+                                              WHERE id = ?";
+                                $clear_stmt = $conn->prepare($clear_query);
+                                $clear_stmt->execute([$user['id']]);
+                            }
+                        }
+                    } else {
+                        $error = "Invalid email or you don't have agent access.";
+                        write_log("User not found or inactive: " . $email);
+                        unset($_SESSION['login_email']);
+                    }
+                } catch (Exception $e) {
+                    $error = "An error occurred. Please try again.";
+                    write_log("OTP verification error for {$email}: " . $e->getMessage(), 'ERROR');
+                }
+            } else {
+                $error = "Invalid session. Please start over.";
+                write_log("Invalid session during OTP verification", 'ERROR');
+            }
         }
     }
 }
-
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -423,62 +480,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="row justify-content-center">
             <div class="col-md-4">
                 <div class="card shadow">
-                    <div class="card-body">
-                        <div class="logo">
-                            <img src="../assets/images/logo.png" alt="Logo">
-                        </div>
-                        <h2 class="text-center mb-4">Agent Login</h2>
-
-                        <?php if (isset($_SESSION['error_message'])): ?>
-                        <div class="alert alert-danger">
-                            <?php 
-                            echo htmlspecialchars($_SESSION['error_message']);
-                            unset($_SESSION['error_message']);
-                            ?>
-                        </div>
+                    <div class="card-body p-4">
+                        <h4 class="card-title text-center mb-4">Agent Login</h4>
+                        <?php if (!empty($error)): ?>
+                            <div class="alert alert-danger"><?php echo $error; ?></div>
+                            <?php if (isset($_SESSION['login_email'])): ?>
+                            <form method="post">
+                                <div class="d-grid">
+                                    <button type="submit" name="reset" class="btn btn-link">Back to Email Entry</button>
+                                </div>
+                            </form>
+                            <?php endif; ?>
                         <?php endif; ?>
-
-                        <?php if (isset($_SESSION['success_message'])): ?>
-                        <div class="alert alert-success">
-                            <?php 
-                            echo htmlspecialchars($_SESSION['success_message']);
-                            unset($_SESSION['success_message']);
-                            ?>
-                        </div>
+                        <?php if (!empty($success)): ?>
+                            <div class="alert alert-success"><?php echo $success; ?></div>
                         <?php endif; ?>
-
-                        <form method="POST" action="" class="needs-validation" novalidate>
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" required 
-                                       value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
-                                       placeholder="Enter your email">
-                                <div class="invalid-feedback">
-                                    Please enter a valid email address.
+                        
+                        <?php if (isset($_SESSION['login_email'])): ?>
+                            <!-- OTP verification form -->
+                            <form method="post" class="needs-validation" novalidate>
+                                <div class="mb-3">
+                                    <label for="otp" class="form-label">Enter OTP</label>
+                                    <input type="text" class="form-control" id="otp" name="otp" required pattern="[0-9]{6}" maxlength="6" autocomplete="off">
+                                    <div class="invalid-feedback">Please enter the 6-digit OTP.</div>
+                                    <small class="form-text text-muted">OTP has been sent to <?php echo htmlspecialchars($_SESSION['login_email']); ?></small>
                                 </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="password" required 
-                                       placeholder="Enter your password">
-                                <div class="mt-2">
-                                    <a href="forgot-password.php" class="text-decoration-none">Forgot Password?</a>
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">Verify OTP</button>
+                                    <button type="submit" name="resend_otp" class="btn btn-outline-primary">Request New OTP</button>
                                 </div>
-                                <div class="invalid-feedback">
-                                    Please enter your password.
+                            </form>
+                        <?php else: ?>
+                            <!-- Email form -->
+                            <form method="post" class="needs-validation" novalidate>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email address</label>
+                                    <input type="email" class="form-control" id="email" name="email" required autocomplete="email">
+                                    <div class="invalid-feedback">Please enter a valid email address.</div>
                                 </div>
-                            </div>
-
-                            <div class="d-grid mb-3">
-                                <button type="submit" class="btn btn-primary" id="loginButton">
-                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                                    <span class="button-text">Login</span>
-                                </button>
-                            </div>
-                        </form>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg">Send OTP</button>
+                                </div>
+                            </form>
+                        <?php endif; ?>
                     </div>
                 </div>
+                <?php if (isset($_SESSION['login_email'])): ?>
+                <div class="mt-3 text-center">
+                    <form method="post">
+                        <button type="submit" name="reset" class="btn btn-link">Use Different Email</button>
+                    </form>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -497,31 +550,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             event.stopPropagation()
                         } else {
                             // Show loading state
-                            const button = document.getElementById('loginButton')
-                            const spinner = button.querySelector('.spinner-border')
-                            const buttonText = button.querySelector('.button-text')
+                            const button = document.querySelector('button[type="submit"]');
+                            const spinner = button.querySelector('.spinner-border');
+                            const buttonText = button.querySelector('.button-text');
                             
-                            spinner.classList.remove('d-none')
-                            buttonText.textContent = 'Logging in...'
-                            button.disabled = true
+                            spinner.classList.remove('d-none');
+                            buttonText.textContent = 'Logging in...';
+                            button.disabled = true;
                         }
                         form.classList.add('was-validated')
                     }, false)
                 })
         })()
-
-        // Toggle password visibility
-        const togglePassword = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
-
-        togglePassword.addEventListener('click', function () {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            
-            const icon = this.querySelector('i');
-            icon.classList.toggle('bi-eye');
-            icon.classList.toggle('bi-eye-slash');
-        });
 
         // Auto-hide alerts after 5 seconds
         document.addEventListener('DOMContentLoaded', function() {

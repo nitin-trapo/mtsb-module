@@ -20,24 +20,32 @@ if (!is_logged_in() || !is_agent()) {
 }
 
 $page_title = 'Dashboard';
-$use_datatables = false; // We don't need datatables for this page
+$use_datatables = false;
 
 $db = new Database();
 $conn = $db->getConnection();
 
 // Get agent details
 $stmt = $conn->prepare("
-    SELECT c.* 
-    FROM " . TABLE_CUSTOMERS . " c
-    JOIN " . TABLE_USERS . " u ON c.email = u.email
-    WHERE u.id = ? AND c.is_agent = 1
+    SELECT * 
+    FROM " . TABLE_CUSTOMERS . "
+    WHERE email = ? AND is_agent = 1
 ");
-$stmt->execute([$_SESSION['user_id']]);
+
+$stmt->execute([$_SESSION['user_email']]);
 $agent = $stmt->fetch(PDO::FETCH_ASSOC);
 
+if (!$agent) {
+    // Log the error
+    debug_log("Failed to find agent with email: " . $_SESSION['user_email']);
+    // Redirect back to login
+    session_destroy();
+    header('Location: login.php?error=invalid_agent');
+    exit;
+}
+
 debug_log("Agent Details:");
-debug_log("- Agent ID: " . $agent['id']);
-debug_log("- Agent Email: " . $agent['email']);
+debug_log($agent);
 
 // Get agent statistics
 $stats = [
@@ -48,55 +56,53 @@ $stats = [
     'total_spent' => 0
 ];
 
-// Get all orders for this agent from local database
+// Get all orders for this agent
 $stmt = $conn->prepare("
-    SELECT o.*, c.first_name, c.last_name,
-           COALESCE(cm.status, 'pending') as commission_status,
-           COALESCE(cm.amount, 0) as commission_amount
+    SELECT 
+        o.*,
+        CASE 
+            WHEN o.customer_id = ? THEN c1.first_name
+            ELSE c2.first_name
+        END as customer_first_name,
+        CASE 
+            WHEN o.customer_id = ? THEN c1.last_name
+            ELSE c2.last_name
+        END as customer_last_name,
+        COALESCE(cm.status, 'pending') as commission_status,
+        COALESCE(cm.amount, 0) as commission_amount
     FROM " . TABLE_ORDERS . " o
-    LEFT JOIN " . TABLE_CUSTOMERS . " c ON o.customer_id = c.id
+    LEFT JOIN " . TABLE_CUSTOMERS . " c1 ON o.customer_id = c1.id
+    LEFT JOIN " . TABLE_CUSTOMERS . " c2 ON o.agent_id = c2.id
     LEFT JOIN " . TABLE_COMMISSIONS . " cm ON o.id = cm.order_id
-    WHERE o.customer_id = ?
+    WHERE o.agent_id = ? OR o.customer_id = ?
     ORDER BY o.created_at DESC
     LIMIT 10
 ");
 
-debug_log("\nLocal Database Query:");
-debug_log("- Query: " . str_replace('?', $agent['id'], $stmt->queryString));
-
-$stmt->execute([$agent['id']]);
+debug_log("Executing orders query for agent/customer ID: " . $agent['id']);
+$stmt->execute([$agent['id'], $agent['id'], $agent['id'], $agent['id']]);
 $recent_orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-debug_log("- Number of local orders found: " . count($recent_orders));
-if (empty($recent_orders)) {
-    debug_log("- No local orders found for customer_id: " . $agent['id']);
-} else {
-    debug_log("- Local orders found: " . print_r($recent_orders, true));
-}
+debug_log("Found " . count($recent_orders) . " recent orders");
 
 // Get total orders count
 $stmt = $conn->prepare("
     SELECT COUNT(*) 
     FROM " . TABLE_ORDERS . "
-    WHERE customer_id = ?
+    WHERE agent_id = ? OR customer_id = ?
 ");
-$stmt->execute([$agent['id']]);
+$stmt->execute([$agent['id'], $agent['id']]);
 $stats['total_orders'] = $stmt->fetchColumn();
-
-debug_log("- Total orders count: " . $stats['total_orders']);
 
 // Get total spent
 $stmt = $conn->prepare("
     SELECT COALESCE(SUM(total_price), 0) as total_spent
     FROM " . TABLE_ORDERS . "
-    WHERE customer_id = ?
+    WHERE agent_id = ? OR customer_id = ?
 ");
-$stmt->execute([$agent['id']]);
+$stmt->execute([$agent['id'], $agent['id']]);
 $stats['total_spent'] = $stmt->fetchColumn();
 
-debug_log("- Total spent: " . $stats['total_spent']);
-
-// Get total commissions
+// Get commission statistics
 $stmt = $conn->prepare("
     SELECT 
         COUNT(*) as total_count,
@@ -108,13 +114,11 @@ $stmt = $conn->prepare("
 $stmt->execute([$agent['id']]);
 $commission_stats = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$stats['total_commissions'] = $commission_stats['pending_amount'] + $commission_stats['paid_amount'];
-$stats['pending_commissions'] = $commission_stats['pending_amount'];
-$stats['paid_commissions'] = $commission_stats['paid_amount'];
+$stats['total_commissions'] = $commission_stats ? ($commission_stats['pending_amount'] + $commission_stats['paid_amount']) : 0;
+$stats['pending_commissions'] = $commission_stats ? $commission_stats['pending_amount'] : 0;
+$stats['paid_commissions'] = $commission_stats ? $commission_stats['paid_amount'] : 0;
 
-debug_log("- Commission stats: " . print_r($commission_stats, true));
-
-// Get recent commissions with currency
+// Get recent commissions
 $stmt = $conn->prepare("
     SELECT cm.*, o.order_number, o.currency
     FROM " . TABLE_COMMISSIONS . " cm
@@ -124,9 +128,12 @@ $stmt = $conn->prepare("
     LIMIT 5
 ");
 $stmt->execute([$agent['id']]);
-$recent_commissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$recent_commissions = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-debug_log("- Recent commissions: " . print_r($recent_commissions, true));
+debug_log("Stats:");
+debug_log($stats);
+debug_log("Recent Commissions:");
+debug_log($recent_commissions);
 
 include 'includes/header.php'; ?>
 
@@ -221,7 +228,10 @@ include 'includes/header.php'; ?>
                                                 <strong>#<?php echo htmlspecialchars($order['order_number']); ?></strong>
                                             </td>
                                             <td>
-                                                <?php echo htmlspecialchars($order['first_name'] . ' ' . $order['last_name']); ?>
+                                                <?php 
+                                                $customer_name = trim($order['customer_first_name'] . ' ' . $order['customer_last_name']);
+                                                echo htmlspecialchars($customer_name ?: 'N/A'); 
+                                                ?>
                                             </td>
                                             <td>
                                                 <strong><?php echo format_currency($order['total_price'], $order['currency'] ?? 'INR'); ?></strong>
@@ -236,18 +246,30 @@ include 'includes/header.php'; ?>
                                                 <?php endif; ?>
                                             </td>
                                             <td>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <?php if ($order['commission_status'] == 'approved'): ?>
-                                                        <span class="badge bg-success">Approved</span>
-                                                    <?php elseif ($order['commission_status'] == 'pending'): ?>
-                                                        <span class="badge bg-warning">Commission Pending</span>
-                                                    <?php elseif ($order['commission_status'] == 'paid'): ?>
-                                                        <span class="badge bg-success">Commission Paid</span>
-                                                    <?php endif; ?>
-                                                </div>
+                                                <?php
+                                                $status_class = '';
+                                                switch ($order['financial_status']) {
+                                                    case 'paid':
+                                                        $status_class = 'bg-success';
+                                                        break;
+                                                    case 'pending':
+                                                        $status_class = 'bg-warning';
+                                                        break;
+                                                    case 'refunded':
+                                                        $status_class = 'bg-danger';
+                                                        break;
+                                                    default:
+                                                        $status_class = 'bg-secondary';
+                                                }
+                                                ?>
+                                                <span class="badge <?php echo $status_class; ?>">
+                                                    <?php echo ucfirst($order['financial_status'] ?? 'unknown'); ?>
+                                                </span>
                                             </td>
                                             <td>
-                                                <?php echo date('M d, Y', strtotime($order['created_at'])); ?>
+                                                <span title="<?php echo htmlspecialchars($order['created_at']); ?>">
+                                                    <?php echo date('M j, Y', strtotime($order['created_at'])); ?>
+                                                </span>
                                             </td>
                                         </tr>
                                         <?php endforeach; ?>
