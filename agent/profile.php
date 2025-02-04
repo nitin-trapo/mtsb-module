@@ -1,16 +1,12 @@
 <?php
 session_start();
 
-// Debug session data
-error_log("Session data: " . print_r($_SESSION, true));
-
 require_once '../config/database.php';
 require_once '../config/tables.php';
 require_once '../includes/functions.php';
 
 // Check if user is logged in and is agent
 if (!is_logged_in() || !is_agent()) {
-    error_log("User not logged in or not agent. Session: " . print_r($_SESSION, true));
     header('Location: login.php');
     exit;
 }
@@ -20,81 +16,22 @@ $conn = $db->getConnection();
 
 // Get agent details from customers table using email
 $stmt = $conn->prepare("SELECT * FROM " . TABLE_CUSTOMERS . " WHERE email = ? AND is_agent = 1");
-$stmt->execute([$_SESSION['email']]);
+$stmt->execute([$_SESSION['user_email']]);
 $agent = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$agent) {
-    error_log("Agent not found in customers table for email: " . $_SESSION['email']);
+    error_log("Agent not found in customers table for email: " . $_SESSION['user_email']);
     // Create customer record if it doesn't exist
     $insert_stmt = $conn->prepare("
         INSERT INTO " . TABLE_CUSTOMERS . " 
         (email, first_name, last_name, is_agent, status, created_at) 
         VALUES (?, '', '', 1, 'active', NOW())
     ");
-    $insert_stmt->execute([$_SESSION['email']]);
+    $insert_stmt->execute([$_SESSION['user_email']]);
     
     // Fetch the newly created record
-    $stmt->execute([$_SESSION['email']]);
+    $stmt->execute([$_SESSION['user_email']]);
     $agent = $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-error_log("Agent data retrieved: " . print_r($agent, true));
-
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        // Debug logging
-        error_log("POST Data: " . print_r($_POST, true));
-        error_log("Session customer_id: " . $_SESSION['customer_id']);
-        
-        $stmt = $conn->prepare("
-            UPDATE " . TABLE_CUSTOMERS . " 
-            SET 
-                first_name = :first_name,
-                last_name = :last_name,
-                phone = :phone,
-                bank_name = :bank_name,
-                bank_account_number = :bank_account_number,
-                bank_account_holder = :bank_account_holder,
-                bank_swift_code = :bank_swift_code
-            WHERE email = :email AND is_agent = 1
-        ");
-        
-        $params = [
-            ':first_name' => $_POST['first_name'],
-            ':last_name' => $_POST['last_name'],
-            ':phone' => $_POST['phone'],
-            ':bank_name' => $_POST['bank_name'],
-            ':bank_account_number' => $_POST['bank_account_number'],
-            ':bank_account_holder' => $_POST['bank_account_holder'],
-            ':bank_swift_code' => $_POST['bank_swift_code'],
-            ':email' => $_SESSION['email']
-        ];
-
-        // Debug logging
-        error_log("SQL Parameters: " . print_r($params, true));
-        
-        $stmt->execute($params);
-        
-        if ($stmt->rowCount() > 0) {
-            $_SESSION['success_message'] = 'Profile updated successfully!';
-        } else {
-            error_log("No rows updated. SQL: " . $stmt->queryString);
-            $_SESSION['error_message'] = 'No changes were made to the profile.';
-        }
-        
-        header('Location: profile.php');
-        exit;
-        
-    } catch (PDOException $e) {
-        error_log("Error updating profile: " . $e->getMessage());
-        error_log("SQL State: " . $e->errorInfo[0]);
-        error_log("Error Code: " . $e->errorInfo[1]);
-        error_log("Error Message: " . $e->errorInfo[2]);
-        $_SESSION['error_message'] = 'Error updating profile. Please try again.';
-        header('Location: profile.php');
-        exit;
-    }
 }
 
 include 'includes/header.php';
@@ -106,8 +43,8 @@ include 'includes/header.php';
             <?php if (isset($_SESSION['success_message'])): ?>
                 <div class="alert alert-success">
                     <?php 
-                    echo $_SESSION['success_message'];
-                    unset($_SESSION['success_message']);
+                        echo $_SESSION['success_message'];
+                        unset($_SESSION['success_message']);
                     ?>
                 </div>
             <?php endif; ?>
@@ -115,64 +52,17 @@ include 'includes/header.php';
             <?php if (isset($_SESSION['error_message'])): ?>
                 <div class="alert alert-danger">
                     <?php 
-                    echo $_SESSION['error_message'];
-                    unset($_SESSION['error_message']);
+                        echo $_SESSION['error_message'];
+                        unset($_SESSION['error_message']);
                     ?>
                 </div>
             <?php endif; ?>
-
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Profile Information</h5>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                        Edit Profile
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="mb-3">Personal Information</h6>
-                            <table class="table">
-                                <tr>
-                                    <th width="30%">Name:</th>
-                                    <td><?php echo htmlspecialchars($agent['first_name'] . ' ' . $agent['last_name']); ?></td>
-                                </tr>
-                                <tr>
-                                    <th>Email:</th>
-                                    <td><?php echo htmlspecialchars($agent['email']); ?></td>
-                                </tr>
-                                <tr>
-                                    <th>Phone:</th>
-                                    <td><?php echo htmlspecialchars($agent['phone'] ?? 'Not provided'); ?></td>
-                                </tr>
-                                
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="mb-3">Bank Information</h6>
-                            <table class="table">
-                                <tr>
-                                    <th width="30%">Bank Name:</th>
-                                    <td><?php echo htmlspecialchars($agent['bank_name'] ?? 'Not provided'); ?></td>
-                                </tr>
-                                <tr>
-                                    <th>Account Holder:</th>
-                                    <td><?php echo htmlspecialchars($agent['bank_account_holder'] ?? 'Not provided'); ?></td>
-                                </tr>
-                                <tr>
-                                    <th>Account Number:</th>
-                                    <td><?php echo htmlspecialchars($agent['bank_account_number'] ?? 'Not provided'); ?></td>
-                                </tr>
-                                <tr>
-                                    <th>SWIFT Code:</th>
-                                    <td><?php echo htmlspecialchars($agent['bank_swift_code'] ?? 'Not provided'); ?></td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
+    </div>
+
+    <!-- Profile Information Section -->
+    <div id="bankDetailsContainer">
+        <!-- Bank details and basic information will be loaded here -->
     </div>
 </div>
 
@@ -232,5 +122,59 @@ include 'includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+// Function to load bank details
+function loadBankDetails() {
+    fetch('ajax/view_bank_details.php')
+        .then(response => {
+            // Check if response is JSON (error) or HTML (success)
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Failed to load bank details');
+                });
+            }
+            return response.text();
+        })
+        .then(data => {
+            document.getElementById('bankDetailsContainer').innerHTML = data;
+        })
+        .catch(error => {
+            console.error('Error loading bank details:', error);
+            document.getElementById('bankDetailsContainer').innerHTML = 
+                `<div class="alert alert-danger">${error.message || 'Error loading bank details. Please try again later.'}</div>`;
+        });
+}
+
+// Load bank details when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadBankDetails();
+});
+
+// Reload bank details after form submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadBankDetails(); // Reload bank details after successful update
+            alert('Bank details updated successfully!');
+        } else {
+            alert(data.error || 'Failed to update bank details');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating bank details');
+    });
+});
+</script>
 
 <?php include 'includes/footer.php'; ?>

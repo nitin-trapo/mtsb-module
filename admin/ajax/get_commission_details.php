@@ -866,7 +866,7 @@ try {
                         </tr>
                         <tr class="table-light">
                             <td colspan="6" class="text-end fw-bold">Final Commission:</td>
-                            <td colspan="2" class="text-end fw-bold fs-5 text-success">' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['amount'] : $commission['actual_commission'], 2) . '</td>
+                            <td colspan="2" class="text-end fw-bold fs-5 text-success">' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['amount'] : $commission['amount'], 2) . '</td>
                         </tr>
                     </tbody>
                 </table>

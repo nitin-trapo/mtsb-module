@@ -24,6 +24,8 @@ try {
             o.*,
             c.first_name as customer_first_name,
             c.last_name as customer_last_name,
+            DATE_FORMAT(o.created_at, '%Y-%m-%d %H:%i:%s') as sort_date,
+            DATE_FORMAT(o.created_at, '%b %d, %Y %h:%i %p') as formatted_date,
             COALESCE(com.amount, 0) as base_commission,
             COALESCE(com.total_discount, 0) as total_discount,
             COALESCE(com.actual_commission, 0) as actual_commission,
@@ -35,12 +37,19 @@ try {
         FROM " . TABLE_ORDERS . " o
         LEFT JOIN " . TABLE_CUSTOMERS . " c ON o.customer_id = c.id
         LEFT JOIN " . TABLE_COMMISSIONS . " com ON o.id = com.order_id
-        WHERE o.agent_id = ?
+        WHERE o.customer_id = :customer_id
         ORDER BY o.created_at DESC
     ");
 
-    $stmt->execute([$_SESSION['user_id']]);
+    // Debug logging
+    error_log("Fetching orders for customer ID: " . $_SESSION['user_id']);
+
+    $stmt->bindParam(':customer_id', $_SESSION['user_id'], PDO::PARAM_INT);
+    $stmt->execute();
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Debug logging
+    error_log("Found " . count($orders) . " orders");
 
     // Currency symbol mapping
     $currency_symbols = [
@@ -69,19 +78,41 @@ try {
 
     // Get agent details
     $stmt = $conn->prepare("
-        SELECT * 
-        FROM " . TABLE_CUSTOMERS . "
-        WHERE email = ? AND is_agent = 1
+        SELECT c.* 
+        FROM " . TABLE_CUSTOMERS . " c
+        WHERE c.email = :email 
+        AND c.is_agent = 1 
+        AND c.status = 'active'
+        LIMIT 1
     ");
-    $stmt->execute([$_SESSION['user_email']]);
+    
+    $stmt->bindParam(':email', $_SESSION['user_email']);
+    $stmt->execute();
     $agent = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // Debug: Print agent details
     error_log("Agent Details: " . print_r($agent, true));
 
     if (!$agent) {
-        throw new Exception("No agent profile found for your email (" . $_SESSION['user_email'] . ")");
+        throw new Exception("No active agent profile found for email: " . $_SESSION['user_email']);
     }
+
+    // Update session with correct agent ID if needed
+    if ($_SESSION['user_id'] != $agent['id']) {
+        $_SESSION['user_id'] = $agent['id'];
+        error_log("Updated session user_id to match agent ID: " . $agent['id']);
+    }
+
+    // Verify the orders query after getting agent ID
+    $orders_check = $conn->prepare("
+        SELECT COUNT(*) as order_count 
+        FROM " . TABLE_ORDERS . " 
+        WHERE customer_id = :customer_id
+    ");
+    $orders_check->bindParam(':customer_id', $agent['id'], PDO::PARAM_INT);
+    $orders_check->execute();
+    $order_count = $orders_check->fetchColumn();
+    error_log("Total orders found for agent: " . $order_count);
 
     include 'includes/header.php';
 
@@ -90,21 +121,6 @@ try {
     error_log("Error in orders.php: " . $error);
 }
 ?>
-
-<!-- Debug Info -->
-<?php if (isset($_SESSION['debug']) && $_SESSION['debug']): ?>
-<div class="container-fluid py-2">
-    <div class="alert alert-info">
-        <h6>Debug Information:</h6>
-        <pre><?php 
-            echo "Session Email: " . $_SESSION['user_email'] . "\n";
-            echo "Agent ID: " . ($agent['id'] ?? 'Not found') . "\n";
-            echo "Number of Orders: " . (isset($orders) ? count($orders) : 'No orders array') . "\n";
-            if (isset($error)) echo "Error: " . $error . "\n";
-        ?></pre>
-    </div>
-</div>
-<?php endif; ?>
 
 <div class="container-fluid py-4">
     <div class="row mb-4">
@@ -142,6 +158,13 @@ try {
                                         <?php foreach ($orders as $order): 
                                             $currency = $order['currency'] ?? $default_currency;
                                             $currency_symbol = $currency_symbols[$currency] ?? $currency;
+                                            
+                                            // Format the processed date
+                                            $processed_date = !empty($order['processed_at']) ? 
+                                                date('Y-m-d H:i:s', strtotime($order['processed_at'])) : '';
+                                            
+                                            $display_date = !empty($order['processed_at']) ? 
+                                                date('M d, Y h:i A', strtotime($order['processed_at'])) : 'Not processed';
                                             
                                             // Get customer email from metafields
                                             $metafields = json_decode($order['metafields'], true);
@@ -211,11 +234,11 @@ try {
 </div>
 
 <!-- Order Details Modal -->
-<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade" id="orderModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="orderModalLabel">Order Details</h5>
+                <h5 class="modal-title">Order Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -223,58 +246,135 @@ try {
                     <!-- Content will be loaded here -->
                 </div>
             </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary view-invoice">
+                    <i class="fas fa-file-invoice me-1"></i>View Invoice
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
 <script>
+// Helper Functions
+function formatAddress(address) {
+    if (!address) return 'N/A';
+    
+    const parts = [];
+    if (address.name) parts.push(address.name);
+    if (address.company) parts.push(address.company);
+    if (address.address1) parts.push(address.address1);
+    if (address.address2) parts.push(address.address2);
+    
+    const cityParts = [];
+    if (address.city) cityParts.push(address.city);
+    if (address.province) cityParts.push(address.province);
+    if (address.zip) cityParts.push(address.zip);
+    if (cityParts.length) parts.push(cityParts.join(', '));
+    
+    if (address.country) parts.push(address.country);
+    if (address.phone) parts.push(`Phone: ${address.phone}`);
+    
+    return parts.join('<br>');
+}
+
+function getFinancialStatusColor(status) {
+    if (!status) return 'secondary';
+    const colors = {
+        'paid': 'success',
+        'pending': 'warning',
+        'refunded': 'info',
+        'voided': 'danger'
+    };
+    return colors[status.toLowerCase()] || 'secondary';
+}
+
+function getFulfillmentStatusColor(status) {
+    if (!status) return 'secondary';
+    const colors = {
+        'fulfilled': 'success',
+        'partial': 'info',
+        'unfulfilled': 'danger',
+        'restocked': 'primary',
+        'cancelled': 'secondary'
+    };
+    return colors[status.toLowerCase()] || 'light';
+}
+
+function capitalizeFirst(string) {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
+
 function viewDetails(orderId) {
     const modal = $('#orderModal');
     const content = modal.find('.order-details-content');
     
-    // Show loading
-    content.html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div><div class="mt-2">Loading order details...</div></div>');
+    content.html('<div class="text-center"><div class="spinner-border" role="status"></div><p>Loading...</p></div>');
     modal.modal('show');
+    modal.data('orderId', orderId);
     
-    // Load order details
     $.post('ajax/get_order_details.php', { order_id: orderId })
         .done(function(response) {
             if (response.success) {
                 const order = response.order;
+                console.log('Order Data:', order);
+
                 let html = `
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <div class="card h-100">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
                                 <div class="card-body">
                                     <h6 class="card-title">Order Information</h6>
-                                    <table class="table table-sm">
+                                    <table class="table table-sm mb-0">
                                         <tr>
-                                            <td><strong>Order Number:</strong></td>
+                                            <th>Order Number:</th>
                                             <td>#${order.order_number}</td>
                                         </tr>
                                         <tr>
-                                            <td><strong>Created:</strong></td>
-                                            <td>${order.formatted_created_date}</td>
-                                        </tr>
-                                        ${order.formatted_processed_date ? `
-                                        <tr>
-                                            <td><strong>Processed:</strong></td>
-                                            <td>${order.formatted_processed_date}</td>
-                                        </tr>
-                                        ` : ''}
-                                        <tr>
-                                            <td><strong>Financial Status:</strong></td>
-                                            <td>
-                                                <span class="badge bg-${getStatusClass(order.financial_status)}">
-                                                    ${(order.financial_status || 'PENDING').toUpperCase()}
-                                                </span>
-                                            </td>
+                                            <th>Created:</th>
+                                            <td>${order.created_at}</td>
                                         </tr>
                                         <tr>
-                                            <td><strong>Fulfillment Status:</strong></td>
-                                            <td>
-                                                <span class="badge bg-${getStatusClass(order.fulfillment_status)}">
-                                                    ${(order.fulfillment_status || 'UNFULFILLED').toUpperCase()}
+                                            <th>Financial Status:</th>
+                                            <td><span class="badge bg-${getFinancialStatusColor(order.financial_status)}">${capitalizeFirst(order.financial_status)}</span></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Fulfillment Status:</th>
+                                            <td><span class="badge bg-${getFulfillmentStatusColor(order.fulfillment_status)}">${capitalizeFirst(order.fulfillment_status)}</span></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Commission Information</h6>
+                                    <table class="table table-sm mb-0">
+                                        <tr>
+                                            <th>Base Commission:</th>
+                                            <td class="text-end">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.base_commission).toFixed(2)}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Commission Discount:</th>
+                                            <td class="text-end text-danger">-${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.commission_discount).toFixed(2)}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Actual Commission:</th>
+                                            <td class="text-end">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.actual_commission).toFixed(2)}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Commission Status:</th>
+                                            <td class="text-end">
+                                                <span class="badge bg-${order.commission_status === 'paid' ? 'success' : 'warning'}">
+                                                    ${capitalizeFirst(order.commission_status || 'Pending')}
                                                 </span>
                                             </td>
                                         </tr>
@@ -282,237 +382,166 @@ function viewDetails(orderId) {
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="card h-100">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
                                 <div class="card-body">
                                     <h6 class="card-title">Customer Information</h6>
-                                    <table class="table table-sm">
+                                    <table class="table table-sm mb-0">
                                         <tr>
-                                            <td><strong>Name:</strong></td>
-                                            <td>${order.customer_first_name} ${order.customer_last_name}</td>
+                                            <th>Name:</th>
+                                            <td>${order.customer_name || 'N/A'}</td>
                                         </tr>
                                         <tr>
-                                            <td><strong>Email:</strong></td>
-                                            <td>${order.customer_email}</td>
+                                            <th>Email:</th>
+                                            <td>${order.customer_email || 'N/A'}</td>
                                         </tr>
                                         <tr>
-                                            <td><strong>Phone:</strong></td>
+                                            <th>Phone:</th>
                                             <td>${order.customer_phone || 'N/A'}</td>
                                         </tr>
                                     </table>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h6 class="card-title">Commission Details</h6>
-                                    <table class="table table-sm">
-                                        <tr>
-                                            <td><strong>Amount:</strong></td>
-                                            <td>${order.formatted_commission}</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Status:</strong></td>
-                                            <td>
-                                                <span class="badge bg-${getStatusClass(order.commission_status)}">
-                                                    ${(order.commission_status || 'PENDING').toUpperCase()}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        ${order.commission_date ? `
-                                        <tr>
-                                            <td><strong>Date:</strong></td>
-                                            <td>${order.commission_date}</td>
-                                        </tr>
-                                        ` : ''}
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h6 class="card-title">Order Summary</h6>
-                                    <table class="table table-sm">
-                                        <tr>
-                                            <td><strong>Subtotal:</strong></td>
-                                            <td class="text-end">${order.formatted_subtotal}</td>
-                                        </tr>
-                                        ${parseFloat(order.total_shipping) > 0 ? `
-                                        <tr>
-                                            <td><strong>Shipping:</strong></td>
-                                            <td class="text-end">${order.formatted_shipping}</td>
-                                        </tr>
-                                        ` : ''}
-                                        ${parseFloat(order.total_tax) > 0 ? `
-                                        <tr>
-                                            <td><strong>Tax:</strong></td>
-                                            <td class="text-end">${order.formatted_tax}</td>
-                                        </tr>
-                                        ` : ''}
-                                        <tr>
-                                            <td><strong>Total:</strong></td>
-                                            <td class="text-end"><strong>${order.formatted_total}</strong></td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    ${order.billing_address || order.shipping_address ? `
-                    <div class="row mb-3">
-                        ${order.shipping_address ? `
                         <div class="col-md-6">
-                            <div class="card">
+                            <div class="card mb-3">
                                 <div class="card-body">
-                                    <h6 class="card-title">Shipping Address</h6>
-                                    <address class="mb-0">
-                                        ${formatAddress(order.shipping_address)}
-                                    </address>
+                                    <h6 class="card-title">Addresses</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>Billing Address:</strong><br>
+                                            ${formatAddress(order.billing_address)}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Shipping Address:</strong><br>
+                                            ${formatAddress(order.shipping_address)}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        ` : ''}
-                        ${order.billing_address ? `
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h6 class="card-title">Billing Address</h6>
-                                    <address class="mb-0">
-                                        ${formatAddress(order.billing_address)}
-                                    </address>
-                                </div>
-                            </div>
-                        </div>
-                        ` : ''}
                     </div>
-                    ` : ''}
 
-                    ${order.note ? `
-                    <div class="card mt-3">
+                    <div class="card">
                         <div class="card-body">
-                            <h6 class="card-title">Order Notes</h6>
-                            <p class="mb-0">${order.note}</p>
+                            <h6 class="card-title">Order Items</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>SKU</th>
+                                            <th class="text-end">Quantity</th>
+                                            <th class="text-end">Price</th>
+                                            <th class="text-end">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${order.line_items.map(item => `
+                                            <tr>
+                                                <td>
+                                                    ${item.title}
+                                                    ${item.variant_title ? `<br><small class="text-muted">${item.variant_title}</small>` : ''}
+                                                </td>
+                                                <td>${item.sku || 'N/A'}</td>
+                                                <td class="text-end">${item.quantity}</td>
+                                                <td class="text-end">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(item.price).toFixed(2)}</td>
+                                                <td class="text-end">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(item.total).toFixed(2)}</td>
+                                            </tr>
+                                        `).join('')}
+
+                                        <tr class="table-light">
+                                            <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                                            <td class="text-end">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.subtotal_price).toFixed(2)}</td>
+                                        </tr>
+
+                                        ${order.discount_codes && Array.isArray(order.discount_codes) && order.discount_codes.length > 0 ? `
+                                            <tr class="table-light">
+                                                <td colspan="4" class="text-end"><strong>Total Discounts:</strong></td>
+                                                <td class="text-end text-danger">-${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.total_discounts).toFixed(2)}</td>
+                                            </tr>
+                                            ${order.discount_codes.map(discount => `
+                                                <tr class="table-light">
+                                                    <td colspan="4" class="text-end text-muted">
+                                                        <small>
+                                                            <span class="badge bg-light text-dark border">${discount.code}</span>
+                                                            ${discount.type ? `<span class="ms-1">(${discount.type}${discount.value ? ` ${discount.value}% off` : ''})</span>` : ''}
+                                                            <span class="ms-2 text-danger">-${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(discount.amount).toFixed(2)}</span>
+                                                        </small>
+                                                    </td>
+                                                    <td></td>
+                                                </tr>
+                                            `).join('')}
+                                        ` : ''}
+
+                                        ${parseFloat(order.total_shipping) > 0 ? `
+                                            <tr class="table-light">
+                                                <td colspan="4" class="text-end"><strong>Shipping:</strong></td>
+                                                <td class="text-end">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.total_shipping).toFixed(2)}</td>
+                                            </tr>
+                                        ` : ''}
+
+                                        ${parseFloat(order.total_tax) > 0 ? `
+                                            <tr class="table-light">
+                                                <td colspan="4" class="text-end"><strong>Tax:</strong></td>
+                                                <td class="text-end">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.total_tax).toFixed(2)}</td>
+                                            </tr>
+                                        ` : ''}
+
+                                        <tr class="table-light fw-bold">
+                                            <td colspan="4" class="text-end">Total:</td>
+                                            <td class="text-end">${order.currency === 'MYR' ? 'RM' : order.currency} ${parseFloat(order.total_price).toFixed(2)}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                    ` : ''}
                 `;
+                
                 content.html(html);
             } else {
-                content.html(`
-                    <div class="alert alert-danger">
-                        ${response.error || 'Failed to load order details'}
-                    </div>
-                `);
+                content.html(`<div class="alert alert-danger">${response.error || 'Failed to load order details'}</div>`);
             }
         })
         .fail(function(jqXHR) {
             let errorMessage = 'Failed to load order details';
             try {
                 const response = JSON.parse(jqXHR.responseText);
-                if (response.error) {
-                    errorMessage = response.error;
-                }
-            } catch (e) {}
-            content.html(`
-                <div class="alert alert-danger">
-                    ${errorMessage}
-                </div>
-            `);
+                errorMessage = response.error || errorMessage;
+            } catch (e) {
+                console.error('Error parsing error response:', e);
+            }
+            content.html(`<div class="alert alert-danger">${errorMessage}</div>`);
         });
 }
 
-function formatAddress(address) {
-    if (!address) return 'N/A';
-    try {
-        const addr = typeof address === 'string' ? JSON.parse(address) : address;
-        const parts = [];
-        if (addr.name) parts.push(addr.name);
-        if (addr.company) parts.push(addr.company);
-        if (addr.address1) parts.push(addr.address1);
-        if (addr.address2) parts.push(addr.address2);
-        if (addr.city) {
-            let cityLine = addr.city;
-            if (addr.province_code) cityLine += ', ' + addr.province_code;
-            if (addr.postal_code) cityLine += ' ' + addr.postal_code;
-            parts.push(cityLine);
-        }
-        if (addr.country) parts.push(addr.country);
-        if (addr.phone) parts.push('Phone: ' + addr.phone);
-        return parts.join('<br>');
-    } catch (e) {
-        console.error('Error parsing address:', e);
-        return 'Invalid address format';
-    }
-}
-
-function getStatusClass(status) {
-    switch (status?.toLowerCase()) {
-        case 'completed':
-        case 'paid':
-        case 'fulfilled':
-            return 'success';
-        case 'pending':
-        case 'partially_fulfilled':
-            return 'warning';
-        case 'cancelled':
-        case 'refunded':
-            return 'danger';
-        case 'processing':
-        case 'authorized':
-            return 'primary';
-        default:
-            return 'secondary';
-    }
-}
-</script>
-
-<script>
-window.addEventListener('load', function() {
-    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+// Document Ready Handler
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    if ($.fn.DataTable) {
         $('#ordersTable').DataTable({
-            order: [[5, 'desc']], // Sort by date column
+            order: [[0, 'desc']], // Sort by first column (Order #) in descending order
             pageLength: 25,
             language: {
                 search: "Search orders:",
                 lengthMenu: "Show _MENU_ orders per page",
                 info: "Showing _START_ to _END_ of _TOTAL_ orders",
-                infoEmpty: "No orders available",
-                emptyTable: "No orders found"
-            },
-            columnDefs: [
-                { orderable: false, targets: [7] }, // Actions column
-                { 
-                    targets: [3, 4], // Currency columns
-                    render: function(data, type, row) {
-                        if (type === 'sort') {
-                            return data.replace(/[^\d.-]/g, '');
-                        }
-                        return data;
-                    }
-                },
-                {
-                    targets: [6], // Status column
-                    render: function(data, type, row) {
-                        if (type === 'sort') {
-                            return $(data).text();
-                        }
-                        return data;
-                    }
-                }
-            ]
+                infoEmpty: "Showing 0 to 0 of 0 orders",
+                infoFiltered: "(filtered from _MAX_ total orders)"
+            }
         });
-    } else {
-        console.error('jQuery or DataTables not loaded');
     }
+
+    // Handle invoice actions
+    $('.view-invoice').click(function() {
+        const orderId = $('#orderModal').data('orderId');
+        window.open(`ajax/view_invoice.php?order_id=${orderId}`, '_blank');
+    });
 });
 </script>
 
 <?php include 'includes/footer.php'; ?>
-</body>
-</html>

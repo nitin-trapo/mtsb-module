@@ -1,16 +1,30 @@
 <?php
 session_start();
 require_once '../../config/database.php';
+require_once '../../config/tables.php';
 require_once '../../includes/functions.php';
 
 // Check if user is logged in and is agent
-if (!isset($_SESSION['email']) || !is_agent()) {
-    echo json_encode(['success' => false, 'error' => 'Unauthorized access']);
+if (!isset($_SESSION['user_email']) || !is_agent()) {
+    header('HTTP/1.1 401 Unauthorized');
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        echo json_encode(['success' => false, 'error' => 'Unauthorized access']);
+    } else {
+        echo 'Unauthorized access';
+    }
     exit;
 }
 
-if (!isset($_POST['order_id'])) {
-    echo json_encode(['success' => false, 'error' => 'Order ID is required']);
+// Get order_id from either POST or GET
+$order_id = $_POST['order_id'] ?? $_GET['order_id'] ?? null;
+
+if (!$order_id) {
+    header('HTTP/1.1 400 Bad Request');
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        echo json_encode(['success' => false, 'error' => 'Order ID is required']);
+    } else {
+        echo 'Order ID is required';
+    }
     exit;
 }
 
@@ -19,17 +33,15 @@ try {
     $conn = $db->getConnection();
 
     // Get agent details
-    $stmt = $conn->prepare("SELECT id FROM customers WHERE email = ? AND is_agent = 1");
-    $stmt->execute([$_SESSION['email']]);
+    $stmt = $conn->prepare("SELECT id FROM " . TABLE_CUSTOMERS . " WHERE email = ? AND is_agent = 1");
+    $stmt->execute([$_SESSION['user_email']]);
     $agent = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$agent) {
         throw new Exception("Agent not found");
     }
 
-    $order_id = $_POST['order_id'];
-
-    // Get order details with customer info
+    // Get order details with customer info and verify agent's access
     $query = "SELECT 
         o.*,
         c.first_name as customer_first_name,
@@ -38,16 +50,16 @@ try {
         c.phone as customer_phone,
         DATE_FORMAT(o.processed_at, '%b %d, %Y %h:%i %p') as formatted_processed_date,
         DATE_FORMAT(o.created_at, '%b %d, %Y %h:%i %p') as formatted_created_date
-    FROM orders o
-    LEFT JOIN customers c ON o.customer_id = c.id
-    WHERE o.id = ? AND (o.customer_id = ?)";
+    FROM " . TABLE_ORDERS . " o
+    LEFT JOIN " . TABLE_CUSTOMERS . " c ON o.customer_id = c.id
+    WHERE o.id = ? AND o.agent_id = ?";
 
     $stmt = $conn->prepare($query);
     $stmt->execute([$order_id, $agent['id']]);
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$order) {
-        throw new Exception("Order not found");
+        throw new Exception("Order not found or you don't have permission to view it");
     }
 
     // Decode JSON fields
@@ -55,6 +67,7 @@ try {
     $order['billing_address'] = json_decode($order['billing_address'], true);
     $order['line_items'] = json_decode($order['line_items'], true);
     $order['discount_codes'] = json_decode($order['discount_codes'], true);
+    $order['discount_applications'] = json_decode($order['discount_applications'], true) ?? [];
 
     // Format customer name
     $order['customer_name'] = trim($order['customer_first_name'] . ' ' . $order['customer_last_name']);
@@ -110,29 +123,35 @@ try {
                             <tr>
                                 <td>
                                     <strong>Billing Address:</strong><br>
-                                    <?php
-                                    $billing = $order['billing_address'];
-                                    echo $billing['name'] . "<br>";
-                                    if (!empty($billing['company'])) echo $billing['company'] . "<br>";
-                                    echo $billing['address1'] . "<br>";
-                                    if (!empty($billing['address2'])) echo $billing['address2'] . "<br>";
-                                    echo $billing['city'] . ", " . $billing['province_code'] . " " . $billing['postal_code'] . "<br>";
-                                    echo $billing['country'] . "<br>";
-                                    if (!empty($billing['phone'])) echo "Phone: " . $billing['phone'];
-                                    ?>
+                                    <?php if ($order['billing_address']): ?>
+                                        <?php echo $order['customer_name']; ?><br>
+                                        <?php echo $order['billing_address']['address1']; ?><br>
+                                        <?php if (!empty($order['billing_address']['address2'])): ?>
+                                            <?php echo $order['billing_address']['address2']; ?><br>
+                                        <?php endif; ?>
+                                        <?php echo $order['billing_address']['city']; ?>, 
+                                        <?php echo $order['billing_address']['province']; ?> 
+                                        <?php echo $order['billing_address']['zip']; ?><br>
+                                        <?php echo $order['billing_address']['country']; ?>
+                                    <?php else: ?>
+                                        N/A
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <strong>Shipping Address:</strong><br>
-                                    <?php
-                                    $shipping = $order['shipping_address'];
-                                    echo $shipping['name'] . "<br>";
-                                    if (!empty($shipping['company'])) echo $shipping['company'] . "<br>";
-                                    echo $shipping['address1'] . "<br>";
-                                    if (!empty($shipping['address2'])) echo $shipping['address2'] . "<br>";
-                                    echo $shipping['city'] . ", " . $shipping['province_code'] . " " . $shipping['postal_code'] . "<br>";
-                                    echo $shipping['country'] . "<br>";
-                                    if (!empty($shipping['phone'])) echo "Phone: " . $shipping['phone'];
-                                    ?>
+                                    <?php if ($order['shipping_address']): ?>
+                                        <?php echo $order['customer_name']; ?><br>
+                                        <?php echo $order['shipping_address']['address1']; ?><br>
+                                        <?php if (!empty($order['shipping_address']['address2'])): ?>
+                                            <?php echo $order['shipping_address']['address2']; ?><br>
+                                        <?php endif; ?>
+                                        <?php echo $order['shipping_address']['city']; ?>, 
+                                        <?php echo $order['shipping_address']['province']; ?> 
+                                        <?php echo $order['shipping_address']['zip']; ?><br>
+                                        <?php echo $order['shipping_address']['country']; ?>
+                                    <?php else: ?>
+                                        N/A
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         </table>
@@ -142,7 +161,7 @@ try {
                 <tr class="heading">
                     <td>Item</td>
                     <td>SKU</td>
-                    <td>Quantity</td>
+                    <td class="text-right">Quantity</td>
                     <td class="text-right">Price</td>
                 </tr>
 
@@ -155,59 +174,115 @@ try {
                         <?php endif; ?>
                     </td>
                     <td><?php echo $item['sku'] ?: 'N/A'; ?></td>
-                    <td><?php echo $item['quantity']; ?></td>
-                    <td class="text-right"><?php echo number_format($item['price'] * $item['quantity'], 2); ?></td>
+                    <td class="text-right"><?php echo $item['quantity']; ?></td>
+                    <td class="text-right">
+                        <?php echo ($order['currency'] === 'MYR' ? 'RM' : $order['currency']) . ' ' . 
+                            number_format($item['price'] * $item['quantity'], 2); ?>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
 
                 <tr class="total">
                     <td colspan="3" class="text-right">Subtotal:</td>
-                    <td class="text-right"><?php echo number_format($order['subtotal_price'], 2); ?></td>
+                    <td class="text-right">
+                        <?php echo ($order['currency'] === 'MYR' ? 'RM' : $order['currency']) . ' ' . 
+                            number_format($order['subtotal_price'], 2); ?>
+                    </td>
                 </tr>
 
                 <?php if (!empty($order['discount_codes'])): ?>
-                    <?php foreach ($order['discount_codes'] as $discount): ?>
                     <tr class="total">
-                        <td colspan="3" class="text-right">Discount (<?php echo $discount['code']; ?>):</td>
-                        <td class="text-right">-<?php echo number_format(floatval($discount['amount']) ?: 0.00, 2); ?></td>
+                        <td colspan="3" class="text-right">Discount:</td>
+                        <td class="text-right text-danger">
+                            -<?php echo ($order['currency'] === 'MYR' ? 'RM' : $order['currency']) . ' ' . 
+                                number_format($order['total_discounts'], 2); ?>
+                        </td>
                     </tr>
+                    <?php foreach ($order['discount_codes'] as $discount): ?>
+                        <tr>
+                            <td colspan="3" class="text-right">
+                                <small>
+                                    <?php 
+                                        echo $discount['code'];
+                                        if (!empty($discount['type'])) {
+                                            echo " ({$discount['type']}";
+                                            if (isset($discount['value'])) {
+                                                echo " {$discount['value']}% off";
+                                            }
+                                            echo ")";
+                                        }
+                                    ?>
+                                </small>
+                            </td>
+                            <td class="text-right text-danger">
+                                <small>
+                                    -<?php echo ($order['currency'] === 'MYR' ? 'RM' : $order['currency']) . ' ' . 
+                                        number_format($discount['amount'], 2); ?>
+                                </small>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
 
-                <?php if (floatval($order['total_shipping']) > 0): ?>
+                <?php if ($order['total_shipping'] > 0): ?>
                 <tr class="total">
                     <td colspan="3" class="text-right">Shipping:</td>
-                    <td class="text-right"><?php echo number_format($order['total_shipping'], 2); ?></td>
+                    <td class="text-right">
+                        <?php echo ($order['currency'] === 'MYR' ? 'RM' : $order['currency']) . ' ' . 
+                            number_format($order['total_shipping'], 2); ?>
+                    </td>
                 </tr>
                 <?php endif; ?>
 
-                <?php if (floatval($order['total_tax']) > 0): ?>
+                <?php if ($order['total_tax'] > 0): ?>
                 <tr class="total">
                     <td colspan="3" class="text-right">Tax:</td>
-                    <td class="text-right"><?php echo number_format($order['total_tax'], 2); ?></td>
+                    <td class="text-right">
+                        <?php echo ($order['currency'] === 'MYR' ? 'RM' : $order['currency']) . ' ' . 
+                            number_format($order['total_tax'], 2); ?>
+                    </td>
                 </tr>
                 <?php endif; ?>
 
                 <tr class="total">
                     <td colspan="3" class="text-right"><strong>Total:</strong></td>
-                    <td class="text-right"><strong><?php echo number_format($order['total_price'], 2); ?></strong></td>
+                    <td class="text-right">
+                        <strong>
+                            <?php echo ($order['currency'] === 'MYR' ? 'RM' : $order['currency']) . ' ' . 
+                                number_format($order['total_price'], 2); ?>
+                        </strong>
+                    </td>
                 </tr>
             </table>
+
+            <div class="mt-4 no-print">
+                <button onclick="window.print();" style="padding: 5px 10px;">Print Invoice</button>
+            </div>
         </div>
     </body>
     </html>
     <?php
     $html = ob_get_clean();
 
-    echo json_encode([
-        'success' => true,
-        'html' => $html
-    ]);
+    // For AJAX requests, return JSON
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        echo json_encode([
+            'success' => true,
+            'html' => $html
+        ]);
+    } else {
+        // For direct access (GET request), output HTML
+        echo $html;
+    }
 
 } catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
+    header('HTTP/1.1 400 Bad Request');
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    } else {
+        echo 'Error: ' . $e->getMessage();
+    }
 }
