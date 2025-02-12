@@ -135,7 +135,7 @@ include 'includes/header.php';
                             <td>RM <?php echo number_format($commission['order_amount'], 2); ?></td>
                             <td>
                                 <div>
-                                    RM <?php echo number_format($commission['amount'], 2); ?>
+                                    RM <?php echo number_format($commission['actual_commission'], 2); ?>
                                     <?php if (!empty($commission['adjustment_reason'])): ?>
                                         <span class="badge bg-info" title="This commission was adjusted">
                                             <i class="fas fa-edit"></i>

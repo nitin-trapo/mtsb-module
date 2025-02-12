@@ -526,10 +526,11 @@ try {
                         </tr>
                         <tr>
                             <th>Total Commission:</th>
-                            <td>' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['amount'] : $commission['actual_commission'], 2) . '
+                            <td>' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['amount'] : $commission['actual_commission'], 2) . 
+                             ($commission['status'] !== 'paid' ? '
                                 <button type="button" class="btn btn-sm btn-primary ms-2 adjust-commission" data-commission-id="' . $commission_id . '">
                                     <i class="fas fa-edit me-1"></i>Adjust
-                                </button>
+                                </button>' : '') . '
                             </td>
                         </tr>
                         <tr>
@@ -540,7 +541,7 @@ try {
                                 ($commission['status'] === 'approved' ? 'bg-warning' : 
                                 ($commission['status'] === 'pending' ? 'bg-info' : 'bg-primary'))) . 
                                 ' text-white">' . ucfirst($commission['status']) . '</span>
-                                ' . ($commission['status'] !== 'paid' ? '
+                                ' . ($commission['status'] !== 'paid' && floatval($commission['amount']) > 0 ? '
                                 <button type="button" class="btn btn-sm btn-success ms-2" onclick="showPaymentForm()">
                                     <i class="fas fa-money-bill me-1"></i>Mark as Paid
                                 </button>' : '') . '
@@ -595,8 +596,7 @@ try {
             </div>';
     }
 
-    // Show payment details if commission is paid
-    if ($commission['status'] === 'paid') {
+    if ($commission['amount'] > 0 && $commission['status'] === 'paid') {
         $html .= '
             <div class="card mb-3">
                 <div class="card-body">

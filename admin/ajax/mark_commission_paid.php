@@ -50,6 +50,16 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
 
+    // Check if commission amount is 0
+    $check_stmt = $conn->prepare("SELECT amount FROM commissions WHERE id = ?");
+    $check_stmt->execute([$commission_id]);
+    $commission = $check_stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($commission['amount'] <= 0) {
+        echo json_encode(['success' => false, 'error' => 'Cannot mark commission as paid when amount is 0']);
+        exit;
+    }
+
     // Start transaction
     $conn->beginTransaction();
 
