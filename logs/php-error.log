@@ -1,67 +1,25 @@
-[13-Jan-2025 08:10:06 Europe/Berlin] Commission Stats: Array
+[12-Feb-2025 09:36:47 Europe/Berlin] Commission Stats: Array
 (
-    [total_amount] => 12319.18
-    [total_count] => 44
-    [statuses] => pending,paid
+    [total_amount] => 0.00
+    [total_count] => 0
+    [statuses] => 
 )
 
-[13-Jan-2025 08:10:06 Europe/Berlin] Query: 
+[12-Feb-2025 09:36:47 Europe/Berlin] Query: 
         SELECT 
             COALESCE(SUM(amount), 0) as total_amount,
             COUNT(*) as total_count,
             GROUP_CONCAT(DISTINCT status) as statuses
         FROM commissions 
         WHERE status != 'cancelled'
-[13-Jan-2025 08:57:12 Europe/Berlin] Commission Stats: Array
+[12-Feb-2025 09:36:49 Europe/Berlin] Commission Stats: Array
 (
-    [total_amount] => 12146.18
-    [total_count] => 44
-    [statuses] => pending,paid
+    [total_amount] => 0.00
+    [total_count] => 0
+    [statuses] => 
 )
 
-[13-Jan-2025 08:57:12 Europe/Berlin] Query: 
-        SELECT 
-            COALESCE(SUM(amount), 0) as total_amount,
-            COUNT(*) as total_count,
-            GROUP_CONCAT(DISTINCT status) as statuses
-        FROM commissions 
-        WHERE status != 'cancelled'
-[13-Jan-2025 08:58:58 Europe/Berlin] Commission Stats: Array
-(
-    [total_amount] => 12146.18
-    [total_count] => 44
-    [statuses] => pending,paid
-)
-
-[13-Jan-2025 08:58:58 Europe/Berlin] Query: 
-        SELECT 
-            COALESCE(SUM(amount), 0) as total_amount,
-            COUNT(*) as total_count,
-            GROUP_CONCAT(DISTINCT status) as statuses
-        FROM commissions 
-        WHERE status != 'cancelled'
-[28-Jan-2025 10:04:18 Europe/Berlin] Commission Stats: Array
-(
-    [total_amount] => 12146.18
-    [total_count] => 44
-    [statuses] => pending,paid
-)
-
-[28-Jan-2025 10:04:18 Europe/Berlin] Query: 
-        SELECT 
-            COALESCE(SUM(amount), 0) as total_amount,
-            COUNT(*) as total_count,
-            GROUP_CONCAT(DISTINCT status) as statuses
-        FROM commissions 
-        WHERE status != 'cancelled'
-[28-Jan-2025 10:05:37 Europe/Berlin] Commission Stats: Array
-(
-    [total_amount] => 12146.18
-    [total_count] => 44
-    [statuses] => pending,paid
-)
-
-[28-Jan-2025 10:05:37 Europe/Berlin] Query: 
+[12-Feb-2025 09:36:49 Europe/Berlin] Query: 
         SELECT 
             COALESCE(SUM(amount), 0) as total_amount,
             COUNT(*) as total_count,

@@ -23,7 +23,7 @@ class ShopifyAPI {
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
-    private function makeApiCall($endpoint, $method = 'GET', $data = null) {
+    public function makeApiCall($endpoint, $method = 'GET', $data = null) {
         $url = "https://{$this->shop_domain}/admin/api/{$this->api_version}/{$endpoint}";
         
         $curl = curl_init();
@@ -90,22 +90,51 @@ class ShopifyAPI {
         return isset($this->lastResponseHeaders[$header]) ? $this->lastResponseHeaders[$header] : null;
     }
 
-    private function logError($message, $context = []) {
-        $logFile = __DIR__ . '/../logs/shopify_error.log';
-        $logDir = dirname($logFile);
+    /**
+     * Log a message to the Shopify sync log file
+     * 
+     * @param string $message The message to log
+     * @param array|string $context Additional context data or log level
+     */
+    private function logMessage($message, $context = []) {
+        $logDir = __DIR__ . '/../logs';
+        $logFile = $logDir . '/shopify_sync.log';
         
+        // Create logs directory if it doesn't exist
         if (!file_exists($logDir)) {
             mkdir($logDir, 0777, true);
         }
         
+        // Format timestamp
         $timestamp = date('Y-m-d H:i:s');
-        $contextStr = !empty($context) ? json_encode($context) : '';
-        $logMessage = "[$timestamp] $message $contextStr\n";
         
-        error_log($logMessage, 3, $logFile);
+        // Determine if context is a string (log level) or array
+        $logLevel = 'INFO';
+        if (is_string($context)) {
+            $logLevel = strtoupper($context);
+            $context = [];
+        }
+        
+        // Format context data if present
+        $contextStr = '';
+        if (!empty($context)) {
+            $contextStr = ' | Context: ' . json_encode($context, JSON_UNESCAPED_SLASHES);
+        }
+        
+        // Format log line
+        $logLine = sprintf(
+            "[%s] [%s] %s%s\n",
+            $timestamp,
+            $logLevel,
+            $message,
+            $contextStr
+        );
+        
+        // Write to log file
+        file_put_contents($logFile, $logLine, FILE_APPEND);
     }
 
-    private function makeGraphQLCall($query) {
+    public function makeGraphQLCall($query) {
         try {
             $url = "https://" . $this->shop_domain . "/admin/api/2023-10/graphql.json";
             
@@ -116,40 +145,23 @@ class ShopifyAPI {
 
             $data = json_encode(['query' => $query]);
 
-            $this->logError("GraphQL Request Details", [
+            error_log("GraphQL Request Details: " . json_encode([
                 'url' => $url,
                 'query' => $query
-            ]);
+            ]));
 
             $curl = curl_init($url);
-            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
-            curl_setopt($curl, CURLOPT_VERBOSE, true);
-            
-            // Create temp file for CURL debug info
-            $verbose = fopen('php://temp', 'w+');
-            curl_setopt($curl, CURLOPT_STDERR, $verbose);
+            curl_setopt_array($curl, [
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $data,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => $headers,
+                CURLOPT_SSL_VERIFYPEER => true
+            ]);
 
             $response = curl_exec($curl);
             $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
             
-            // Get CURL debug info
-            rewind($verbose);
-            $verboseLog = stream_get_contents($verbose);
-            fclose($verbose);
-
-            // Log detailed request information
-            $this->logError("GraphQL Request Details", [
-                'url' => $url,
-                'http_code' => $httpCode,
-                'curl_verbose' => $verboseLog,
-                'request_headers' => $headers,
-                'request_data' => $data
-            ]);
-
             if ($response === false) {
                 $error = curl_error($curl);
                 curl_close($curl);
@@ -163,26 +175,30 @@ class ShopifyAPI {
                 throw new Exception("JSON Decode Error: " . json_last_error_msg());
             }
 
-            // Log response details
-            $this->logError("GraphQL Response Details", [
+            error_log("GraphQL Response: " . json_encode([
                 'http_code' => $httpCode,
-                'response_size' => strlen($response),
-                'decoded_structure' => array_keys($decoded)
-            ]);
+                'response' => $decoded
+            ]));
+
+            // Check for GraphQL errors
+            if (isset($decoded['errors'])) {
+                $errorMessages = array_map(function($error) {
+                    return $error['message'];
+                }, $decoded['errors']);
+                throw new Exception("GraphQL Errors: " . implode(", ", $errorMessages));
+            }
 
             return $decoded;
+
         } catch (Exception $e) {
-            $this->logError("makeGraphQLCall failed", [
-                'error' => $e->getMessage(),
-                'query' => $query
-            ]);
+            error_log("makeGraphQLCall failed: " . $e->getMessage());
             throw $e;
         }
     }
 
     public function getProductTags() {
         try {
-            $this->logError("Starting getProductTags using REST API with cursor pagination");
+            $this->logMessage("Starting getProductTags using REST API with cursor pagination");
             $allTags = [];
             $duplicateTagCount = 0;
             $rawTagCount = 0;
@@ -194,7 +210,7 @@ class ShopifyAPI {
 
             while ($nextUrl !== null && $retryCount < $maxRetries) {
                 try {
-                    $this->logError("Making REST API call", [
+                    $this->logMessage("Making REST API call", [
                         'url' => $nextUrl,
                         'page' => $page,
                         'current_unique_tags' => count($allTags),
@@ -289,7 +305,7 @@ class ShopifyAPI {
                         }
                     }
 
-                    $this->logError("Page $page processed", [
+                    $this->logMessage("Page $page processed", [
                         'products_in_page' => count($data['products']),
                         'products_with_tags' => $pageTagStats['products_with_tags'],
                         'total_tags_in_page' => $pageTagStats['total_tags'],
@@ -307,7 +323,7 @@ class ShopifyAPI {
                             if (strpos($link, 'rel="next"') !== false) {
                                 if (preg_match('/<(.+?)>/', $link, $matches)) {
                                     $nextUrl = $matches[1];
-                                    $this->logError("Found next page URL", ['next_url' => $nextUrl]);
+                                    $this->logMessage("Found next page URL", ['next_url' => $nextUrl]);
                                     break;
                                 }
                             }
@@ -315,7 +331,7 @@ class ShopifyAPI {
                     }
 
                     if (!$nextUrl) {
-                        $this->logError("No more pages to fetch");
+                        $this->logMessage("No more pages to fetch");
                         break;
                     }
 
@@ -325,7 +341,7 @@ class ShopifyAPI {
 
                 } catch (Exception $e) {
                     $retryCount++;
-                    $this->logError("Error processing page $page (Attempt $retryCount of $maxRetries)", [
+                    $this->logMessage("Error processing page $page (Attempt $retryCount of $maxRetries)", [
                         'error' => $e->getMessage()
                     ]);
                     
@@ -344,7 +360,7 @@ class ShopifyAPI {
             arsort($tagFrequency);
             $mostCommonTags = array_slice($tagFrequency, 0, 10, true);
 
-            $this->logError("Completed fetching tags", [
+            $this->logMessage("Completed fetching tags", [
                 'total_pages' => $page,
                 'total_unique_tags' => count($allTags),
                 'total_raw_tags' => $rawTagCount,
@@ -355,7 +371,7 @@ class ShopifyAPI {
 
             return $allTags;
         } catch (Exception $e) {
-            $this->logError("Failed to fetch product tags", [
+            $this->logMessage("Failed to fetch product tags", [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -365,77 +381,78 @@ class ShopifyAPI {
 
     public function syncCustomer($customer) {
         try {
-            error_log("Starting customer sync for ID {$customer['id']} with data: " . json_encode($customer));
-            
-            // Get customer metafields
-            $metafields = $this->getCustomerMetafields($customer['id']);
-            error_log("Processing metafields for customer {$customer['id']}: " . json_encode($metafields));
+            $this->logMessage("Starting sync for customer: " . ($customer['email'] ?? 'Unknown'));
             
             // Extract bank details from metafields
             $bankName = '';
             $bankAccountNumber = '';
             $bankAccountHeader = '';
+            $businessRegisterNumber = '';
+            $tinNumber = '';
+            $icNumber = '';
+            
+            // Get customer metafields
+            $metafields = $this->getCustomerMetafields($customer['id']);
+    
+            $this->logMessage("Processing metafields for customer {$customer['id']}", ['metafields' => $metafields]);
             
             foreach ($metafields as $metafield) {
-                error_log("Processing metafield: " . json_encode($metafield));
                 switch ($metafield['key']) {
                     case 'bank_name_e':
                         $bankName = $metafield['value'];
-                        error_log("Found bank name: {$bankName}");
                         break;
                     case 'bank_account_no':
                         $bankAccountNumber = $metafield['value'];
-                        error_log("Found bank account number: {$bankAccountNumber}");
                         break;
                     case 'bank_statement_header':
                         $bankAccountHeader = $metafield['value'];
-                        error_log("Found bank statement header: {$bankAccountHeader}");
+                        break;
+                    case 'business_registration_numb':
+                        $businessRegisterNumber = $metafield['value'];
+                        break;
+                    case 'tax_identification_number_':
+                        $tinNumber = $metafield['value'];
+                        break;
+                    case 'individual_ic_number':
+                        $icNumber = $metafield['value'];
                         break;
                 }
             }
 
-            // Extract phone from default address if not in main customer data
-            $phone = $customer['phone'] ?? null;
-            if (empty($phone) && !empty($customer['default_address']['phone'])) {
-                $phone = $customer['default_address']['phone'];
-                error_log("Using phone from default address: {$phone}");
-            }
-
-            // Begin transaction
-            $this->db->beginTransaction();
-
-            // Check if customer exists
-            $stmt = $this->db->prepare("
-                SELECT id FROM customers 
-                WHERE shopify_customer_id = ?
-            ");
-            $stmt->execute([$customer['id']]);
-            $existingCustomer = $stmt->fetch(PDO::FETCH_ASSOC);
-
+            // Prepare customer data with default values
             $customerData = [
-                'email' => $customer['email'] ?? null,
-                'first_name' => $customer['first_name'] ?? null,
-                'last_name' => $customer['last_name'] ?? null,
-                'phone' => $phone,
-                'accepts_marketing' => $customer['accepts_marketing'] ?? false,
+                'shopify_customer_id' => $customer['id'],
+                'email' => $customer['email'] ?? '',
+                'first_name' => $customer['first_name'] ?? '',
+                'last_name' => $customer['last_name'] ?? '',
+                'phone' => $customer['phone'] ?? '',
+                'accepts_marketing' => isset($customer['accepts_marketing']) ? ($customer['accepts_marketing'] ? 1 : 0) : 0,
                 'total_spent' => $customer['total_spent'] ?? 0,
                 'orders_count' => $customer['orders_count'] ?? 0,
-                'tags' => json_encode($customer['tags'] ?? ''),
+                'tags' => $customer['tags'] ?? '',
                 'addresses' => json_encode($customer['addresses'] ?? []),
-                'default_address' => json_encode($customer['default_address'] ?? null),
-                'tax_exempt' => $customer['tax_exempt'] ?? false,
-                'verified_email' => $customer['verified_email'] ?? false,
+                'default_address' => json_encode($customer['default_address'] ?? []),
+                'tax_exempt' => isset($customer['tax_exempt']) ? ($customer['tax_exempt'] ? 1 : 0) : 0,
+                'verified_email' => isset($customer['verified_email']) ? ($customer['verified_email'] ? 1 : 0) : 0,
                 'bank_name' => $bankName,
                 'bank_account_number' => $bankAccountNumber,
-                'bank_account_header' => $bankAccountHeader
+                'bank_account_header' => $bankAccountHeader,
+                'business_registration_number' => $businessRegisterNumber,
+                'tax_identification_number' => $tinNumber,
+                'ic_number' => $icNumber
             ];
 
-            error_log("Prepared customer data for database: " . json_encode($customerData));
+            $this->logMessage("Prepared customer data for database", ['data' => $customerData]);
 
-            if ($existingCustomer) {
+            // Check if customer exists
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM customers WHERE shopify_customer_id = ?");
+            $stmt->execute([$customer['id']]);
+            $exists = $stmt->fetchColumn() > 0;
+
+            if ($exists) {
                 // Update existing customer
                 $stmt = $this->db->prepare("
-                    UPDATE customers SET 
+                    UPDATE customers SET
                     email = ?,
                     first_name = ?,
                     last_name = ?,
@@ -451,17 +468,34 @@ class ShopifyAPI {
                     bank_name = ?,
                     bank_account_number = ?,
                     bank_account_header = ?,
+                    business_registration_number = ?,
+                    tax_identification_number = ?,
+                    ic_number = ?,
                     last_sync_at = NOW()
                     WHERE shopify_customer_id = ?
                 ");
-
-                $params = array_values($customerData);
-                $params[] = $customer['id'];
-                $result = $stmt->execute($params);
                 
-                error_log("Updated customer {$customer['id']} - Result: " . ($result ? 'success' : 'failed'));
-                error_log("Updated data: " . json_encode($customerData));
-                
+                $stmt->execute([
+                    $customerData['email'],
+                    $customerData['first_name'],
+                    $customerData['last_name'],
+                    $customerData['phone'],
+                    $customerData['accepts_marketing'],
+                    $customerData['total_spent'],
+                    $customerData['orders_count'],
+                    $customerData['tags'],
+                    $customerData['addresses'],
+                    $customerData['default_address'],
+                    $customerData['tax_exempt'],
+                    $customerData['verified_email'],
+                    $customerData['bank_name'],
+                    $customerData['bank_account_number'],
+                    $customerData['bank_account_header'],
+                    $customerData['business_registration_number'],
+                    $customerData['tax_identification_number'],
+                    $customerData['ic_number'],
+                    $customerData['shopify_customer_id']
+                ]);
             } else {
                 // Insert new customer
                 $stmt = $this->db->prepare("
@@ -470,45 +504,80 @@ class ShopifyAPI {
                         phone, accepts_marketing, total_spent, orders_count,
                         tags, addresses, default_address, tax_exempt,
                         verified_email, bank_name, bank_account_number,
-                        bank_account_header, last_sync_at
+                        bank_account_header, business_registration_number, 
+                        tax_identification_number, ic_number, last_sync_at
                     ) VALUES (
-                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
                     )
                 ");
-
-                $params = [$customer['id']];
-                $params = array_merge($params, array_values($customerData));
-                $result = $stmt->execute($params);
                 
-                error_log("Inserted new customer {$customer['id']} - Result: " . ($result ? 'success' : 'failed'));
-                error_log("Inserted data: " . json_encode($customerData));
+                $stmt->execute([
+                    $customerData['shopify_customer_id'],
+                    $customerData['email'],
+                    $customerData['first_name'],
+                    $customerData['last_name'],
+                    $customerData['phone'],
+                    $customerData['accepts_marketing'],
+                    $customerData['total_spent'],
+                    $customerData['orders_count'],
+                    $customerData['tags'],
+                    $customerData['addresses'],
+                    $customerData['default_address'],
+                    $customerData['tax_exempt'],
+                    $customerData['verified_email'],
+                    $customerData['bank_name'],
+                    $customerData['bank_account_number'],
+                    $customerData['bank_account_header'],
+                    $customerData['business_registration_number'],
+                    $customerData['tax_identification_number'],
+                    $customerData['ic_number']
+                ]);
             }
 
-            $this->db->commit();
-            return true;
+            $this->logMessage("Successfully synced customer {$customer['id']}", [
+                'email' => $customer['email'],
+                'bank_name' => $bankName,
+                'bank_account_number' => $bankAccountNumber
+            ]);
 
+            return true;
         } catch (Exception $e) {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
             }
-            $this->logError("Error syncing customer: " . $e->getMessage(), [
+            $this->logMessage("Error syncing customer: " . $e->getMessage(), [
                 'customer_id' => $customer['id'] ?? 'unknown',
                 'trace' => $e->getTraceAsString()
             ]);
-            return false;
+            throw $e;
         }
     }
 
     public function getCustomerMetafields($customerId) {
         try {
-            $response = $this->makeApiCall("customers/{$customerId}/metafields.json");
-            error_log("Metafields response for customer {$customerId}: " . json_encode($response));
-            return $response['metafields'] ?? [];
+            $this->logMessage("Fetching metafields for customer $customerId");
+            
+            // Get all metafields for the customer using REST API
+            $response = $this->makeApiCall("customers/$customerId/metafields.json");
+            
+            if (!isset($response['metafields'])) {
+                $this->logMessage("No metafields found for customer $customerId");
+                return [];
+            }
+            
+            $metafields = $response['metafields'];
+            $this->logMessage("Found " . count($metafields) . " metafields for customer $customerId");
+            
+            // Log each metafield for debugging
+            foreach ($metafields as $metafield) {
+                $this->logMessage("Metafield: {$metafield['namespace']}.{$metafield['key']} = {$metafield['value']} (Type: {$metafield['type']})");
+            }
+            
+            return $metafields;
+            
         } catch (Exception $e) {
-            $this->logError("Error fetching customer metafields: " . $e->getMessage(), [
-                'customer_id' => $customerId
-            ]);
-            return [];
+            $this->logMessage("Error fetching metafields for customer $customerId: " . $e->getMessage(), 'error');
+            throw $e;
         }
     }
 
@@ -572,7 +641,7 @@ class ShopifyAPI {
             }
             GRAPHQL;
 
-            $this->logError("Starting product types fetch");
+            $this->logMessage("Starting product types fetch");
             $result = $this->makeGraphQLCall($query);
             $types = [];
             
@@ -584,14 +653,14 @@ class ShopifyAPI {
                 }
             }
             
-            $this->logError("Completed product types fetch", [
+            $this->logMessage("Completed product types fetch", [
                 'total_types' => count($types),
                 'sample_types' => array_slice($types, 0, 5)
             ]);
             
             return $types;
         } catch (Exception $e) {
-            $this->logError("Failed to fetch product types", [
+            $this->logMessage("Failed to fetch product types", [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -798,11 +867,11 @@ class ShopifyAPI {
             $endpoint = "orders.json?status=any&limit={$page_size}&created_at_min=" . urlencode($start_date);
             
             do {
-                $this->logError("Fetching orders", ['endpoint' => $endpoint]);
+                $this->logMessage("Fetching orders", ['endpoint' => $endpoint]);
                 $response = $this->makeApiCall($endpoint);
                 
                 if (empty($response['orders'])) {
-                    $this->logError("No more orders found");
+                    $this->logMessage("No more orders found");
                     break;
                 }
 
@@ -811,7 +880,7 @@ class ShopifyAPI {
                         // Get the order number (with #)
                         $order_number = $order['name'] ?? ('#' . $order['order_number']);
                         
-                        $this->logError("Processing order", [
+                        $this->logMessage("Processing order", [
                             'order_number' => $order_number,
                             'shopify_order_id' => $order['id']
                         ]);
@@ -836,7 +905,7 @@ class ShopifyAPI {
                                         }
                                     }
                                 } catch (Exception $e) {
-                                    $this->logError("Error syncing customer for order", [
+                                    $this->logMessage("Error syncing customer for order", [
                                         'order_number' => $order_number,
                                         'customer_id' => $order['customer']['id'],
                                         'error' => $e->getMessage()
@@ -909,14 +978,14 @@ class ShopifyAPI {
                                 $order_data['metafields'] = $metafields_json;
                                 
                                 // Log metafields for debugging
-                                $this->logError("Metafields processed for order", [
+                                $this->logMessage("Metafields processed for order", [
                                     'order_id' => $order['id'],
                                     'order_number' => $order_number,
                                     'metafields' => $metafields_json
                                 ]);
                                 
                             } catch (Exception $e) {
-                                $this->logError("Error fetching metafields for order", [
+                                $this->logMessage("Error fetching metafields for order", [
                                     'order_id' => $order['id'],
                                     'order_number' => $order_number,
                                     'error' => $e->getMessage()
@@ -949,14 +1018,14 @@ class ShopifyAPI {
                             $existing_order_numbers[] = $order_number;
                             
                             $total_synced++;
-                            $this->logError("Synced new order", [
+                            $this->logMessage("Synced new order", [
                                 'order_number' => $order_number,
                                 'shopify_order_id' => $order['id'],
                                 'customer_id' => $customer_id
                             ]);
                         }
                     } catch (Exception $e) {
-                        $this->logError("Error processing order", [
+                        $this->logMessage("Error processing order", [
                             'order_number' => $order_number ?? 'unknown',
                             'error' => $e->getMessage()
                         ]);
@@ -980,7 +1049,7 @@ class ShopifyAPI {
                 }
 
                 if (!$next_url) {
-                    $this->logError("No more pages to fetch");
+                    $this->logMessage("No more pages to fetch");
                     break;
                 }
 
@@ -991,7 +1060,7 @@ class ShopifyAPI {
             return $total_synced;
 
         } catch (Exception $e) {
-            $this->logError("Error in syncOrders", [
+            $this->logMessage("Error in syncOrders", [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -1018,7 +1087,7 @@ class ShopifyAPI {
             error_log("Raw customer data from Shopify for ID {$customerId}: " . json_encode($response));
             return $response['customer'] ?? null;
         } catch (Exception $e) {
-            $this->logError("Error fetching customer: " . $e->getMessage(), [
+            $this->logMessage("Error fetching customer: " . $e->getMessage(), [
                 'customer_id' => $customerId
             ]);
             return null;
@@ -1027,7 +1096,7 @@ class ShopifyAPI {
 
     public function getProductById($product_id) {
         try {
-            $this->logError("Starting product fetch", [
+            $this->logMessage("Starting product fetch", [
                 'product_id' => $product_id,
                 'timestamp' => date('Y-m-d H:i:s'),
                 'action' => 'getProductById'
@@ -1048,7 +1117,7 @@ class ShopifyAPI {
             }
             GRAPHQL;
 
-            $this->logError("Executing GraphQL query", [
+            $this->logMessage("Executing GraphQL query", [
                 'query' => $query,
                 'product_id' => $product_id
             ]);
@@ -1057,7 +1126,7 @@ class ShopifyAPI {
             
             if (isset($result['data']['product'])) {
                 $product = $result['data']['product'];
-                $this->logError("Product fetch successful", [
+                $this->logMessage("Product fetch successful", [
                     'product_id' => $product_id,
                     'title' => $product['title'],
                     'type' => $product['productType'],
@@ -1078,21 +1147,21 @@ class ShopifyAPI {
             }
             
             if (isset($result['errors'])) {
-                $this->logError("GraphQL returned errors", [
+                $this->logMessage("GraphQL returned errors", [
                     'product_id' => $product_id,
                     'errors' => $result['errors']
                 ]);
                 return null;
             }
             
-            $this->logError("Product not found", [
+            $this->logMessage("Product not found", [
                 'product_id' => $product_id,
                 'response' => $result
             ]);
             return null;
 
         } catch (Throwable $e) {
-            $this->logError("Error fetching product", [
+            $this->logMessage("Error fetching product", [
                 'product_id' => $product_id,
                 'error_message' => $e->getMessage(),
                 'error_code' => $e->getCode(),
@@ -1107,7 +1176,7 @@ class ShopifyAPI {
 
     public function getOrderById($order_id) {
         try {
-            $this->logError("Starting order fetch", [
+            $this->logMessage("Starting order fetch", [
                 'order_id' => $order_id,
                 'timestamp' => date('Y-m-d H:i:s'),
                 'action' => 'getOrderById',
@@ -1150,14 +1219,14 @@ class ShopifyAPI {
             }
             GRAPHQL;
 
-            $this->logError("Executing GraphQL query", [
+            $this->logMessage("Executing GraphQL query", [
                 'query' => $query,
                 'order_id' => $order_id
             ]);
 
             $result = $this->makeGraphQLCall($query);
             
-            $this->logError("GraphQL response received", [
+            $this->logMessage("GraphQL response received", [
                 'order_id' => $order_id,
                 'has_data' => isset($result['data']),
                 'has_errors' => isset($result['errors']),
@@ -1166,7 +1235,7 @@ class ShopifyAPI {
             ]);
 
             if (isset($result['errors'])) {
-                $this->logError("GraphQL query returned errors", [
+                $this->logMessage("GraphQL query returned errors", [
                     'order_id' => $order_id,
                     'errors' => $result['errors']
                 ]);
@@ -1200,7 +1269,7 @@ class ShopifyAPI {
                     'line_items' => $line_items
                 ];
 
-                $this->logError("Order fetch successful", [
+                $this->logMessage("Order fetch successful", [
                     'order_id' => $order_id,
                     'name' => $order['name'],
                     'line_items_count' => count($line_items),
@@ -1210,14 +1279,14 @@ class ShopifyAPI {
                 return $response;
             }
 
-            $this->logError("Order not found in response", [
+            $this->logMessage("Order not found in response", [
                 'order_id' => $order_id,
                 'response_data' => $result['data'] ?? null
             ]);
             return null;
 
         } catch (Exception $e) {
-            $this->logError("Error fetching order by ID", [
+            $this->logMessage("Error fetching order by ID", [
                 'order_id' => $order_id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
