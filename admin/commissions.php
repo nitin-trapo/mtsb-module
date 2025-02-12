@@ -12,6 +12,7 @@ if (!is_logged_in() || !is_admin()) {
 $db = new Database();
 $conn = $db->getConnection();
 
+
 // Handle commission status update
 if (isset($_POST['action']) && $_POST['action'] == 'update_status') {
     $commission_id = $_POST['commission_id'];
@@ -91,7 +92,7 @@ include 'includes/header.php';
     </div>
 
     <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card bg-info text-white">
                 <div class="card-body">
                     <h5 class="card-title">Pending Commissions</h5>
@@ -99,11 +100,24 @@ include 'includes/header.php';
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h5 class="card-title">Paid Commissions</h5>
                     <h3>RM <?php echo number_format($totals['paid'], 2); ?></h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Approved Commissions</h5>
+                    <h3 class="mb-0">RM <?php 
+                        $stmt = $conn->prepare("SELECT COALESCE(SUM(actual_commission), 0) as total FROM commissions WHERE status = 'approved'");
+                        $stmt->execute();
+                        $approved_commission = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+                        echo number_format($approved_commission, 2); 
+                    ?></h3>
                 </div>
             </div>
         </div>
@@ -512,6 +526,10 @@ include 'includes/header.php';
                 `);
             }
         });
+    }
+
+    function viewInvoice(commissionId) {
+        window.open('ajax/generate_invoice.php?id=' + commissionId, '_blank');
     }
 
     function deleteCommission(commissionId) {
