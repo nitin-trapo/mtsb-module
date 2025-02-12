@@ -149,7 +149,12 @@ include 'includes/header.php';
                             <td>RM <?php echo number_format($commission['order_amount'], 2); ?></td>
                             <td>
                                 <div>
-                                    RM <?php echo number_format($commission['actual_commission'], 2); ?>
+                                    RM 
+                                    <?php if (!empty($commission['adjustment_reason'])): ?>
+                                        <?php echo number_format($commission['amount'], 2); ?>
+                                    <?php else: ?>
+                                        <?php echo number_format($commission['actual_commission'], 2); ?>
+                                    <?php endif; ?>
                                     <?php if (!empty($commission['adjustment_reason'])): ?>
                                         <span class="badge bg-info" title="This commission was adjusted">
                                             <i class="fas fa-edit"></i>
@@ -529,7 +534,7 @@ include 'includes/header.php';
     }
 
     function viewInvoice(commissionId) {
-        window.open('ajax/generate_invoice.php?id=' + commissionId, '_blank');
+        window.open('generate_invoice.php?commission_id=' + commissionId, '_blank');
     }
 
     function deleteCommission(commissionId) {

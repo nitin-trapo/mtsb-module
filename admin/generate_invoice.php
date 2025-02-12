@@ -524,7 +524,7 @@ function generate_invoice($commission_id = null) {
         class MYPDF extends TCPDF {
             public function Header() {
                 $this->SetFont('helvetica', 'B', 20);
-                $this->Cell(0, 15, 'Commission Invoice', 0, true, 'C', 0, '', 0, false, 'M', 'M');
+                $this->Cell(0, 15, 'Commission Note', 0, true, 'C', 0, '', 0, false, 'M', 'M');
             }
 
             public function Footer() {

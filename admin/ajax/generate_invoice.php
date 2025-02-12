@@ -34,7 +34,7 @@ try {
         WHERE o.id = ?
     ");
     
-    $stmt->execute([$_GET['order_id']]);
+    $stmt->execute([]);
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$order) {

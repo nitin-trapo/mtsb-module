@@ -80,6 +80,9 @@ try {
             o.discount_codes,
             CONCAT(a.first_name, ' ', a.last_name) as agent_name,
             a.email as agent_email,
+            a.business_registration_number,
+            a.tax_identification_number,
+            a.ic_number,
             u.name as adjusted_by_name,
             p.name as paid_by_name
         FROM commissions c
@@ -526,12 +529,21 @@ try {
                             </tr>
                             <tr>
                                 <th>Total Commission:</th>
-                                <td>' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['actual_commission'] : $commission['actual_commission'], 2) . 
-                                 ($commission['status'] !== 'paid' ? '
+                                <td>
+                                    ' . $currency_symbol . ' ' . 
+                                    ((!empty($commission['adjustment_reason'])) ? 
+                                    number_format($commission['amount'], 2) : 
+                                    number_format($commission['actual_commission'], 2)) . '
+                                    ' . (!empty($commission['adjustment_reason']) ? '
+                                    <span class="badge bg-info" title="This commission was adjusted">
+                                        <i class="fas fa-edit"></i> Adjusted
+                                    </span>' : '') . '
+                                    ' . ($commission['status'] !== 'paid' ? '
                                     <button type="button" class="btn btn-sm btn-primary ms-2 adjust-commission" data-commission-id="' . $commission_id . '">
                                         <i class="fas fa-edit me-1"></i>Adjust
                                     </button>
-                                 ' : '') . '</td>
+                                    ' : '') . '
+                                </td>
                             </tr>
                             <tr>
                                 <th>Status:</th>
@@ -571,6 +583,18 @@ try {
                             <tr>
                                 <th>Agent Email:</th>
                                 <td>' . htmlspecialchars($commission['agent_email']) . '</td>
+                            </tr>
+                            <tr>
+                                <th>Business Registration Number:</th>
+                                <td>' . htmlspecialchars($commission['business_registration_number']) . '</td>
+                            </tr>
+                            <tr>
+                                <th>Tax Identification Number (TIN):</th>
+                                <td>' . htmlspecialchars($commission['tax_identification_number']) . '</td>
+                            </tr>
+                            <tr>
+                                <th>IC Number:</th>
+                                <td>' . htmlspecialchars($commission['ic_number']) . '</td>
                             </tr>
                         </table>
                     </div>
