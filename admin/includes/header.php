@@ -65,7 +65,7 @@ if (!defined('BASE_URL')) {
                         <a class="nav-link" href="<?php echo BASE_URL; ?>/admin/dashboard.php">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo BASE_URL; ?>/admin/customers.php">Customers</a>
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>/admin/customers.php">Agents</a>
                     </li>
 
                     <li class="nav-item">

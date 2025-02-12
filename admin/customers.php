@@ -57,7 +57,7 @@ $stmt = $conn->query("
 $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Set page title
-$page_title = 'Customers';
+$page_title = 'Agents';
 
 // Include header
 include 'includes/header.php';
@@ -68,13 +68,13 @@ include 'includes/header.php';
         <div class="col">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Customers</h5>
+                    <h5 class="mb-0">Agents</h5>
                     <div>
                         <div id="syncStatus" class="d-none alert alert-success me-3">
-                            Customers synced successfully!
+                            Agents synced successfully!
                         </div>
                         <button type="button" class="btn btn-primary" id="syncButton" onclick="syncCustomers()">
-                            <i class="fas fa-sync-alt me-2"></i>Sync Customers
+                            <i class="fas fa-sync-alt me-2"></i>Sync Agents
                         </button>
                     </div>
                 </div>
@@ -83,7 +83,7 @@ include 'includes/header.php';
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <div class="mt-2">Syncing customers... Please wait.</div>
+                        <div class="mt-2">Syncing agents... Please wait.</div>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover datatable"
@@ -163,7 +163,7 @@ include 'includes/header.php';
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Customer Details</h5>
+                <h5 class="modal-title">Agent Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body px-4">
@@ -178,7 +178,7 @@ include 'includes/header.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white py-2">
-                <h5 class="modal-title">Edit Customer</h5>
+                <h5 class="modal-title">Edit Agent</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-3">
@@ -320,7 +320,7 @@ function syncCustomers() {
                 syncStatus.classList.remove('d-none');
                 syncStatus.classList.remove('alert-danger');
                 syncStatus.classList.add('alert-success');
-                syncStatus.textContent = response.message || 'Customers synced successfully!';
+                syncStatus.textContent = response.message || 'Agents synced successfully!';
                 
                 // Reload the page after 2 seconds to show updated data
                 setTimeout(function() {
@@ -331,7 +331,7 @@ function syncCustomers() {
                 syncStatus.classList.remove('d-none');
                 syncStatus.classList.remove('alert-success');
                 syncStatus.classList.add('alert-danger');
-                syncStatus.textContent = response.message || 'Error syncing customers';
+                syncStatus.textContent = response.message || 'Error syncing agents';
             }
         },
         error: function(xhr, status, error) {
@@ -339,7 +339,7 @@ function syncCustomers() {
             syncStatus.classList.remove('d-none');
             syncStatus.classList.remove('alert-success');
             syncStatus.classList.add('alert-danger');
-            syncStatus.textContent = 'Error syncing customers: ' + error;
+            syncStatus.textContent = 'Error syncing agents: ' + error;
         },
         complete: function() {
             // Hide loader and enable button
@@ -386,7 +386,7 @@ function viewDetails(customerId) {
             modalBody.html(response);
         }
     }).fail(function() {
-        modalBody.html('<div class="alert alert-danger">Failed to load customer details</div>');
+        modalBody.html('<div class="alert alert-danger">Failed to load agent details</div>');
     });
 }
 
@@ -414,11 +414,11 @@ function editCustomer(customerId) {
                 $('#editBankAccountHeader').val(customer.bank_account_header);
                 $('#editCustomerModal').modal('show');
             } else {
-                alert('Error loading customer details: ' + response.message);
+                alert('Error loading agent details: ' + response.message);
             }
         },
         error: function() {
-            alert('Error loading customer details');
+            alert('Error loading agent details');
         }
     });
 }
@@ -446,20 +446,20 @@ function saveCustomer() {
                 bootstrap.Modal.getInstance(document.getElementById('editCustomerModal')).hide();
                 
                 // Show success message and reload
-                alert('Customer updated successfully');
+                alert('Agent updated successfully');
                 location.reload();
             } else {
-                alert('Error updating customer: ' + response.message);
+                alert('Error updating agent: ' + response.message);
             }
         },
         error: function() {
-            alert('Error updating customer');
+            alert('Error updating agent');
         }
     });
 }
 
 function deleteCustomer(customerId) {
-    if (confirm('Are you sure you want to delete this customer?')) {
+    if (confirm('Are you sure you want to delete this agent?')) {
         $.ajax({
             url: 'ajax/delete_customer.php',
             method: 'POST',
@@ -467,14 +467,14 @@ function deleteCustomer(customerId) {
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
-                    alert('Customer deleted successfully');
+                    alert('Agent deleted successfully');
                     location.reload();
                 } else {
-                    alert('Error deleting customer: ' + response.message);
+                    alert('Error deleting agent: ' + response.message);
                 }
             },
             error: function() {
-                alert('Error deleting customer');
+                alert('Error deleting agent');
             }
         });
     }
@@ -508,15 +508,15 @@ $('#editCustomerForm').on('submit', function(e) {
         data: formData,
         success: function(response) {
             if (response.success) {
-                alert('Customer updated successfully');
+                alert('Agent updated successfully');
                 $('#editCustomerModal').modal('hide');
                 location.reload(); // Refresh to show updated data
             } else {
-                alert('Error updating customer: ' + response.message);
+                alert('Error updating agent: ' + response.message);
             }
         },
         error: function() {
-            alert('Error updating customer');
+            alert('Error updating agent');
         }
     });
 });

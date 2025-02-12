@@ -115,7 +115,7 @@ try {
             <tr>
                 <th>Status:</th>
                 <td>
-                    <span class="badge bg-<?php echo $customer['status'] === 'active' ? 'success' : 'warning'; ?>">
+                    <span class="badge bg-<?php echo $customer['status'] === 'active' ? 'success' : 'danger'; ?>">
                         <?php echo !empty($customer['status']) ? ucfirst($customer['status']) : 'N/A'; ?>
                     </span>
                 </td>
@@ -123,32 +123,66 @@ try {
             <tr>
                 <th>Agent Status:</th>
                 <td>
-                    <span class="badge bg-<?php echo $customer['is_agent'] ? 'info' : 'secondary'; ?>">
-                        <?php echo $customer['is_agent'] ? 'Agent' : 'Customer'; ?>
+                    <span class="badge bg-<?php echo $customer['is_agent'] ? 'primary' : 'secondary'; ?>">
+                        <?php echo $customer['is_agent'] ? 'Agent' : 'Not Agent'; ?>
                     </span>
                 </td>
             </tr>
-            <?php if ($customer['is_agent'] == 1): ?>
-            <?php endif; ?>
+        </table>
+
+        <h5 class="mt-4">Registration Information</h5>
+        <table class="table">
+            <tr>
+                <th>Business Registration No. (SSM):</th>
+                <td><?php echo !empty($customer['business_registration_number']) ? htmlspecialchars($customer['business_registration_number']) : 'N/A'; ?></td>
+            </tr>
+            <tr>
+                <th>Tax Identification No. (TIN):</th>
+                <td><?php echo !empty($customer['tax_identification_number']) ? htmlspecialchars($customer['tax_identification_number']) : 'N/A'; ?></td>
+            </tr>
+            <tr>
+                <th>Individual IC Number:</th>
+                <td><?php echo !empty($customer['ic_number']) ? htmlspecialchars($customer['ic_number']) : 'N/A'; ?></td>
+            </tr>
+        </table>
+
+        <h5 class="mt-4">Bank Information</h5>
+        <table class="table">
             <tr>
                 <th>Bank Name:</th>
                 <td><?php echo !empty($customer['bank_name']) ? htmlspecialchars($customer['bank_name']) : 'N/A'; ?></td>
             </tr>
             <tr>
-                <th>Account Number:</th>
+                <th>Bank Account Number:</th>
                 <td><?php echo !empty($customer['bank_account_number']) ? htmlspecialchars($customer['bank_account_number']) : 'N/A'; ?></td>
             </tr>
             <tr>
-                <th>Statement:</th>
+                <th>Bank Statement:</th>
                 <td>
-                    <?php if ($fileUrl): ?>
-                        <a href="<?php echo htmlspecialchars($fileUrl); ?>" target="_blank" 
-                           class="btn btn-sm btn-outline-primary">
-                            <i class="<?php echo $fileIcon; ?> me-2"></i>View Statement
-                        </a>
-                    <?php else: ?>
-                        N/A
-                    <?php endif; ?>
+                    <?php 
+                    if (!empty($customer['bank_account_header'])) {
+                        $bankStatement = json_decode($customer['bank_account_header'], true);
+                        if (json_last_error() === JSON_ERROR_NONE && isset($bankStatement['url'])) {
+                            $fileName = $bankStatement['name'] ?? basename($bankStatement['url']);
+                            $fileSize = isset($bankStatement['size']) ? number_format($bankStatement['size'] / 1024, 2) . ' KB' : '';
+                            ?>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file-image me-2"></i>
+                                <a href="<?php echo htmlspecialchars($bankStatement['url']); ?>" target="_blank" class="text-primary">
+                                    <?php echo htmlspecialchars($fileName); ?>
+                                </a>
+                                <?php if ($fileSize): ?>
+                                    <span class="text-muted ms-2">(<?php echo $fileSize; ?>)</span>
+                                <?php endif; ?>
+                            </div>
+                            <?php
+                        } else {
+                            echo 'N/A';
+                        }
+                    } else {
+                        echo 'N/A';
+                    }
+                    ?>
                 </td>
             </tr>
         </table>
