@@ -72,7 +72,14 @@ if (!defined('BASE_URL')) {
                         <a class="nav-link" href="<?php echo BASE_URL; ?>/admin/orders.php">Orders</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo BASE_URL; ?>/admin/commissions.php">Commissions</a>
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'commissions.php' ? 'active' : ''; ?>" href="commissions.php">
+                            <i class="fas fa-percentage me-2"></i>Commissions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'bulk_commissions.php' ? 'active' : ''; ?>" href="bulk_commissions.php">
+                            <i class="fas fa-tasks me-2"></i>Bulk Commissions
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<?php echo BASE_URL; ?>/admin/rules.php">Commission Rules</a>
