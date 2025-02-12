@@ -101,18 +101,10 @@ include 'includes/header.php';
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Paid Commissions</h5>
-                    <h3>RM <?php echo number_format($totals['paid'], 2); ?></h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
             <div class="card bg-warning text-white">
                 <div class="card-body">
                     <h5 class="card-title">Approved Commissions</h5>
-                    <h3 class="mb-0">RM <?php 
+                    <h3>RM <?php 
                         $stmt = $conn->prepare("SELECT COALESCE(SUM(actual_commission), 0) as total FROM commissions WHERE status = 'approved'");
                         $stmt->execute();
                         $approved_commission = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
@@ -121,6 +113,15 @@ include 'includes/header.php';
                 </div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Paid Commissions</h5>
+                    <h3>RM <?php echo number_format($totals['paid'], 2); ?></h3>
+                </div>
+            </div>
+        </div>
+        
     </div>
 
     <div class="card">

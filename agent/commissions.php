@@ -26,7 +26,7 @@ if (!$agent) {
     die("Agent profile not found");
 }
 
-// Get all commissions for this agent with related details
+// Get all commissions for this agent with related details, excluding pending status
 $stmt = $conn->prepare("
     SELECT 
         cm.*,
@@ -40,7 +40,7 @@ $stmt = $conn->prepare("
     FROM " . TABLE_COMMISSIONS . " cm
     LEFT JOIN " . TABLE_ORDERS . " o ON cm.order_id = o.id
     LEFT JOIN " . TABLE_CUSTOMERS . " c ON o.customer_id = c.id
-    WHERE cm.agent_id = ?
+    WHERE cm.agent_id = ? AND cm.status != 'pending'
     ORDER BY cm.created_at DESC
 ");
 $stmt->execute([$agent['id']]);
@@ -48,7 +48,6 @@ $commissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Calculate totals
 $totals = [
-    'pending' => 0,
     'approved' => 0,
     'paid' => 0
 ];
@@ -76,15 +75,7 @@ include 'includes/header.php';
 
     <!-- Stats Cards -->
     <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Pending Commissions</h5>
-                    <h3>RM <?php echo number_format($totals['pending'], 2); ?></h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card bg-warning text-white">
                 <div class="card-body">
                     <h5 class="card-title">Approved Commissions</h5>
@@ -92,7 +83,7 @@ include 'includes/header.php';
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h5 class="card-title">Paid Commissions</h5>
@@ -142,10 +133,6 @@ include 'includes/header.php';
                                         echo 'bg-success';
                                     } elseif ($commission['status'] === 'approved') {
                                         echo 'bg-warning';
-                                    } elseif ($commission['status'] === 'pending') {
-                                        echo 'bg-info';
-                                    } elseif ($commission['status'] === 'calculated') {
-                                        echo 'bg-primary';
                                     } else {
                                         echo 'bg-secondary';
                                     }
@@ -201,38 +188,13 @@ $(document).ready(function() {
 });
 
 function viewDetails(commissionId) {
-    const modal = $('#commissionModal');
-    const modalBody = modal.find('.modal-body');
+    const modal = new bootstrap.Modal(document.getElementById('commissionModal'));
     
-    // Show loading spinner
-    modalBody.html(`
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary mb-2" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <div>Loading commission details...</div>
-        </div>
-    `);
-    
-    modal.modal('show');
-    
-    $.get('ajax/get_commission_details.php', { id: commissionId })
-        .done(function(response) {
-            if (response.success) {
-                modalBody.html(response.html);
-            } else {
-                modalBody.html(
-                    '<div class="alert alert-danger">' + 
-                    (response.error || 'Failed to load commission details') + 
-                    '</div>'
-                );
-            }
-        })
-        .fail(function() {
-            modalBody.html(
-                '<div class="alert alert-danger">Failed to load commission details</div>'
-            );
-        });
+    // Load commission details
+    $.get('ajax/get_commission_details.php', { commission_id: commissionId }, function(response) {
+        $('#commissionModal .modal-body').html(response);
+        modal.show();
+    });
 }
 </script>
 

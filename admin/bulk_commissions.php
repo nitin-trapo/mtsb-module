@@ -77,7 +77,6 @@ include 'includes/header.php';
                                 <option value="pending">Pending</option>
                                 <option value="approved">Approved</option>
                                 <option value="paid">Paid</option>
-                                <option value="calculated">Calculated</option>
                             </select>
                         </div>
                     </div>
@@ -97,7 +96,7 @@ include 'includes/header.php';
             <div class="card bg-info text-white">
                 <div class="card-body">
                     <h5 class="card-title">Pending Commissions</h5>
-                    <h3>RM <span id="pendingCount">0</span></h3>
+                    <h3><span id="pendingCount">0</span></h3>
                 </div>
             </div>
         </div>
@@ -105,7 +104,7 @@ include 'includes/header.php';
             <div class="card bg-warning text-white">
                 <div class="card-body">
                     <h5 class="card-title">Approved Commissions</h5>
-                    <h3>RM <span id="approvedCount">0</span></h3>
+                    <h3><span id="approvedCount">0</span></h3>
                 </div>
             </div>
         </div>
