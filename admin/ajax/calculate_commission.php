@@ -127,13 +127,33 @@ try {
         json_encode($commissionDetails)
     ]);
 
+    // If commission amount is 0, automatically mark it as paid
+    if ($totalCommission == 0) {
+        $stmt = $conn->prepare("
+            UPDATE orders 
+            SET status = 'paid',
+                commission_calculation_status = 'Calculated'
+            WHERE id = ?
+        ");
+        $stmt->execute([$order_id]);
+    } else {
+        // Just update the calculation status
+        $stmt = $conn->prepare("
+            UPDATE orders 
+            SET commission_calculation_status = 'Calculated'
+            WHERE id = ?
+        ");
+        $stmt->execute([$order_id]);
+    }
+
     // Return the results
     header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
         'order_number' => $orderItems[0]['order_number'],
         'total_commission' => $totalCommission,
-        'details' => $commissionDetails
+        'details' => $commissionDetails,
+        'status' => $totalCommission == 0 ? 'paid' : 'pending'
     ]);
 
 } catch (Exception $e) {

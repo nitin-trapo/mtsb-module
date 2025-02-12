@@ -159,6 +159,24 @@ $order_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 </div>
 
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="d-flex justify-content-end">
+            <?php if ($commission['status'] !== 'paid'): ?>
+            <button type="button" class="btn btn-warning me-2" onclick="adjustCommission(<?php echo $commission['id']; ?>)">
+                <i class="fas fa-edit"></i> Adjust Commission
+            </button>
+            <?php endif; ?>
+            <button type="button" class="btn btn-primary me-2" onclick="generateInvoice(<?php echo $commission['id']; ?>)">
+                <i class="fas fa-file-invoice"></i> Generate Invoice
+            </button>
+            <button type="button" class="btn btn-success" onclick="sendEmail(<?php echo $commission['id']; ?>)">
+                <i class="fas fa-envelope"></i> Send Email
+            </button>
+        </div>
+    </div>
+</div>
+
 <?php if ($commission['notes']): ?>
 <div class="row mt-4">
     <div class="col-12">

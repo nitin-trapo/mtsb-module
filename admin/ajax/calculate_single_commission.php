@@ -241,24 +241,26 @@ try {
             amount,
             total_discount,
             actual_commission,
-            status, 
-            created_at, 
+            status,
+            created_at,
             updated_at
         ) VALUES (
-            ?, ?, ?, ?, ?, 'pending', NOW(), NOW()
+            ?, ?, ?, ?, ?, ?, NOW(), NOW()
         ) ON DUPLICATE KEY UPDATE 
-            actual_commission = VALUES(amount),
+            amount = VALUES(amount),
             total_discount = VALUES(total_discount),
-            amount = VALUES(actual_commission),
+            actual_commission = VALUES(actual_commission),
+            status = VALUES(status),
             updated_at = NOW()
     ");
-    
+
     $stmt->execute([
         $order_id,
         $order['customer_id'],
-        $final_commission_amount,
+        $total_commission,
         $total_discount,
-        $total_commission
+        $final_commission_amount,
+        $final_commission_amount == 0 ? 'paid' : 'pending'
     ]);
 
     echo json_encode([
@@ -269,7 +271,8 @@ try {
         'final_commission' => $final_commission_amount,
         'currency' => $order['currency'],
         'processed_items' => $processed_items,
-        'discount_codes' => $order['discount_codes']
+        'discount_codes' => $order['discount_codes'],
+        'status' => $final_commission_amount == 0 ? 'paid' : 'pending'
     ]);
 
 } catch (Exception $e) {

@@ -69,7 +69,8 @@ try {
             JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[0].code')) as discount_code_1,
             CAST(JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[0].amount')) AS DECIMAL(10,2)) as discount_amount_1,
             JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[1].code')) as discount_code_2,
-            CAST(JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[1].amount')) AS DECIMAL(10,2)) as discount_amount_2
+            CAST(JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[1].amount')) AS DECIMAL(10,2)) as discount_amount_2,
+            o.metafields
         FROM orders o
         LEFT JOIN customers c ON o.customer_id = c.id
         WHERE o.id = ?
@@ -98,17 +99,40 @@ try {
     
     // Create a new PHPMailer instance
     $mail = new PHPMailer(true);
+
+    // Get customer email from metafields
+    $metafields = json_decode($order['metafields'], true);
+    $customerMetafieldEmail = isset($metafields['customer_email']) ? $metafields['customer_email'] : null;
     
     try {
         // Server settings
-        $mail->SMTPDebug = SMTP::DEBUG_OFF;
         $mail->isSMTP();
         $mail->Host = $mail_config['host'];
         $mail->SMTPAuth = true;
         $mail->Username = $mail_config['username'];
         $mail->Password = $mail_config['password'];
-        $mail->SMTPSecure = $mail_config['encryption'];
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = $mail_config['port'];
+        
+        // Recipients
+        $mail->setFrom($mail_config['from_email'], $mail_config['from_name']);
+        
+        // Add customer email from database
+        if (!empty($order['customer_email'])) {
+            $mail->addAddress($order['customer_email']);
+            logInvoiceMessage("Added customer email from database: " . $order['customer_email']);
+        }
+        
+        // Add customer email from metafields if different
+        if (!empty($customerMetafieldEmail) && $customerMetafieldEmail !== $order['customer_email']) {
+            $mail->addAddress($customerMetafieldEmail);
+            logInvoiceMessage("Added customer email from metafields: " . $customerMetafieldEmail);
+        }
+
+        // If no email addresses were added, log error and exit
+        if (count($mail->getToAddresses()) === 0) {
+            throw new Exception("No valid email addresses found for the customer");
+        }
         
         // Attempt to get customer email from metafields
         $metafields = json_decode($order['metafields'], true);
@@ -124,10 +148,6 @@ try {
             exit;
         }
 
-        // Recipients
-        $mail->setFrom($mail_config['from_email'], $mail_config['from_name']);
-        $mail->addAddress($primary_email, $order['customer_first_name'] . ' ' . $order['customer_last_name']);
-        
         // Add CC if customer email is different from primary email
         if (!empty($order['customer_email']) && $order['customer_email'] !== $primary_email) {
             $mail->addCC($order['customer_email']);

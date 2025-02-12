@@ -274,37 +274,62 @@ include 'includes/header.php';
 
     function viewDetails(commissionId) {
         const modal = $('#commissionModal');
-        const modalBody = modal.find('.modal-body');
+        const modalContent = modal.find('.modal-content');
         
         // Show loading spinner
-        modalBody.html(`
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary mb-2" role="status">
-                    <span class="visually-hidden">Loading...</span>
+        modalContent.html(`
+            <div class="modal-header">
+                <h5 class="modal-title">Commission Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div>Loading commission details...</div>
                 </div>
-                <div>Loading commission details...</div>
             </div>
         `);
         
         modal.modal('show');
         
-        $.get('ajax/get_commission_details.php', { id: commissionId })
-            .done(function(response) {
+        $.ajax({
+            url: 'ajax/get_commission_details.php',
+            method: 'GET',
+            data: { id: commissionId },
+            dataType: 'json',
+            success: function(response) {
                 if (response.success) {
-                    modalBody.html(response.html);
+                    modalContent.html(response.html);
                 } else {
-                    modalBody.html(
-                        '<div class="alert alert-danger">' + 
-                        (response.error || 'Failed to load commission details') + 
-                        '</div>'
-                    );
+                    modalContent.html(`
+                        <div class="modal-header">
+                            <h5 class="modal-title">Error</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-danger">
+                                ${response.error || 'Failed to load commission details'}
+                            </div>
+                        </div>
+                    `);
                 }
-            })
-            .fail(function() {
-                modalBody.html(
-                    '<div class="alert alert-danger">Failed to load commission details</div>'
-                );
-            });
+            },
+            error: function(xhr, status, error) {
+                modalContent.html(`
+                    <div class="modal-header">
+                        <h5 class="modal-title">Error</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger">
+                            Error loading commission details: ${error}
+                        </div>
+                    </div>
+                `);
+            }
+        });
     }
 
     function deleteCommission(commissionId) {
