@@ -272,6 +272,15 @@ include 'includes/header.php';
         });
     });
 
+    // Payment form functions
+    function showPaymentForm() {
+        $("#paymentForm").slideDown();
+    }
+
+    function hidePaymentForm() {
+        $("#paymentForm").slideUp();
+    }
+
     function viewDetails(commissionId) {
         const modal = $('#commissionModal');
         const modalContent = modal.find('.modal-content');
@@ -304,6 +313,40 @@ include 'includes/header.php';
                     modalContent.html(response.html);
                     
                     // Initialize event listeners after content is loaded
+                    // Approve Commission Button
+                    const approveBtn = modal.find(".approve-commission");
+                    if (approveBtn.length) {
+                        approveBtn.on("click", function() {
+                            if (confirm('Are you sure you want to approve this commission?')) {
+                                const btn = $(this);
+                                const originalText = btn.html();
+                                btn.prop('disabled', true)
+                                   .html(`<i class="fas fa-spinner fa-spin"></i> Approving...`);
+
+                                $.ajax({
+                                    url: "ajax/approve_commission.php",
+                                    method: "POST",
+                                    data: { commission_id: commissionId },
+                                    dataType: 'json',
+                                    success: function(data) {
+                                        if (data.success) {
+                                            toastr.success("Commission approved successfully!");
+                                            location.reload();
+                                        } else {
+                                            toastr.error(data.error || "Failed to approve commission");
+                                        }
+                                    },
+                                    error: function() {
+                                        toastr.error("Failed to approve commission");
+                                    },
+                                    complete: function() {
+                                        btn.prop('disabled', false).html(originalText);
+                                    }
+                                });
+                            }
+                        });
+                    }
+
                     // Send Invoice Button
                     const sendInvoiceBtn = modal.find(".send-invoice");
                     if (sendInvoiceBtn.length) {
@@ -340,7 +383,23 @@ include 'includes/header.php';
                     const adjustBtn = modal.find(".adjust-commission");
                     if (adjustBtn.length) {
                         adjustBtn.on("click", function() {
-                            $("#adjustmentForm").slideDown();
+                            $("#adjustCommissionForm").slideDown();
+                        });
+                    }
+
+                    // Mark as Paid Button
+                    const markAsPaidBtn = modal.find(".mark-as-paid");
+                    if (markAsPaidBtn.length) {
+                        markAsPaidBtn.on("click", function() {
+                            $("#paymentForm").slideDown();
+                        });
+                    }
+
+                    // Cancel Payment Button
+                    const cancelPaymentBtn = modal.find(".cancel-payment");
+                    if (cancelPaymentBtn.length) {
+                        cancelPaymentBtn.on("click", function() {
+                            $("#paymentForm").slideUp();
                         });
                     }
 
@@ -348,7 +407,7 @@ include 'includes/header.php';
                     const cancelBtn = modal.find(".cancel-adjustment");
                     if (cancelBtn.length) {
                         cancelBtn.on("click", function() {
-                            $("#adjustmentForm").slideUp();
+                            $("#adjustCommissionForm").slideUp();
                         });
                     }
 

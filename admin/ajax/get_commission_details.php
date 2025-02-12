@@ -509,69 +509,72 @@ try {
     $currency = $commission['currency'] ?? 'MYR';
     $currency_symbol = $currency === 'MYR' ? 'RM' : $currency;
     
-    // Format the HTML for commission details
     $html = '
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h6 class="card-title">Commission Information</h6>
-                    <table class="table table-sm">
-                        <tr>
-                            <th>Order Number:</th>
-                            <td>#' . htmlspecialchars($commission['order_number']) . '</td>
-                        </tr>
-                        <tr>
-                            <th>Order Amount:</th>
-                            <td>' . $currency_symbol . ' ' . number_format($commission['order_amount'], 2) . '</td>
-                        </tr>
-                        <tr>
-                            <th>Total Commission:</th>
-                            <td>' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['actual_commission'] : $commission['actual_commission'], 2) . 
-                             ($commission['status'] !== 'paid' ? '
-                                <button type="button" class="btn btn-sm btn-primary ms-2 adjust-commission" data-commission-id="' . $commission_id . '">
-                                    <i class="fas fa-edit me-1"></i>Adjust
-                                </button>' : '') . '
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Status:</th>
-                            <td>
-                                <span class="badge ' . 
-                                ($commission['status'] === 'paid' ? 'bg-success' : 
-                                ($commission['status'] === 'approved' ? 'bg-warning' : 
-                                ($commission['status'] === 'pending' ? 'bg-info' : 'bg-primary'))) . 
-                                ' text-white">' . ucfirst($commission['status']) . '</span>
-                                ' . ($commission['status'] !== 'paid' && floatval($commission['amount']) > 0 ? '
-                                <button type="button" class="btn btn-sm btn-success ms-2" onclick="showPaymentForm()">
-                                    <i class="fas fa-money-bill me-1"></i>Mark as Paid
-                                </button>' : '') . '
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Created Date:</th>
-                            <td>' . date('M d, Y h:i A', strtotime($commission['created_at'])) . '</td>
-                        </tr>
-                    </table>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">Commission Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Order Number:</th>
+                                <td>#' . htmlspecialchars($commission['order_number']) . '</td>
+                            </tr>
+                            <tr>
+                                <th>Order Amount:</th>
+                                <td>' . $currency_symbol . ' ' . number_format($commission['order_amount'], 2) . '</td>
+                            </tr>
+                            <tr>
+                                <th>Total Commission:</th>
+                                <td>' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['actual_commission'] : $commission['actual_commission'], 2) . 
+                                 ($commission['status'] !== 'paid' ? '
+                                    <button type="button" class="btn btn-sm btn-primary ms-2 adjust-commission" data-commission-id="' . $commission_id . '">
+                                        <i class="fas fa-edit me-1"></i>Adjust
+                                    </button>
+                                 ' : '') . '</td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>
+                                    <span class="badge ' . 
+                                    ($commission['status'] === 'paid' ? 'bg-success' : 
+                                    ($commission['status'] === 'approved' ? 'bg-warning' : 
+                                    ($commission['status'] === 'pending' ? 'bg-info' : 'bg-primary'))) . 
+                                    ' text-white">' . ucfirst($commission['status']) . '</span>
+                                    ' . ($commission['status'] === 'pending' ? '
+                                    <button type="button" class="btn btn-warning btn-sm ms-2 approve-commission">
+                                        <i class="fas fa-check me-1"></i>Approve
+                                    </button>' : '') . '
+                                    ' . ($commission['status'] === 'approved' ? '
+                                    <button type="button" class="btn btn-success btn-sm ms-2 mark-as-paid">
+                                        <i class="fas fa-dollar-sign me-1"></i>Mark as Paid
+                                    </button>' : '') . '
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Created Date:</th>
+                                <td>' . date('M d, Y h:i A', strtotime($commission['created_at'])) . '</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h6 class="card-title">Agent Information</h6>
-                    <table class="table table-sm">
-                        <tr>
-                            <th>Agent Name:</th>
-                            <td>' . htmlspecialchars($commission['agent_name']) . '</td>
-                        </tr>
-                        <tr>
-                            <th>Agent Email:</th>
-                            <td>' . htmlspecialchars($commission['agent_email']) . '</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>';
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">Agent Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Agent Name:</th>
+                                <td>' . htmlspecialchars($commission['agent_name']) . '</td>
+                            </tr>
+                            <tr>
+                                <th>Agent Email:</th>
+                                <td>' . htmlspecialchars($commission['agent_email']) . '</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>';
 
     // Show adjustment details if commission was adjusted
     if (!empty($commission['adjusted_by'])) {
@@ -630,30 +633,87 @@ try {
     }
 
     $html .= '
+            </div>
         </div>
-    </div>
 
-    <div class="card">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Commission Details</h5>
-            <span class="badge bg-light text-dark">Total Commission: ' . $currency_symbol . ' ' . number_format($commission['amount'], 2) . '</span>
+
+        <!-- Adjust Commission Form -->
+        <div id="adjustCommissionForm" class="card mb-4" style="display: none;">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0">Adjust Commission</h6>
+            </div>
+            <div class="card-body">
+                <form id="commissionAdjustmentForm" enctype="multipart/form-data">
+                    <input type="hidden" name="commission_id" value="' . $commission_id . '">
+                    <div class="mb-3">
+                        <label for="adjustedAmount" class="form-label">Adjusted Commission Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">' . $currency_symbol . '</span>
+                            <input type="number" class="form-control" id="adjustedAmount" name="amount" 
+                                   step="0.01" min="0" required 
+                                   value="' . number_format($commission["actual_commission"], 2, ".", "") . '">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="adjustmentReason" class="form-label">Reason for Adjustment</label>
+                        <textarea class="form-control" id="adjustmentReason" name="adjustment_reason" 
+                                rows="3" required placeholder="Please explain why this commission is being adjusted"></textarea>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary cancel-adjustment">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Adjustment</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="min-width: 200px;">Product</th>
-                            <th>Type</th>
-                            <th class="text-center">Qty</th>
-                            <th class="text-end">Unit Price</th>
-                            <th class="text-end">Total</th>
-                            <th>Applied Rule</th>
-                            <th class="text-end">Rate</th>
-                            <th class="text-end">Commission</th>
-                        </tr>
-                    </thead>
-                    <tbody>';
+
+        <!-- Payment Form -->
+        <div id="paymentForm" class="card mb-4" style="display: none;">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0">Mark Commission as Paid</h6>
+            </div>
+            <div class="card-body">
+                <form id="commissionPaymentForm" enctype="multipart/form-data">
+                    <input type="hidden" name="commission_id" value="' . $commission_id . '">
+                    <div class="mb-3">
+                        <label for="paymentNote" class="form-label">Payment Note</label>
+                        <textarea class="form-control" id="paymentNote" name="payment_note" 
+                                  rows="3" required placeholder="Enter payment details or notes"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="paymentReceipt" class="form-label">Payment Receipt (PDF or Image)</label>
+                        <input type="file" class="form-control" id="paymentReceipt" name="payment_receipt" 
+                               accept=".pdf,.jpg,.jpeg,.png" required>
+                        <small class="text-muted">Accepted formats: PDF, JPG, JPEG, PNG</small>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary cancel-payment">Cancel</button>
+                        <button type="submit" class="btn btn-success">Save Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Order Items</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="min-width: 200px;">Product</th>
+                                <th>Type</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Total</th>
+                                <th>Applied Rule</th>
+                                <th class="text-end">Rate</th>
+                                <th class="text-end">Commission</th>
+                            </tr>
+                        </thead>
+                        <tbody>';
 
     foreach ($items_with_rules as $item) {
         $discount = isset($item['discount']) ? floatval($item['discount']) : 0;
@@ -713,6 +773,9 @@ try {
                 </table>
             </div>
         </div>
+    </div>';
+
+    $html .= '
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
