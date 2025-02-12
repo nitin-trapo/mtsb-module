@@ -302,6 +302,129 @@ include 'includes/header.php';
             success: function(response) {
                 if (response.success) {
                     modalContent.html(response.html);
+                    
+                    // Initialize event listeners after content is loaded
+                    // Send Invoice Button
+                    const sendInvoiceBtn = modal.find(".send-invoice");
+                    if (sendInvoiceBtn.length) {
+                        sendInvoiceBtn.on("click", function() {
+                            const commissionId = $(this).data("commission-id");
+                            const button = $(this);
+                            
+                            button.prop('disabled', true)
+                                  .html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...`);
+                            
+                            $.ajax({
+                                url: "ajax/send_commission_email.php",
+                                method: "POST",
+                                data: { commission_id: commissionId },
+                                dataType: 'json',
+                                success: function(data) {
+                                    if (data.success) {
+                                        toastr.success(data.message);
+                                    } else {
+                                        toastr.error(data.message || "Failed to send invoice");
+                                    }
+                                },
+                                error: function() {
+                                    toastr.error("An error occurred while sending the invoice");
+                                },
+                                complete: function() {
+                                    button.prop('disabled', false).text("Send Invoice");
+                                }
+                            });
+                        });
+                    }
+
+                    // Adjust Commission Button
+                    const adjustBtn = modal.find(".adjust-commission");
+                    if (adjustBtn.length) {
+                        adjustBtn.on("click", function() {
+                            $("#adjustmentForm").slideDown();
+                        });
+                    }
+
+                    // Cancel Adjustment Button
+                    const cancelBtn = modal.find(".cancel-adjustment");
+                    if (cancelBtn.length) {
+                        cancelBtn.on("click", function() {
+                            $("#adjustmentForm").slideUp();
+                        });
+                    }
+
+                    // Commission Adjustment Form
+                    const adjustmentForm = modal.find("#commissionAdjustmentForm");
+                    if (adjustmentForm.length) {
+                        adjustmentForm.on("submit", function(e) {
+                            e.preventDefault();
+                            const form = $(this);
+                            const submitBtn = form.find("button[type=submit]");
+                            const originalText = submitBtn.html();
+                            
+                            submitBtn.prop('disabled', true)
+                                    .html(`<i class="fas fa-spinner fa-spin"></i> Saving...`);
+                            
+                            $.ajax({
+                                url: "ajax/adjust_commission.php",
+                                method: "POST",
+                                data: form.serialize(),
+                                dataType: 'json',
+                                success: function(data) {
+                                    if (data.success) {
+                                        toastr.success("Commission adjusted successfully!");
+                                        location.reload();
+                                    } else {
+                                        toastr.error(data.error || "Failed to adjust commission");
+                                    }
+                                },
+                                error: function() {
+                                    toastr.error("Failed to adjust commission");
+                                },
+                                complete: function() {
+                                    submitBtn.prop('disabled', false).html(originalText);
+                                }
+                            });
+                        });
+                    }
+
+                    // Commission Payment Form
+                    const paymentForm = modal.find("#commissionPaymentForm");
+                    if (paymentForm.length) {
+                        paymentForm.on("submit", function(e) {
+                            e.preventDefault();
+                            const form = $(this);
+                            const submitBtn = form.find("button[type=submit]");
+                            const originalText = submitBtn.html();
+                            
+                            submitBtn.prop('disabled', true)
+                                    .html(`<i class="fas fa-spinner fa-spin"></i> Saving...`);
+                            
+                            const formData = new FormData(this);
+                            
+                            $.ajax({
+                                url: "ajax/mark_commission_paid.php",
+                                method: "POST",
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                dataType: 'json',
+                                success: function(data) {
+                                    if (data.success) {
+                                        toastr.success("Commission marked as paid successfully!");
+                                        setTimeout(() => location.reload(), 1500);
+                                    } else {
+                                        toastr.error(data.error || "Failed to mark commission as paid");
+                                    }
+                                },
+                                error: function() {
+                                    toastr.error("Failed to mark commission as paid");
+                                },
+                                complete: function() {
+                                    submitBtn.prop('disabled', false).html(originalText);
+                                }
+                            });
+                        });
+                    }
                 } else {
                     modalContent.html(`
                         <div class="modal-header">

@@ -77,6 +77,7 @@ try {
             o.currency,
             o.line_items,
             o.metafields,
+            o.discount_codes,
             CONCAT(a.first_name, ' ', a.last_name) as agent_name,
             a.email as agent_email,
             u.name as adjusted_by_name,
@@ -526,7 +527,7 @@ try {
                         </tr>
                         <tr>
                             <th>Total Commission:</th>
-                            <td>' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['amount'] : $commission['actual_commission'], 2) . 
+                            <td>' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['actual_commission'] : $commission['actual_commission'], 2) . 
                              ($commission['status'] !== 'paid' ? '
                                 <button type="button" class="btn btn-sm btn-primary ms-2 adjust-commission" data-commission-id="' . $commission_id . '">
                                     <i class="fas fa-edit me-1"></i>Adjust
@@ -596,7 +597,7 @@ try {
             </div>';
     }
 
-    if ($commission['amount'] > 0 && $commission['status'] === 'paid') {
+    if ($commission['actual_commission'] > 0 && $commission['status'] === 'paid') {
         $html .= '
             <div class="card mb-3">
                 <div class="card-body">
@@ -631,186 +632,6 @@ try {
     $html .= '
         </div>
     </div>
-
-    <!-- Commission Adjustment Form -->
-    <div id="adjustmentForm" class="card mb-3" style="display: none;">
-        <div class="card-body">
-            <h6 class="card-title">Adjust Commission</h6>
-            <form id="commissionAdjustmentForm">
-                <input type="hidden" name="commission_id" value="' . $commission_id . '">
-                <div class="mb-3">
-                    <label for="adjustedAmount" class="form-label">New Commission Amount (' . $currency_symbol . ')</label>
-                    <input type="number" class="form-control" id="adjustedAmount" name="amount" 
-                           value="' . $commission['amount'] . '" step="0.01" min="0" required>
-                </div>
-                <div class="mb-3">
-                    <label for="adjustmentReason" class="form-label">Reason for Adjustment</label>
-                    <textarea class="form-control" id="adjustmentReason" name="adjustment_reason" 
-                              rows="3" required></textarea>
-                </div>
-                <div class="text-end">
-                    <button type="button" class="btn btn-secondary cancel-adjustment">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Payment Form -->
-    <div id="paymentForm" class="card mb-3" style="display: none;">
-        <div class="card-header bg-success text-white">
-            <h6 class="mb-0">Mark Commission as Paid</h6>
-        </div>
-        <div class="card-body">
-            <form id="commissionPaymentForm" enctype="multipart/form-data">
-                <input type="hidden" name="commission_id" value="' . $commission_id . '">
-                <div class="mb-3">
-                    <label for="paymentNote" class="form-label">Payment Note</label>
-                    <textarea class="form-control" id="paymentNote" name="payment_note" 
-                              rows="3" required placeholder="Enter payment details or notes"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label for="paymentReceipt" class="form-label">Payment Receipt (PDF or Image)</label>
-                    <input type="file" class="form-control" id="paymentReceipt" name="payment_receipt" 
-                           accept=".pdf,.jpg,.jpeg,.png" required>
-                    <small class="text-muted">Accepted formats: PDF, JPG, JPEG, PNG</small>
-                </div>
-                <div class="text-end">
-                    <button type="button" class="btn btn-secondary" onclick="hidePaymentForm()">Cancel</button>
-                    <button type="submit" class="btn btn-success">Save Payment</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        // Function to handle invoice viewing
-        function viewInvoice(commissionId) {
-            window.open(`generate_invoice.php?commission_id=${commissionId}`, "_blank");
-        }
-
-        document.querySelector(".send-invoice").addEventListener("click", function() {
-            const commissionId = this.getAttribute("data-commission-id");
-            const button = this;
-            
-            button.disabled = true;
-            button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...`;
-            
-            fetch("ajax/send_commission_email.php", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: `commission_id=${commissionId}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    toastr.success(data.message);
-                } else {
-                    toastr.error(data.message || "Failed to send invoice");
-                }
-            })
-            .catch(error => {
-                toastr.error("An error occurred while sending the invoice");
-            })
-            .finally(() => {
-                button.disabled = false;
-                button.innerHTML = "Send Invoice";
-            });
-        });
-
-        document.querySelector(".adjust-commission").addEventListener("click", function() {
-            const adjustmentForm = document.getElementById("adjustmentForm");
-            adjustmentForm.style.display = "block";
-        });
-
-        document.querySelector(".cancel-adjustment").addEventListener("click", function() {
-            const adjustmentForm = document.getElementById("adjustmentForm");
-            adjustmentForm.style.display = "none";
-        });
-
-        document.getElementById("commissionAdjustmentForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const submitBtn = this.querySelector("button[type=submit]");
-            const originalText = submitBtn.innerHTML;
-            
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
-            
-            fetch("ajax/adjust_commission.php", {
-                method: "POST",
-                body: new URLSearchParams(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    toastr.success("Commission adjusted successfully!");
-                    location.reload();
-                } else {
-                    toastr.error(data.error || "Failed to adjust commission");
-                }
-            })
-            .catch(error => {
-                toastr.error("Failed to adjust commission");
-            })
-            .finally(() => {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-            });
-        });
-
-        function showPaymentForm() {
-            $("#paymentForm").slideDown();
-        }
-
-        function hidePaymentForm() {
-            $("#paymentForm").slideUp();
-        }
-
-        $("#commissionPaymentForm").on("submit", function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const submitBtn = $(this).find("button[type=submit]");
-            const originalText = submitBtn.html();
-            
-            submitBtn.prop("disabled", true).html(\'<i class="fas fa-spinner fa-spin"></i> Saving...\');
-            
-            $.ajax({
-                url: "ajax/mark_commission_paid.php",
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    if (response.success) {
-                        const alertHtml = \'<div class="alert alert-success alert-dismissible fade show" role="alert">\'
-                            + \'<i class="fas fa-check-circle me-2"></i>Commission has been marked as paid successfully!\'
-                            + \'<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>\'
-                            + \'</div>\';
-                        $("#paymentForm").before(alertHtml);
-                        
-                        toastr.success("Commission marked as paid successfully!");
-                        
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
-                    } else {
-                        toastr.error(response.error || "Failed to mark commission as paid");
-                    }
-                },
-                error: function() {
-                    toastr.error("Failed to mark commission as paid");
-                },
-                complete: function() {
-                    submitBtn.prop("disabled", false).html(originalText);
-                }
-            });
-        });
-    </script>
 
     <div class="card">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -863,7 +684,27 @@ try {
                         <tr class="table-light">
                             <td colspan="6" class="text-end fw-bold">Total Discount:</td>
                             <td colspan="2" class="text-end fw-bold text-danger">-' . $currency_symbol . ' ' . number_format($commission['total_discount'], 2) . '</td>
-                        </tr>
+                        </tr>';
+    
+    // Add discount code display
+    if (!empty($commission['discount_codes'])) {
+        logError("Discount Codes found: " . print_r($commission['discount_codes'], true));
+        $discount_codes = json_decode($commission['discount_codes'], true);
+        if (!empty($discount_codes)) {
+            $first_discount = reset($discount_codes);
+            $discount_code = $first_discount['code'] ?? '';
+            if (!empty($discount_code)) {
+                $html .= '<tr class="table-light">
+                            <td colspan="6" class="text-end fw-bold">Discount Code:</td>
+                            <td colspan="2" class="text-end fw-bold">' . htmlspecialchars($discount_code) . '</td>
+                        </tr>';
+            }
+        }
+    } else {
+        logError("No discount codes found for commission ID: " . $commission_id);
+    }
+
+    $html .= '
                         <tr class="table-light">
                             <td colspan="6" class="text-end fw-bold">Final Commission:</td>
                             <td colspan="2" class="text-end fw-bold fs-5 text-success">' . $currency_symbol . ' ' . number_format(!empty($commission['adjustment_reason']) ? $commission['amount'] : $commission['amount'], 2) . '</td>
@@ -879,14 +720,27 @@ try {
         <button type="button" class="btn btn-success send-invoice" data-commission-id="' . $commission_id . '">Send Invoice</button>
     </div>';
 
-    header('Content-Type: application/json');
+    // Clear any buffered output before sending JSON response
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    
     echo json_encode([
         'success' => true,
         'html' => $html
     ]);
 
 } catch (Exception $e) {
-    header('Content-Type: application/json');
+    // Clear any buffered output before sending error response
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    
+    logError("Error in get_commission_details.php", [
+        'error' => $e->getMessage(),
+        'commission_id' => isset($commission_id) ? $commission_id : null
+    ]);
+    
     echo json_encode([
         'success' => false,
         'error' => $e->getMessage()
