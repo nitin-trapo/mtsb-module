@@ -28,12 +28,12 @@ try {
     // Get order details
     $query = "SELECT 
         o.*,
-        c.first_name as customer_first_name,
-        c.last_name as customer_last_name,
-        c.email as customer_email,
-        c.phone as customer_phone,
-        COALESCE(a.first_name, '') as agent_first_name,
-        COALESCE(a.last_name, '') as agent_last_name,
+        c.first_name as agent_first_name,
+        c.last_name as agent_last_name,
+        c.email as agent_email,
+        c.phone as agent_phone,
+        c.is_agent,
+        c.commission_rate,
         DATE_FORMAT(o.processed_at, '%b %d, %Y %h:%i %p') as formatted_processed_date,
         DATE_FORMAT(o.created_at, '%b %d, %Y %h:%i %p') as formatted_created_date,
         o.metafields,
@@ -49,7 +49,6 @@ try {
         END as commission_calculation_status
     FROM orders o
     LEFT JOIN customers c ON o.customer_id = c.id
-    LEFT JOIN customers a ON o.agent_id = a.id
     LEFT JOIN commissions com ON o.id = com.order_id
     WHERE o.id = ?";
 
@@ -85,8 +84,7 @@ try {
 
     // Format customer name
     $order['customer_name'] = trim($order['customer_first_name'] . ' ' . $order['customer_last_name']);
-    $order['agent_name'] = trim($order['agent_first_name'] . ' ' . $order['agent_last_name']);
-
+    
     // Format dates
     $order['formatted_created_date'] = date('M d, Y h:i A', strtotime($order['created_at']));
     $order['formatted_processed_date'] = !empty($order['formatted_processed_date']) ? 
@@ -150,33 +148,35 @@ try {
         'order' => [
             'id' => $order['id'],
             'order_number' => $order['order_number'],
-            'created_at' => $order['formatted_created_date'],
+            'created_at' => $order['created_at'],
             'processed_at' => $order['formatted_processed_date'],
-            'customer_name' => $order['customer_name'],
+            'financial_status' => $order['financial_status'],
+            'fulfillment_status' => $order['fulfillment_status'],
+            'currency' => $order['currency'],
+            'total_price' => $order['total_price'],
+            'subtotal_price' => $subtotal,
+            'total_tax' => $total_tax,
+            'total_discounts' => $total_discounts,
+            'metafields' => $order['metafields'],
+            'email' => $order['email'] ?? '',
             'customer_email' => $order['customer_email'],
             'customer_phone' => $order['customer_phone'],
-            'agent_name' => $order['agent_name'],
+            'agent_first_name' => $order['agent_first_name'] ?? '',
+            'agent_last_name' => $order['agent_last_name'] ?? '',
+            'agent_email' => $order['agent_email'] ?? '',
+            'agent_phone' => $order['agent_phone'] ?? '',
+            'is_agent' => (bool)($order['is_agent'] ?? false),
+            'commission_rate' => $order['commission_rate'] ?? 0,
             'shipping_address' => $order['shipping_address'],
             'billing_address' => $order['billing_address'],
             'line_items' => $line_items,
             'discount_codes' => $order['discount_codes'],
             'discount_applications' => $order['discount_applications'],
-            'subtotal_price' => $subtotal,
-            'total_shipping' => $total_shipping,
-            'total_tax' => $total_tax,
-            'total_price' => $total_price,
-            'discount_code' => $discount_code,
-            'total_discounts' => $discount_amount,
-            'currency' => $order['currency'],
-            'financial_status' => $order['financial_status'],
-            'fulfillment_status' => $order['fulfillment_status'],
-            'base_commission' => floatval($order['base_commission']),
-            'commission_discount' => floatval($order['commission_discount']),
-            'actual_commission' => floatval($order['actual_commission']),
+            'base_commission' => $order['base_commission'],
+            'commission_discount' => $order['commission_discount'],
+            'actual_commission' => $order['actual_commission'],
             'commission_status' => $order['commission_status'],
-            'commission_date' => $order['commission_date'] ? date('M d, Y h:i A', strtotime($order['commission_date'])) : '',
-            'commission_calculation_status' => $order['commission_calculation_status'],
-            'metafields' => $order['metafields']
+            'commission_calculation_status' => $order['commission_calculation_status']
         ]
     ]);
 } catch (Exception $e) {

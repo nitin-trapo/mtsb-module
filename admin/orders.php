@@ -324,6 +324,12 @@ function viewDetails(orderId) {
                     customerEmail = order.metafields.customer_email;
                 }
                 
+                // Get customer name and phone from shipping address
+                const shippingAddress = order.shipping_address || {};
+                const customerName = shippingAddress.first_name && shippingAddress.last_name ? 
+                    `${shippingAddress.first_name} ${shippingAddress.last_name}` : 'N/A';
+                const customerPhone = shippingAddress.phone || 'N/A';
+                
                 let html = `
                     <div class="row">
                         <div class="col-md-6">
@@ -354,8 +360,7 @@ function viewDetails(orderId) {
                                     </table>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-6">
+
                             <div class="card mb-3">
                                 <div class="card-body">
                                     <h6 class="card-title">Commission Information</h6>
@@ -398,54 +403,60 @@ function viewDetails(orderId) {
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="row">
                         <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Customer Information</h6>
+                                    <table class="table table-sm mb-0">
+                                        <tr>
+                                            <th width="35%">Name:</th>
+                                            <td>${customerName}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email:</th>
+                                            <td>${customerEmail}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Phone:</th>
+                                            <td>${customerPhone}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
                             <div class="card mb-3">
                                 <div class="card-body">
                                     <h6 class="card-title">Agent Information</h6>
                                     <table class="table table-sm mb-0">
                                         <tr>
                                             <th width="35%">Name:</th>
-                                            <td>${order.customer_name}</td>
+                                            <td>${(order.agent_first_name || order.agent_last_name) ? 
+                                                `${order.agent_first_name || ''} ${order.agent_last_name || ''}`.trim() : 'N/A'}</td>
                                         </tr>
                                         <tr>
-                                            <th>Agent Email:</th>
-                                            <td>${order.customer_email || 'N/A'}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Customer Email:</th>
-                                            <td>${customerEmail}</td>
+                                            <th>Email:</th>
+                                            <td>${order.agent_email || 'N/A'}</td>
                                         </tr>
                                         <tr>
                                             <th>Phone:</th>
-                                            <td>${order.customer_phone || 'N/A'}</td>
+                                            <td>${order.agent_phone || 'N/A'}</td>
                                         </tr>
-                                        ${order.agent_first_name ? `
-                                        <tr>
-                                            <th>Agent:</th>
-                                            <td>${order.agent_first_name} ${order.agent_last_name}</td>
-                                        </tr>
-                                        ` : ''}
                                     </table>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <h6 class="card-title">Addresses</h6>
-                                    <div class="row">
-                                        <div class="col-sm-6">
-                                            <h6 class="card-subtitle mb-2 text-muted">Billing Address</h6>
-                                            ${formatAddress(order.billing_address)}
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <h6 class="card-subtitle mb-2 text-muted">Shipping Address</h6>
-                                            ${formatAddress(order.shipping_address)}
-                                        </div>
-                                    </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">Addresses</h6>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <h6 class="card-subtitle mb-2 text-muted">Billing Address</h6>
+                                    ${formatAddress(order.billing_address)}
+                                </div>
+                                <div class="col-sm-6">
+                                    <h6 class="card-subtitle mb-2 text-muted">Shipping Address</h6>
+                                    ${formatAddress(order.shipping_address)}
                                 </div>
                             </div>
                         </div>
