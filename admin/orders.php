@@ -64,10 +64,11 @@ try {
     $stmt = $conn->query("
         SELECT 
             o.*,
-            c.first_name as customer_first_name,
-            c.last_name as customer_last_name,
-            COALESCE(a.first_name, '') as agent_first_name,
-            COALESCE(a.last_name, '') as agent_last_name,
+            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.first_name')), '') as customer_first_name,
+            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.last_name')), '') as customer_last_name,
+            a.first_name as agent_first_name,
+            a.last_name as agent_last_name,
+            a.email as agent_email,
             DATE_FORMAT(o.created_at, '%Y-%m-%d %H:%i:%s') as sort_date,
             DATE_FORMAT(o.created_at, '%b %d, %Y %h:%i %p') as formatted_date,
             COALESCE(a.commission_rate, 0) as agent_commission_rate,
@@ -81,7 +82,6 @@ try {
                 ELSE com.status
             END as commission_calculation_status
         FROM orders o
-        LEFT JOIN customers c ON o.customer_id = c.id
         LEFT JOIN customers a ON o.customer_id = a.id
         LEFT JOIN commissions com ON o.id = com.order_id
         ORDER BY o.created_at DESC
@@ -135,6 +135,7 @@ include 'includes/header.php';
                                 <tr>
                                     <th>Order #</th>
                                     <th>Customer</th>
+                                    <th>Agent</th>
                                     <th class="text-end">Amount</th>
                                     <th class="text-end">Commission</th>
                                     <th class="text-center">Payment Status</th>
@@ -166,6 +167,18 @@ include 'includes/header.php';
                                                 $customerEmail = isset($metafields['customer_email']) ? $metafields['customer_email'] : 'N/A';
                                                 
                                                 echo '<br><small class="text-muted">' . htmlspecialchars($customerEmail) . '</small>';
+                                            ?>
+                                        </td>
+                                        <td>
+                                            <?php 
+                                            if (!empty($order['agent_first_name']) || !empty($order['agent_last_name'])) {
+                                                echo htmlspecialchars($order['agent_first_name'] . ' ' . $order['agent_last_name']);
+                                                if (!empty($order['agent_email'])) {
+                                                    echo '<br><small class="text-muted">' . htmlspecialchars($order['agent_email']) . '</small>';
+                                                }
+                                            } else {
+                                                echo '<span class="text-muted">No Agent</span>';
+                                            }
                                             ?>
                                         </td>
                                         <td class="text-end" data-sort="<?php echo $order['total_price']; ?>">
