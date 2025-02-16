@@ -3,7 +3,9 @@ session_start();
 require_once '../../config/database.php';
 require_once '../../includes/functions.php';
 require_once '../../vendor/autoload.php';
-require_once '../../classes/InvoicePDF.php';
+
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 // Check if user is logged in and is admin
 if (!is_logged_in() || !is_admin()) {
@@ -25,12 +27,7 @@ try {
             c.last_name as customer_last_name,
             c.email as customer_email,
             c.phone as customer_phone,
-            DATE_FORMAT(o.processed_at, '%b %d, %Y %h:%i %p') as formatted_processed_date,
-            (SELECT SUM(quantity * price) FROM order_items WHERE order_id = o.id) as subtotal_price,
-            JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[0].code')) as discount_code_1,
-            CAST(JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[0].amount')) AS DECIMAL(10,2)) as discount_amount_1,
-            JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[1].code')) as discount_code_2,
-            CAST(JSON_UNQUOTE(JSON_EXTRACT(o.discount_codes, '$[1].amount')) AS DECIMAL(10,2)) as discount_amount_2
+            DATE_FORMAT(o.processed_at, '%b %d, %Y %h:%i %p') as formatted_processed_date
         FROM orders o
         LEFT JOIN customers c ON o.customer_id = c.id
         WHERE o.id = ?
@@ -43,12 +40,32 @@ try {
         die('Order not found');
     }
 
-    // Generate PDF invoice
-    $pdf = new InvoicePDF('P', 'mm', 'A4');
-    $pdf->generateInvoice($order);
+    // Configure Dompdf
+    $options = new Options();
+    $options->set('isHtml5ParserEnabled', true);
+    $options->set('isPhpEnabled', true);
+    $options->set('isRemoteEnabled', true);
+    $options->set('defaultFont', 'Arial');
     
-    // Output PDF directly to browser
-    $pdf->Output('Invoice_' . $order['order_number'] . '.pdf', 'I');
+    // Create new PDF document
+    $dompdf = new Dompdf($options);
+    
+    // Load the invoice template
+    ob_start();
+    include dirname(__DIR__, 2) . '/templates/invoice.php';
+    $html = ob_get_clean();
+    
+    // Load HTML into Dompdf
+    $dompdf->loadHtml($html);
+    
+    // Set paper size and orientation
+    $dompdf->setPaper('A4', 'portrait');
+    
+    // Render PDF
+    $dompdf->render();
+    
+    // Output PDF
+    $dompdf->stream('Invoice_' . $order['order_number'] . '.pdf', array('Attachment' => false));
     
 } catch (Exception $e) {
     die('Error generating invoice: ' . $e->getMessage());
