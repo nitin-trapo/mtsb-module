@@ -241,7 +241,7 @@ if (!empty($discount_codes)) {
                     $billing = json_decode($order['billing_address'], true);
                     if ($billing): 
                     ?>
-                    Attn <?php echo htmlspecialchars($billing['name']); ?><br>
+                    <?php echo htmlspecialchars($billing['name']); ?><br>
                     MILLENNIUM AUTOBEYOND SDN BHD<br>
                     No 691, Batu 5, Jalan Cheras<br>
                     Taman Mutiara Barat<br>
@@ -256,7 +256,7 @@ if (!empty($discount_codes)) {
                     $shipping = json_decode($order['shipping_address'], true);
                     if ($shipping): 
                     ?>
-                    Attn <?php echo htmlspecialchars($shipping['name']); ?><br>
+                    <?php echo htmlspecialchars($shipping['name']); ?><br>
                     BYD CHERAS MILLENNIUM AUTOBEYOND<br>
                     No 691, Batu 5, Jalan Cheras<br>
                     Kuala Lumpur, KUL 56000

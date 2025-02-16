@@ -8,6 +8,8 @@ require_once '../../classes/InvoicePDF.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 // Set up logging
 $logDir = __DIR__ . '/../../logs';
@@ -86,13 +88,46 @@ try {
         exit;
     }
     
-    // Generate PDF invoice
-    $pdf = new InvoicePDF('P', 'mm', 'A4');
-    $pdf->generateInvoice($order);
+    // Calculate totals
+    $line_items = json_decode($order['line_items'], true);
+    $subtotal = 0;
+    $total_discount = 0;
+    
+    foreach ($line_items as $item) {
+        $subtotal += $item['price'] * $item['quantity'];
+    }
+    
+    // Get discount codes
+    $discount_codes = json_decode($order['discount_codes'], true) ?? [];
+    foreach ($discount_codes as $discount) {
+        $total_discount += $discount['amount'];
+    }
+    
+    // Prepare billing and shipping addresses
+    $billing = json_decode($order['billing_address'], true) ?? [];
+    $shipping = json_decode($order['shipping_address'], true) ?? [];
+
+    // Generate PDF using the same template as view_invoice.php
+    $options = new Options();
+    $options->set('isHtml5ParserEnabled', true);
+    $options->set('isPhpEnabled', true);
+    
+    $dompdf = new Dompdf($options);
+    
+    // Get the invoice template
+    ob_start();
+    require_once '../../templates/invoice.php';
+    $html = ob_get_clean();
+    
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+    
+    $pdf_content = $dompdf->output();
     
     // Save PDF to temporary file
     $pdfFile = tempnam(sys_get_temp_dir(), 'invoice_');
-    $pdf->Output($pdfFile, 'F');
+    file_put_contents($pdfFile, $pdf_content);
     
     // Load mail configuration
     $mail_config = require_once '../../config/mail.php';
@@ -180,15 +215,6 @@ try {
         }
         
         // Email body with modern styling
-        // Calculate subtotal from line items
-        $line_items = json_decode($order['line_items'], true);
-        $subtotal = 0;
-        if (is_array($line_items)) {
-            foreach ($line_items as $item) {
-                $subtotal += $item['price'] * $item['quantity'];
-            }
-        }
-        
         $message = '
         <!DOCTYPE html>
         <html>
@@ -212,7 +238,7 @@ try {
                 </div>
                 
                 <div class="content">
-                    <p>Dear ' . htmlspecialchars($order['customer_first_name'] . ' ' . $order['customer_last_name']) . ',</p>
+                    <p>Dear ' . htmlspecialchars($billing['name']) . ',</p>
                     
                     <p>Thank you for your order. Please find your invoice attached to this email.</p>
                     
