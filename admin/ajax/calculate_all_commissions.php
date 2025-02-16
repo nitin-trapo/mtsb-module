@@ -3,6 +3,10 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 ini_set('error_log', '../logs/php-error.log');
+// Increase execution time and memory limits
+ini_set('max_execution_time', 300); // 5 minutes
+ini_set('memory_limit', '256M');
+set_time_limit(300);
 
 session_start();
 require_once '../../config/database.php';
@@ -40,27 +44,53 @@ try {
     // Get all orders that need commission calculation
     $is_refresh = isset($_GET['refresh']) && $_GET['refresh'] == 1;
     
+    // Add pagination/batch processing
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $batch_size = 50; // Process 50 orders at a time
+    $offset = ($page - 1) * $batch_size;
+    
     $query = "
         SELECT o.*, c.id as agent_id 
         FROM orders o
         LEFT JOIN customers c ON o.customer_id = c.id
         LEFT JOIN commissions cm ON o.id = cm.order_id
-        AND o.customer_id IS NOT NULL
+        WHERE o.customer_id IS NOT NULL
         " . (!$is_refresh ? "AND cm.id IS NULL" : "") . "
+        LIMIT ? OFFSET ?
     ";
 
     $stmt = $conn->prepare($query);
+    $stmt->bindValue(1, $batch_size, PDO::PARAM_INT);
+    $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+    
     if (!$stmt->execute()) {
         throw new Exception("Failed to fetch orders");
     }
 
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
+    // Get total count for pagination
+    $count_query = "
+        SELECT COUNT(*) as total 
+        FROM orders o
+        LEFT JOIN customers c ON o.customer_id = c.id
+        LEFT JOIN commissions cm ON o.id = cm.order_id
+        WHERE o.customer_id IS NOT NULL
+        " . (!$is_refresh ? "AND cm.id IS NULL" : "");
+    
+    $count_stmt = $conn->prepare($count_query);
+    $count_stmt->execute();
+    $total_count = $count_stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    $total_pages = ceil($total_count / $batch_size);
+    
     if (empty($orders)) {
         header('Content-Type: application/json');
         echo json_encode([
             'success' => true,
-            'message' => 'No ' . ($is_refresh ? 'orders found to refresh' : 'new orders found for commission calculation')
+            'message' => 'No ' . ($is_refresh ? 'orders found to refresh' : 'new orders found for commission calculation'),
+            'total_count' => $total_count,
+            'current_page' => $page,
+            'total_pages' => $total_pages
         ]);
         exit;
     }
@@ -69,17 +99,23 @@ try {
     $processed_orders = 0;
     $total_commissions = 0;
 
-    // If refreshing, first delete existing commissions
+    // If refreshing, first delete existing commissions for this batch
     if ($is_refresh) {
-        $delete_stmt = $conn->prepare("DELETE FROM commissions WHERE order_id IN (SELECT id FROM orders WHERE financial_status = 'paid')");
-        if (!$delete_stmt->execute()) {
+        $order_ids = array_map(function($order) { return $order['id']; }, $orders);
+        $placeholders = str_repeat('?,', count($order_ids) - 1) . '?';
+        $delete_stmt = $conn->prepare("DELETE FROM commissions WHERE order_id IN ($placeholders)");
+        if (!$delete_stmt->execute($order_ids)) {
             throw new Exception("Failed to delete existing commissions");
         }
         
-        logError("Existing commissions deleted for refresh", [
+        logError("Existing commissions deleted for batch", [
+            'page' => $page,
             'orders_count' => count($orders)
         ]);
     }
+
+    // Create a cache for product types to reduce API calls
+    $product_type_cache = [];
 
     foreach ($orders as $order) {
         try {
@@ -103,49 +139,56 @@ try {
                     // Initialize product type with default value
                     $product_type = 'TRAPO CLASSIC';
 
-                    // Get product type from Shopify API
+                    // Check cache first before making API call
                     if (isset($item['product_id'])) {
-                        try {
-                            $shop_domain = SHOPIFY_SHOP_DOMAIN;
-                            $access_token = SHOPIFY_ACCESS_TOKEN;
-                            $api_version = SHOPIFY_API_VERSION;
-                            $url = "https://{$shop_domain}/admin/api/{$api_version}/products/{$item['product_id']}.json";
+                        if (isset($product_type_cache[$item['product_id']])) {
+                            $product_type = $product_type_cache[$item['product_id']];
+                        } else {
+                            try {
+                                $shop_domain = SHOPIFY_SHOP_DOMAIN;
+                                $access_token = SHOPIFY_ACCESS_TOKEN;
+                                $api_version = SHOPIFY_API_VERSION;
+                                $url = "https://{$shop_domain}/admin/api/{$api_version}/products/{$item['product_id']}.json";
 
-                            $ch = curl_init();
-                            curl_setopt($ch, CURLOPT_URL, $url);
-                            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                                "X-Shopify-Access-Token: {$access_token}",
-                                "Content-Type: application/json"
-                            ]);
-                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            
-                            $response = curl_exec($ch);
-                            if ($response === false) {
-                                throw new Exception("Curl error: " . curl_error($ch));
-                            }
-                            
-                            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                            curl_close($ch);
-                            
-                            if ($http_code === 200) {
-                                $product_data = json_decode($response, true);
-                                if (json_last_error() !== JSON_ERROR_NONE) {
-                                    throw new Exception("Invalid API response JSON: " . json_last_error_msg());
+                                $ch = curl_init();
+                                curl_setopt($ch, CURLOPT_URL, $url);
+                                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                                    "X-Shopify-Access-Token: {$access_token}",
+                                    "Content-Type: application/json"
+                                ]);
+                                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                                curl_setopt($ch, CURLOPT_TIMEOUT, 10); // 10 seconds timeout for each API call
+                                
+                                $response = curl_exec($ch);
+                                if ($response === false) {
+                                    throw new Exception("Curl error: " . curl_error($ch));
                                 }
                                 
-                                if (isset($product_data['product']['product_type']) && !empty($product_data['product']['product_type'])) {
-                                    $product_type = strtoupper($product_data['product']['product_type']);
-                                    logError("Got product type from Shopify API", [
-                                        'product_id' => $item['product_id'],
-                                        'type' => $product_type
-                                    ]);
+                                $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                                curl_close($ch);
+                                
+                                if ($http_code === 200) {
+                                    $product_data = json_decode($response, true);
+                                    if (json_last_error() !== JSON_ERROR_NONE) {
+                                        throw new Exception("Invalid API response JSON: " . json_last_error_msg());
+                                    }
+                                    
+                                    if (isset($product_data['product']['product_type']) && !empty($product_data['product']['product_type'])) {
+                                        $product_type = strtoupper($product_data['product']['product_type']);
+                                        // Cache the product type
+                                        $product_type_cache[$item['product_id']] = $product_type;
+                                        logError("Got product type from Shopify API", [
+                                            'product_id' => $item['product_id'],
+                                            'type' => $product_type
+                                        ]);
+                                    }
                                 }
+                            } catch (Exception $e) {
+                                logError("Error fetching from Shopify API", [
+                                    'error' => $e->getMessage(),
+                                    'product_id' => $item['product_id']
+                                ]);
                             }
-                        } catch (Exception $e) {
-                            logError("Error fetching from Shopify API", [
-                                'error' => $e->getMessage(),
-                                'product_id' => $item['product_id']
-                            ]);
                         }
                     }
 
@@ -312,19 +355,35 @@ try {
         'message' => "Successfully processed $processed_orders orders with total commissions of $total_commissions",
         'processed_orders' => $processed_orders,
         'total_commissions' => $total_commissions,
-        'errors' => $errors
+        'errors' => $errors,
+        'total_count' => $total_count,
+        'current_page' => $page,
+        'total_pages' => $total_pages
     ]);
     exit;
 } catch (Exception $e) {
-    logError("Failed to calculate commissions", [
-        'error' => $e->getMessage()
+    logError("Fatal error in commission calculation", [
+        'error' => $e->getMessage(),
+        'trace' => $e->getTraceAsString()
     ]);
     
     header('Content-Type: application/json');
     echo json_encode([
         'success' => false,
-        'message' => "Failed to calculate commissions: " . $e->getMessage(),
-        'errors' => [$e->getMessage()]
+        'message' => "Error: " . $e->getMessage(),
+        'current_page' => $page ?? 1,
+        'total_pages' => $total_pages ?? 0,
+        'total_count' => $total_count ?? 0
     ]);
     exit;
 }
+
+// Add progress tracking in session
+$_SESSION['commission_calculation'] = [
+    'last_processed_page' => $page,
+    'total_pages' => $total_pages,
+    'processed_orders' => $processed_orders,
+    'total_commissions' => $total_commissions,
+    'timestamp' => time()
+];
+?>
