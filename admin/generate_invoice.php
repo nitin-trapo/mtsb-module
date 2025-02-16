@@ -411,7 +411,14 @@ try {
     // Render PDF
     $dompdf->render();
     
-    // Output PDF
+    // Check if we're outputting to file
+    if (isset($_GET['output'])) {
+        $output_path = $_GET['output'];
+        file_put_contents($output_path, $dompdf->output());
+        exit;
+    }
+    
+    // Output PDF for direct viewing
     $dompdf->stream('Commission_Note_MT-CP' . str_pad($commission['id'], 4, '0', STR_PAD_LEFT) . '.pdf', array('Attachment' => false));
     
 } catch (Exception $e) {

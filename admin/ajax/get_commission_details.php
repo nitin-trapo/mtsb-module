@@ -533,7 +533,7 @@ try {
                                     ' . $currency_symbol . ' ' . 
                                     ((!empty($commission['adjustment_reason'])) ? 
                                     number_format($commission['amount'], 2) : 
-                                    number_format($commission['actual_commission'], 2)) . '
+                                    number_format($commission['amount'], 2)) . '
                                     ' . (!empty($commission['adjustment_reason']) ? '
                                     <span class="badge bg-info" title="This commission was adjusted">
                                         <i class="fas fa-edit"></i> Adjusted

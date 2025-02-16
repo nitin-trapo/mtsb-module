@@ -154,7 +154,7 @@ include 'includes/header.php';
                                     <?php if (!empty($commission['adjustment_reason'])): ?>
                                         <?php echo number_format($commission['amount'], 2); ?>
                                     <?php else: ?>
-                                        <?php echo number_format($commission['actual_commission'], 2); ?>
+                                        <?php echo number_format($commission['amount'], 2); ?>
                                     <?php endif; ?>
                                     <?php if (!empty($commission['adjustment_reason'])): ?>
                                         <span class="badge bg-info" title="This commission was adjusted">
@@ -394,6 +394,39 @@ include 'includes/header.php';
                                 },
                                 complete: function() {
                                     button.prop('disabled', false).text("Send Invoice");
+                                }
+                            });
+                        });
+                    }
+
+                    // Send Commission Email Button
+                    const sendEmailBtn = modal.find(".send-email");
+                    if (sendEmailBtn.length) {
+                        sendEmailBtn.on("click", function() {
+                            const btn = $(this);
+                            const originalText = btn.html();
+                            
+                            // Disable button and show loading
+                            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
+                            
+                            $.ajax({
+                                url: 'ajax/send_commission_email.php',
+                                method: 'POST',
+                                data: { commission_id: commissionId },
+                                dataType: 'json',
+                                success: function(response) {
+                                    if (response.success) {
+                                        toastr.success(response.message);
+                                    } else {
+                                        toastr.error(response.error || 'Failed to send email');
+                                    }
+                                },
+                                error: function() {
+                                    toastr.error('Failed to send email');
+                                },
+                                complete: function() {
+                                    // Re-enable button and restore text
+                                    btn.prop('disabled', false).html(originalText);
                                 }
                             });
                         });
