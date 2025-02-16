@@ -624,7 +624,7 @@ try {
             </div>';
     }
 
-    if ($commission['actual_commission'] > 0 && $commission['status'] === 'paid') {
+    if ($commission['amount'] > 0 && $commission['status'] === 'paid') {
         $html .= '
             <div class="card mb-3">
                 <div class="card-body">
@@ -675,7 +675,7 @@ try {
                             <span class="input-group-text">' . $currency_symbol . '</span>
                             <input type="number" class="form-control" id="adjustedAmount" name="amount" 
                                    step="0.01" min="0" required 
-                                   value="' . number_format($commission["actual_commission"], 2, ".", "") . '">
+                                   value="' . number_format($commission['amount'], 2, ".", "") . '">
                         </div>
                     </div>
                     <div class="mb-3">

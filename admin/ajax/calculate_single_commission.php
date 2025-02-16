@@ -185,15 +185,15 @@ try {
             if ($rate['rate'] > 0) {
                 // Calculate commission
                 $item_price = isset($item['price_set']['shop_money']['amount']) 
-                    ? floatval($item['price_set']['shop_money']['amount'])
-                    : floatval($item['price']);
+                    ? number_format(floatval($item['price_set']['shop_money']['amount']), 2, '.', '')
+                    : number_format(floatval($item['price']), 2, '.', '');
                     
                 $item_quantity = isset($item['quantity']) ? intval($item['quantity']) : 0;
-                $item_total = $item_price * $item_quantity;
+                $item_total = number_format($item_price * $item_quantity, 2, '.', '');
                 $order_total += $item_total;
                 
-                $commission = $item_total * ($rate['rate'] / 100);
-                $total_commission += $commission;
+                $commission = number_format($item_total * ($rate['rate'] / 100), 2, '.', '');
+                $total_commission = number_format($total_commission + floatval($commission), 2, '.', '');
                 
                 $processed_items[] = [
                     'title' => $item['title'],
@@ -212,7 +212,7 @@ try {
     }
 
     // Process discount codes if present
-    $final_commission_amount = $total_commission;
+    $final_commission_amount = number_format($total_commission, 2, '.', '');
     $total_discount = 0;
     if (!empty($order['discount_codes'])) {
         $discount_codes = json_decode($order['discount_codes'], true);
@@ -220,27 +220,27 @@ try {
             foreach ($discount_codes as $discount) {
                 if ($discount['type'] === 'percentage') {
                     // For percentage discounts, apply directly to commission amount
-                    $discount_amount = floatval($discount['amount']);
-                    $total_discount += $discount_amount;
+                    $discount_amount = number_format(floatval($discount['amount']), 2, '.', '');
+                    $total_discount = number_format($total_discount + $discount_amount, 2, '.', '');
                 }
             }
             
             // Calculate final commission after all percentage discounts
-            $final_commission_amount = $total_commission - $total_discount;
+            $final_commission_amount = number_format($total_commission - $total_discount, 2, '.', '');
         }
     }
 
     // Ensure commission amount is not negative
-    $final_commission_amount = max(0, $final_commission_amount);
+    $final_commission_amount = number_format(max(0, floatval($final_commission_amount)), 2, '.', '');
 
     // Save commission to database
     $stmt = $conn->prepare("
         INSERT INTO commissions (
             order_id, 
             agent_id, 
-            amount,
-            total_discount,
             actual_commission,
+            total_discount,
+            amount,
             status,
             created_at,
             updated_at

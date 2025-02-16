@@ -133,6 +133,7 @@ try {
 
             $order_total = 0;
             $commission_amount = 0;
+            $total_discount = 0;
 
             if (!empty($line_items) && is_array($line_items)) {
                 foreach ($line_items as $item) {
@@ -192,10 +193,7 @@ try {
                         }
                     }
 
-                    // Get product tags
-                    $product_tags = isset($item['tags']) ? explode(',', $item['tags']) : [];
-                    
-                    // Log commission rule matching
+                    // Get commission rule
                     $stmt = $conn->prepare("
                         SELECT * FROM commission_rules 
                         WHERE status = 'active' 
@@ -207,183 +205,127 @@ try {
                         ORDER BY rule_type = 'product_type' DESC
                         LIMIT 1
                     ");
-                    
-                    if (!$stmt->execute([$product_type])) {
-                        throw new Exception("Failed to fetch commission rule");
-                    }
-                    
+                    $stmt->execute([$product_type]);
                     $rule = $stmt->fetch(PDO::FETCH_ASSOC);
-                    
-                    logError("Commission Rule Matching", [
-                        'product_type' => $product_type,
-                        'matched_rule' => $rule ? json_encode($rule) : 'No rule found',
-                        'rule_type' => $rule['rule_type'] ?? 'N/A',
-                        'rule_value' => $rule['rule_value'] ?? 'N/A'
-                    ]);
 
                     if ($rule) {
-                        $rate = floatval($rule['commission_percentage']);
-                        
-                        // Get item price
-                        $item_price = 0;
-                        if (isset($item['price_set']['shop_money']['amount'])) {
-                            $item_price = floatval($item['price_set']['shop_money']['amount']);
-                        } elseif (isset($item['price'])) {
-                            $item_price = floatval($item['price']);
-                        }
-                        
+                        // Calculate commission for this item
+                        $item_price = isset($item['price_set']['shop_money']['amount']) 
+                            ? number_format(floatval($item['price_set']['shop_money']['amount']), 2, '.', '')
+                            : number_format(floatval($item['price']), 2, '.', '');
+                            
                         $item_quantity = isset($item['quantity']) ? intval($item['quantity']) : 0;
-                        $item_total = $item_price * $item_quantity;
+                        $item_total = number_format($item_price * $item_quantity, 2, '.', '');
+                        $order_total = number_format($order_total + floatval($item_total), 2, '.', '');
                         
-                        // Handle discounts
-                        $total_discount = 0;
-                        if (isset($item['total_discount']) && floatval($item['total_discount']) > 0) {
-                            $total_discount = floatval($item['total_discount']);
-                        }
-                        $item_total -= $total_discount;
+                        $commission_rate = floatval($rule['commission_percentage']);
+                        $item_commission = number_format($item_total * ($commission_rate / 100), 2, '.', '');
+                        $commission_amount = number_format($commission_amount + floatval($item_commission), 2, '.', '');
                         
-                        // Ensure non-negative total
-                        $item_total = max(0, $item_total);
-                        
-                        $commission = $item_total * ($rate / 100);
-                        $commission_amount += $commission;
-                        $order_total += $item_total;
-
-                        logError("Commission calculated", [
+                        logError("Commission calculated for item", [
                             'order_id' => $order['id'],
-                            'product' => $item['name'] ?? 'Unknown',
-                            'product_type' => $product_type,
-                            'price' => $item_price,
-                            'quantity' => $item_quantity,
-                            'discount' => $total_discount,
-                            'final_total' => $item_total,
-                            'commission_rate' => $rate,
-                            'commission_amount' => $commission
+                            'product_id' => $item['product_id'],
+                            'rate' => $commission_rate,
+                            'amount' => $item_commission
                         ]);
                     }
                 }
             }
 
             // Process discount codes if present
-            $final_commission_amount = $commission_amount;
-            $total_discount = 0;
             if (!empty($order['discount_codes'])) {
                 $discount_codes = json_decode($order['discount_codes'], true);
                 if (is_array($discount_codes)) {
                     foreach ($discount_codes as $discount) {
                         if ($discount['type'] === 'percentage') {
-                            // For percentage discounts, apply directly to commission amount
-                            $discount_amount = floatval($discount['amount']);
-                            $total_discount += $discount_amount;
+                            $discount_amount = number_format(floatval($discount['amount']), 2, '.', '');
+                            $total_discount = number_format($total_discount + floatval($discount_amount), 2, '.', '');
                         }
                     }
                     
-                    // Calculate final commission after all percentage discounts
-                    $final_commission_amount = $commission_amount - $total_discount;
+                    // Apply discounts to commission amount
+                    $commission_amount = number_format($commission_amount - floatval($total_discount), 2, '.', '');
                 }
             }
 
             // Ensure commission amount is not negative
-            $final_commission_amount = max(0, $final_commission_amount);
+            $commission_amount = number_format(max(0, floatval($commission_amount)), 2, '.', '');
 
-            // Update commission in database
-            try {
-                $stmt = $conn->prepare("
-                    INSERT INTO commissions (
-                        order_id, 
-                        agent_id, 
-                        amount,
-                        total_discount,
-                        actual_commission,
-                        status,
-                        created_at,
-                        updated_at
-                    ) VALUES (
-                        :order_id,
-                        :agent_id,
-                        :actual_commission,
-                        :total_discount,
-                        :amount,
-                        'pending',
-                        NOW(),
-                        NOW()
-                    )
-                ");
-                
-                if (!$stmt->execute([
-                    ':order_id' => $order['id'],
-                    ':agent_id' => $order['agent_id'],
-                    ':amount' => $commission_amount,
-                    ':total_discount' => $total_discount,
-                    ':actual_commission' => $final_commission_amount
-                ])) {
-                    throw new Exception("Failed to update commission");
-                }
-                
-                logError("Commission calculated successfully", [
-                    'order_id' => $order['id'],
-                    'base_commission' => $commission_amount,
-                    'total_discount' => $total_discount,
-                    'actual_commission' => $final_commission_amount,
-                    'discount_codes' => $order['discount_codes']
-                ]);
-                
-                $processed_orders++;
-                $total_commissions += $final_commission_amount;
-                
-            } catch (Exception $e) {
-                logError("Database Update Error", [
-                    'order_id' => $order['id'],
-                    'error' => $e->getMessage()
-                ]);
-                throw $e;
+            // Insert or update commission record
+            $stmt = $conn->prepare("
+                INSERT INTO commissions (
+                    order_id, 
+                    agent_id, 
+                    actual_commission,
+                    total_discount,
+                    amount,
+                    status,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    ?, ?, ?, ?, ?, ?, NOW(), NOW()
+                ) ON DUPLICATE KEY UPDATE 
+                    amount = VALUES(amount),
+                    total_discount = VALUES(total_discount),
+                    actual_commission = VALUES(actual_commission),
+                    status = VALUES(status),
+                    updated_at = NOW()
+            ");
+
+            // Store original commission amount before discount in actual_commission
+            $actual_commission = number_format($commission_amount + floatval($total_discount), 2, '.', '');
+            if (!$stmt->execute([
+                $order['id'],
+                $order['agent_id'],
+                $actual_commission, // actual_commission (before discount)
+                $total_discount,
+                $commission_amount, // amount (after discount)
+                $commission_amount == 0 ? 'paid' : 'pending'
+            ])) {
+                throw new Exception("Failed to save commission for order {$order['id']}");
             }
 
+            $processed_orders++;
+            $total_commissions += $commission_amount;
+
+            logError("Commission saved", [
+                'order_id' => $order['id'],
+                'actual_commission' => $actual_commission,
+                'total_discount' => $total_discount,
+                'final_amount' => $commission_amount,
+                'status' => $commission_amount == 0 ? 'paid' : 'pending'
+            ]);
+
         } catch (Exception $e) {
-            logError("Order Processing Error", [
-                'order_id' => $order['id'] ?? 'unknown',
+            $errors[] = "Error processing order {$order['id']}: " . $e->getMessage();
+            logError("Error processing order", [
+                'order_id' => $order['id'],
                 'error' => $e->getMessage()
             ]);
-            $errors[] = "Error processing order " . ($order['id'] ?? 'unknown') . ": " . $e->getMessage();
+            continue;
         }
     }
 
-    // After processing all orders
+    // Return response
     header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
-        'message' => "Successfully processed $processed_orders orders with total commissions of $total_commissions",
-        'processed_orders' => $processed_orders,
-        'total_commissions' => $total_commissions,
+        'message' => "Processed $processed_orders orders. Total commissions: $total_commissions",
         'errors' => $errors,
         'total_count' => $total_count,
         'current_page' => $page,
         'total_pages' => $total_pages
     ]);
-    exit;
+
 } catch (Exception $e) {
     logError("Fatal error in commission calculation", [
-        'error' => $e->getMessage(),
-        'trace' => $e->getTraceAsString()
+        'error' => $e->getMessage()
     ]);
     
     header('Content-Type: application/json');
+    http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => "Error: " . $e->getMessage(),
-        'current_page' => $page ?? 1,
-        'total_pages' => $total_pages ?? 0,
-        'total_count' => $total_count ?? 0
+        'message' => $e->getMessage()
     ]);
-    exit;
 }
-
-// Add progress tracking in session
-$_SESSION['commission_calculation'] = [
-    'last_processed_page' => $page,
-    'total_pages' => $total_pages,
-    'processed_orders' => $processed_orders,
-    'total_commissions' => $total_commissions,
-    'timestamp' => time()
-];
-?>
