@@ -62,30 +62,33 @@ if (!defined('BASE_URL')) {
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo BASE_URL; ?>/admin/dashboard.php">Dashboard</a>
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/dashboard.php">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo BASE_URL; ?>/admin/customers.php">Agents</a>
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'customers.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/customers.php">Agents</a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo BASE_URL; ?>/admin/orders.php">Orders</a>
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'orders.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/orders.php">Orders</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'commissions.php' ? 'active' : ''; ?>" href="commissions.php">
                            Commissions
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item ">
                         <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'bulk_commissions.php' ? 'active' : ''; ?>" href="bulk_commissions.php">
                             Bulk Commissions
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo BASE_URL; ?>/admin/rules.php">Commission Rules</a>
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'rules.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/rules.php">Commission Rules</a>
+                    </li>
+					<li class="nav-item">
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/users.php">Users</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo BASE_URL; ?>/admin/sync.php">Sync Data</a>
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'sync.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/sync.php">Sync Data</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">

@@ -1,7 +1,7 @@
 <?php
 class Database {
     private $host = "localhost";
-    private $db_name = "shopify_commission_new";
+    private $db_name = "testnew";
     private $username = "root";
     private $password = "";
     public $conn;
