@@ -739,7 +739,6 @@ try {
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary view-invoice" data-commission-id="' . $commission_id . '">View Invoice</button>
-        <button type="button" class="btn btn-success send-invoice" data-commission-id="' . $commission_id . '">Send Invoice</button>
     </div>
     <script>
         document.querySelector(".view-invoice").addEventListener("click", function() {

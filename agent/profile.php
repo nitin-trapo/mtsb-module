@@ -70,7 +70,7 @@ include 'includes/header.php';
 <div class="modal fade" id="editProfileModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form method="POST">
+            <form id="profileForm" action="ajax/save_profile.php" method="POST">
                 <div class="modal-header">
                     <h5 class="modal-title">Edit Profile</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -90,6 +90,18 @@ include 'includes/header.php';
                             <div class="mb-3">
                                 <label class="form-label">Phone</label>
                                 <input type="tel" class="form-control" name="phone" value="<?php echo htmlspecialchars($agent['phone'] ?? ''); ?>">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Business Registration No.</label>
+                                <input type="text" class="form-control" name="business_registration_number" value="<?php echo htmlspecialchars($agent['business_registration_number'] ?? ''); ?>">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tax Identification No. (TIN)</label>
+                                <input type="text" class="form-control" name="tax_identification_number" value="<?php echo htmlspecialchars($agent['tax_identification_number'] ?? ''); ?>">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">IC Number</label>
+                                <input type="text" class="form-control" name="ic_number" value="<?php echo htmlspecialchars($agent['ic_number'] ?? ''); ?>">
                             </div>
                            
                         </div>
@@ -153,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Reload bank details after form submission
-document.querySelector('form').addEventListener('submit', function(e) {
+document.getElementById('profileForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
     
@@ -164,15 +176,16 @@ document.querySelector('form').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            $('#editProfileModal').modal('hide');
             loadBankDetails(); // Reload bank details after successful update
-            alert('Bank details updated successfully!');
+            alert(data.message || 'Profile updated successfully!');
         } else {
-            alert(data.error || 'Failed to update bank details');
+            alert(data.error || 'Failed to update profile');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while updating bank details');
+        alert('An error occurred while updating profile');
     });
 });
 </script>

@@ -36,6 +36,9 @@ try {
             bank_name,
             bank_account_number,
             bank_account_header,
+            business_registration_number,
+            tax_identification_number,
+            ic_number,
             created_at
         FROM " . TABLE_CUSTOMERS . "
         WHERE email = ? AND is_agent = 1
@@ -85,6 +88,18 @@ try {
                     <tr>
                         <th>Phone:</th>
                         <td><?php echo !empty($agent['phone']) ? htmlspecialchars($agent['phone']) : 'Not set'; ?></td>
+                    </tr>
+                    <tr>
+                        <th>Business Registration No.:</th>
+                        <td><?php echo !empty($agent['business_registration_number']) ? htmlspecialchars($agent['business_registration_number']) : 'Not set'; ?></td>
+                    </tr>
+                    <tr>
+                        <th>Tax Identification No. (TIN):</th>
+                        <td><?php echo !empty($agent['tax_identification_number']) ? htmlspecialchars($agent['tax_identification_number']) : 'Not set'; ?></td>
+                    </tr>
+                    <tr>
+                        <th>IC Number:</th>
+                        <td><?php echo !empty($agent['ic_number']) ? htmlspecialchars($agent['ic_number']) : 'Not set'; ?></td>
                     </tr>
                     <tr>
                         <th>Joined:</th>
