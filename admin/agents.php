@@ -73,7 +73,7 @@ include 'includes/header.php';
                         <div id="syncStatus" class="d-none alert alert-success me-3">
                             Agents synced successfully!
                         </div>
-                        <button type="button" class="btn btn-primary" id="syncButton" onclick="syncCustomers()">
+                        <button type="button" class="btn btn-primary" id="syncButton" onclick="syncAgents()">
                             <i class="fas fa-sync-alt me-2"></i>Sync Agents
                         </button>
                     </div>
@@ -139,10 +139,10 @@ include 'includes/header.php';
                                                     onclick="viewDetails(<?php echo $customer['id']; ?>)">
                                                 <i class="fas fa-eye me-1"></i>View
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-info" onclick="editCustomer(<?php echo $customer['id']; ?>)">
+                                            <button type="button" class="btn btn-sm btn-info" onclick="editAgent(<?php echo $customer['id']; ?>)">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteCustomer(<?php echo $customer['id']; ?>)">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteAgent(<?php echo $customer['id']; ?>)">
                                                 <i class="fas fa-trash"></i> Delete
                                             </button>
                                         </div>
@@ -158,8 +158,8 @@ include 'includes/header.php';
     </div>
 </div>
 
-<!-- Customer Details Modal -->
-<div class="modal fade" id="customerModal" tabindex="-1">
+<!-- Agent Details Modal -->
+<div class="modal fade" id="agentModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
@@ -173,8 +173,8 @@ include 'includes/header.php';
     </div>
 </div>
 
-<!-- Edit Customer Modal -->
-<div class="modal fade" id="editCustomerModal" tabindex="-1">
+<!-- Edit Agent Modal -->
+<div class="modal fade" id="editAgentModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white py-2">
@@ -182,8 +182,8 @@ include 'includes/header.php';
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-3">
-                <form id="editCustomerForm">
-                    <input type="hidden" id="editCustomerId" name="customer_id">
+                <form id="editAgentForm">
+                    <input type="hidden" id="editAgentId" name="agent_id">
                     
                     <div class="row g-2">
                         <!-- Personal Information -->
@@ -274,7 +274,7 @@ include 'includes/header.php';
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>Cancel
                 </button>
-                <button type="button" class="btn btn-primary btn-sm" onclick="saveCustomer()">
+                <button type="button" class="btn btn-primary btn-sm" onclick="saveAgent()">
                     <i class="fas fa-save me-1"></i>Save Changes
                 </button>
             </div>
@@ -299,7 +299,7 @@ $(document).ready(function() {
     $('.datatable').DataTable();
 });
 
-function syncCustomers() {
+function syncAgents() {
     // Show loader and disable button
     const syncLoader = document.getElementById('syncLoader');
     const syncButton = document.getElementById('syncButton');
@@ -311,7 +311,7 @@ function syncCustomers() {
     
     // Make the AJAX call
     $.ajax({
-        url: 'ajax/sync_customers.php',
+        url: 'ajax/sync_agents.php',
         method: 'POST',
         dataType: 'json',
         success: function(response) {
@@ -349,10 +349,10 @@ function syncCustomers() {
     });
 }
 
-function toggleAgent(customerId, isAgent) {
-    $.post('customers.php', {
+function toggleAgent(agentId, isAgent) {
+    $.post('agents.php', {
         action: 'toggle_agent',
-        customer_id: customerId,
+        agent_id: agentId,
         is_agent: isAgent ? 1 : 0
     }, function(response) {
         if (!response.success) {
@@ -361,10 +361,10 @@ function toggleAgent(customerId, isAgent) {
     });
 }
 
-function updateStatus(customerId, status) {
-    $.post('customers.php', {
+function updateStatus(agentId, status) {
+    $.post('agents.php', {
         action: 'update_status',
-        customer_id: customerId,
+        agent_id: agentId,
         status: status
     }, function(response) {
         if (!response.success) {
@@ -373,13 +373,13 @@ function updateStatus(customerId, status) {
     });
 }
 
-function viewDetails(customerId) {
-    const modal = $('#customerModal');
+function viewDetails(agentId) {
+    const modal = $('#agentModal');
     const modalBody = modal.find('.modal-body');
     modalBody.html('<div class="text-center"><div class="spinner-border" role="status"></div></div>');
     modal.modal('show');
     
-    $.get('ajax/view_customer.php', { id: customerId }, function(response) {
+    $.get('ajax/view_agent.php', { id: agentId }, function(response) {
         if (response.error) {
             modalBody.html('<div class="alert alert-danger">' + response.error + '</div>');
         } else {
@@ -390,29 +390,29 @@ function viewDetails(customerId) {
     });
 }
 
-function editCustomer(customerId) {
-    // Fetch customer details
+function editAgent(agentId) {
+    // Fetch agent details
     $.ajax({
-        url: 'ajax/get_customer.php',
+        url: 'ajax/get_agent.php',
         method: 'GET',
-        data: { customer_id: customerId },
+        data: { agent_id: agentId },
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                const customer = response.customer;
+                const agent = response.agent;
                 
                 // Populate the form
-                $('#editCustomerId').val(customer.id);
-                $('#editFirstName').val(customer.first_name);
-                $('#editLastName').val(customer.last_name);
-                $('#editEmail').val(customer.email);
-                $('#editPhone').val(customer.phone);
-                $('#editIsAgent').prop('checked', customer.is_agent == 1);
-                $('#editStatus').val(customer.status);
-                $('#editBankName').val(customer.bank_name);
-                $('#editBankAccountNumber').val(customer.bank_account_number);
-                $('#editBankAccountHeader').val(customer.bank_account_header);
-                $('#editCustomerModal').modal('show');
+                $('#editAgentId').val(agent.id);
+                $('#editFirstName').val(agent.first_name);
+                $('#editLastName').val(agent.last_name);
+                $('#editEmail').val(agent.email);
+                $('#editPhone').val(agent.phone);
+                $('#editIsAgent').prop('checked', agent.is_agent == 1);
+                $('#editStatus').val(agent.status);
+                $('#editBankName').val(agent.bank_name);
+                $('#editBankAccountNumber').val(agent.bank_account_number);
+                $('#editBankAccountHeader').val(agent.bank_account_header);
+                $('#editAgentModal').modal('show');
             } else {
                 alert('Error loading agent details: ' + response.message);
             }
@@ -423,9 +423,9 @@ function editCustomer(customerId) {
     });
 }
 
-function saveCustomer() {
+function saveAgent() {
     const formData = {
-        customer_id: $('#editCustomerId').val(),
+        agent_id: $('#editAgentId').val(),
         first_name: $('#editFirstName').val(),
         last_name: $('#editLastName').val(),
         phone: $('#editPhone').val(),
@@ -437,13 +437,13 @@ function saveCustomer() {
     };
     
     $.ajax({
-        url: 'ajax/update_customer.php',
+        url: 'ajax/update_agent.php',
         method: 'POST',
         data: formData,
         success: function(response) {
             if (response.success) {
                 // Hide modal
-                bootstrap.Modal.getInstance(document.getElementById('editCustomerModal')).hide();
+                bootstrap.Modal.getInstance(document.getElementById('editAgentModal')).hide();
                 
                 // Show success message and reload
                 alert('Agent updated successfully');
@@ -458,12 +458,12 @@ function saveCustomer() {
     });
 }
 
-function deleteCustomer(customerId) {
+function deleteAgent(agentId) {
     if (confirm('Are you sure you want to delete this agent?')) {
         $.ajax({
-            url: 'ajax/delete_customer.php',
+            url: 'ajax/delete_agent.php',
             method: 'POST',
-            data: { customer_id: customerId },
+            data: { agent_id: agentId },
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
@@ -487,11 +487,11 @@ function formatCurrency(amount) {
     }).format(amount);
 }
 
-$('#editCustomerForm').on('submit', function(e) {
+$('#editAgentForm').on('submit', function(e) {
     e.preventDefault();
     
     const formData = {
-        customer_id: $('#editCustomerId').val(),
+        agent_id: $('#editAgentId').val(),
         first_name: $('#editFirstName').val(),
         last_name: $('#editLastName').val(),
         phone: $('#editPhone').val(),
@@ -503,13 +503,13 @@ $('#editCustomerForm').on('submit', function(e) {
     };
     
     $.ajax({
-        url: 'ajax/update_customer.php',
+        url: 'ajax/update_agent.php',
         method: 'POST',
         data: formData,
         success: function(response) {
             if (response.success) {
                 alert('Agent updated successfully');
-                $('#editCustomerModal').modal('hide');
+                $('#editAgentModal').modal('hide');
                 location.reload(); // Refresh to show updated data
             } else {
                 alert('Error updating agent: ' + response.message);

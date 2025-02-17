@@ -17,15 +17,15 @@ header('Content-Type: application/json');
 try {
     $shopify = new ShopifyAPI();
     
-    // Get the last synced customer ID
+    // Get the last synced agent ID
     $db = new Database();
     $conn = $db->getConnection();
     
-    // Get all existing customer IDs
+    // Get all existing agent IDs
     $stmt = $conn->query("SELECT shopify_customer_id FROM customers");
-    $existing_customers = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $existing_agents = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
-    // Get all customer IDs from orders that don't exist in customers table
+    // Get all agent IDs from orders that don't exist in customers table
     try {
         $stmt = $conn->query("
             SELECT DISTINCT o.customer_id as shopify_customer_id
@@ -34,11 +34,11 @@ try {
             WHERE c.id IS NULL 
             AND o.customer_id IS NOT NULL
         ");
-        $missing_customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        error_log("Found " . count($missing_customers) . " missing customers to sync");
+        $missing_agents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        error_log("Found " . count($missing_agents) . " missing agents to sync");
     } catch (Exception $e) {
-        error_log("Error fetching missing customers: " . $e->getMessage());
-        $missing_customers = [];
+        error_log("Error fetching missing agents: " . $e->getMessage());
+        $missing_agents = [];
     }
     
     // Start sync log entry
@@ -46,7 +46,7 @@ try {
         INSERT INTO sync_logs 
         (sync_type, status, started_at) 
         VALUES 
-        ('customers', 'running', NOW())
+        ('agents', 'running', NOW())
     ");
     $stmt->execute();
     $syncLogId = $conn->lastInsertId();
@@ -59,7 +59,7 @@ try {
     echo json_encode([
         'success' => true,
         'sync_id' => $syncLogId,
-        'message' => 'Customer sync started'
+        'message' => 'Agent sync started'
     ]);
     
     // Ensure all output is sent
@@ -74,42 +74,42 @@ try {
     // Start sync process
     $total_synced = 0;
     
-    // First sync missing customers from orders
-    foreach ($missing_customers as $customer) {
+    // First sync missing agents from orders
+    foreach ($missing_agents as $agent) {
         try {
-            if (!empty($customer['shopify_customer_id'])) {
-                error_log("Processing customer ID: " . $customer['shopify_customer_id']);
+            if (!empty($agent['shopify_customer_id'])) {
+                error_log("Processing agent ID: " . $agent['shopify_customer_id']);
                 
-                $shopify_customer = $shopify->getCustomerById($customer['shopify_customer_id']);
+                $shopify_agent = $shopify->getCustomerById($agent['shopify_customer_id']);
                 
-                if ($shopify_customer) {
+                if ($shopify_agent) {
                     try {
-                        $synced = $shopify->syncCustomer($shopify_customer);
+                        $synced = $shopify->syncCustomer($shopify_agent);
                         if ($synced) {
                             $total_synced++;
                             $itemsSynced++;
-                            error_log("Successfully synced customer: ID={$customer['shopify_customer_id']}");
+                            error_log("Successfully synced agent: ID={$agent['shopify_customer_id']}");
                         } else {
-                            error_log("Failed to sync customer: ID={$customer['shopify_customer_id']} (already exists or invalid data)");
+                            error_log("Failed to sync agent: ID={$agent['shopify_customer_id']} (already exists or invalid data)");
                         }
                     } catch (Exception $e) {
-                        error_log("Error during customer sync: ID={$customer['shopify_customer_id']}, Error: " . $e->getMessage());
+                        error_log("Error during agent sync: ID={$agent['shopify_customer_id']}, Error: " . $e->getMessage());
                         $hasError = true;
                         $errorMessage = $e->getMessage();
                     }
                 } else {
-                    error_log("Customer not found in Shopify: ID={$customer['shopify_customer_id']}");
+                    error_log("Agent not found in Shopify: ID={$agent['shopify_customer_id']}");
                 }
             }
         } catch (Exception $e) {
-            error_log("Error processing customer ID {$customer['shopify_customer_id']}: " . $e->getMessage());
+            error_log("Error processing agent ID {$agent['shopify_customer_id']}: " . $e->getMessage());
             $hasError = true;
             $errorMessage = $e->getMessage();
             continue;
         }
     }
     
-    // Now sync any remaining customers from Shopify
+    // Now sync any remaining agents from Shopify
     try {
         $synced_count = $shopify->syncCustomers();
         $total_synced += $synced_count;
@@ -117,7 +117,7 @@ try {
         
     } catch (Exception $e) {
         // Log error
-        error_log("Error in customer sync: " . $e->getMessage());
+        error_log("Error in agent sync: " . $e->getMessage());
         $hasError = true;
         $errorMessage = $e->getMessage();
     }

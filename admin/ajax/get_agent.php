@@ -10,9 +10,9 @@ if (!is_logged_in() || !is_admin()) {
     exit;
 }
 
-if (!isset($_GET['customer_id'])) {
+if (!isset($_GET['agent_id'])) {
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Customer ID is required']);
+    echo json_encode(['success' => false, 'message' => 'Agent ID is required']);
     exit;
 }
 
@@ -24,15 +24,15 @@ try {
         SELECT * FROM customers WHERE id = ?
     ");
     
-    $stmt->execute([$_GET['customer_id']]);
-    $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt->execute([$_GET['agent_id']]);
+    $agent = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if ($customer) {
+    if ($agent) {
         header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'customer' => $customer]);
+        echo json_encode(['success' => true, 'agent' => $agent]);
     } else {
         header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Customer not found']);
+        echo json_encode(['success' => false, 'message' => 'Agent not found']);
     }
     
 } catch (Exception $e) {

@@ -10,9 +10,9 @@ if (!is_logged_in() || !is_admin()) {
     exit;
 }
 
-if (!isset($_POST['customer_id'])) {
+if (!isset($_POST['agent_id'])) {
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Customer ID is required']);
+    echo json_encode(['success' => false, 'message' => 'Agent ID is required']);
     exit;
 }
 
@@ -20,7 +20,7 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
     
-    // Update customer
+    // Update agent
     $stmt = $conn->prepare("
         UPDATE customers 
         SET first_name = ?,
@@ -43,11 +43,11 @@ try {
         $_POST['bank_name'],
         $_POST['bank_account_number'],
         $_POST['bank_account_header'],
-        $_POST['customer_id']
+        $_POST['agent_id']
     ]);
     
     header('Content-Type: application/json');
-    echo json_encode(['success' => true, 'message' => 'Customer updated successfully']);
+    echo json_encode(['success' => true, 'message' => 'Agent updated successfully']);
     
 } catch (Exception $e) {
     header('Content-Type: application/json');

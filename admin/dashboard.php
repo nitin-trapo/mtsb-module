@@ -133,7 +133,7 @@ try {
     <!-- Stats Cards Row -->
     <div class="row">
         <div class="col-xl-3 col-sm-6 mb-4">
-            <div class="card stats-card customers">
+            <div class="card stats-card agents">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
@@ -219,7 +219,7 @@ try {
                             <thead>
                                 <tr>
                                     <th>Order Number</th>
-                                    <th>Customer</th>
+                                    <th>Agent</th>
                                     <th>Amount</th>
                                     <th>Date</th>
                                     <th>Status</th>

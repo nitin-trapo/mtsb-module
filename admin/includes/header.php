@@ -65,7 +65,7 @@ if (!defined('BASE_URL')) {
                         <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/dashboard.php">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'customers.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/customers.php">Agents</a>
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'agents.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/agents.php">Agents</a>
                     </li>
 
                     <li class="nav-item">
