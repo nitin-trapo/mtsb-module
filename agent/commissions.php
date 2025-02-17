@@ -122,7 +122,7 @@ include 'includes/header.php';
                                     RM <?php echo number_format($commission['amount'], 2); ?>
                                     <?php if (!empty($commission['adjustment_reason'])): ?>
                                         <span class="badge bg-info" title="This commission was adjusted">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="fas fa-info-circle"></i>
                                         </span>
                                     <?php endif; ?>
                                 </div>
@@ -157,15 +157,21 @@ include 'includes/header.php';
 </div>
 
 <!-- Commission Details Modal -->
-<div class="modal fade" id="commissionModal" tabindex="-1">
+<div class="modal fade" id="commissionModal" tabindex="-1" aria-labelledby="commissionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Commission Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="commissionModalLabel">Commission Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body px-4">
-                <!-- Content will be loaded dynamically -->
+            <div class="modal-body">
+                <div id="loadingSpinner" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading commission details...</p>
+                </div>
+                <div id="modalContent" style="display: none;"></div>
             </div>
         </div>
     </div>
@@ -189,12 +195,23 @@ $(document).ready(function() {
 
 function viewDetails(commissionId) {
     const modal = new bootstrap.Modal(document.getElementById('commissionModal'));
+    const modalBody = $('#commissionModal .modal-body');
     
-    // Load commission details
-    $.get('ajax/get_commission_details.php', { commission_id: commissionId }, function(response) {
-        $('#commissionModal .modal-body').html(response);
-        modal.show();
-    });
+    // Show loading spinner
+    modalBody.html('<div class="text-center p-4"><div class="spinner-border" role="status"></div><p class="mt-2">Loading commission details...</p></div>');
+    modal.show();
+    
+    $.post('ajax/get_commission_details.php', { commission_id: commissionId })
+        .done(function(response) {
+            if (response.success) {
+                modalBody.html(response.html);
+            } else {
+                modalBody.html('<div class="alert alert-danger">' + (response.error || 'An error occurred while loading commission details.') + '</div>');
+            }
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            modalBody.html('<div class="alert alert-danger">Failed to load commission details. Please try again later.</div>');
+        });
 }
 </script>
 

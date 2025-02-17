@@ -71,18 +71,35 @@ if (!defined('BASE_URL')) {
                     <li class="nav-item">
                         <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'orders.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/orders.php">Orders</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'commissions.php' ? 'active' : ''; ?>" href="commissions.php">
-                           Commissions
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle <?php echo in_array(basename($_SERVER['PHP_SELF']), ['commissions.php', 'bulk_commissions.php', 'rules.php']) ? 'active' : ''; ?>" 
+                           href="#" 
+                           id="commissionsDropdown" 
+                           role="button" 
+                           data-bs-toggle="dropdown" 
+                           aria-expanded="false">
+                            Commissions
                         </a>
-                    </li>
-                    <li class="nav-item ">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'bulk_commissions.php' ? 'active' : ''; ?>" href="bulk_commissions.php">
-                            Bulk Commissions
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'rules.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/rules.php">Commission Rules</a>
+                        <ul class="dropdown-menu" aria-labelledby="commissionsDropdown">
+                            <li>
+                                <a class="dropdown-item <?php echo basename($_SERVER['PHP_SELF']) == 'commissions.php' ? 'active' : ''; ?>" 
+                                   href="<?php echo BASE_URL; ?>/admin/commissions.php">
+                                    Commissions List
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item <?php echo basename($_SERVER['PHP_SELF']) == 'bulk_commissions.php' ? 'active' : ''; ?>" 
+                                   href="<?php echo BASE_URL; ?>/admin/bulk_commissions.php">
+                                    Bulk Commissions
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item <?php echo basename($_SERVER['PHP_SELF']) == 'rules.php' ? 'active' : ''; ?>" 
+                                   href="<?php echo BASE_URL; ?>/admin/rules.php">
+                                    Commission Rules
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 					<li class="nav-item">
                         <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/users.php">Users</a>

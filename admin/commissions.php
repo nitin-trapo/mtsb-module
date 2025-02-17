@@ -158,7 +158,7 @@ include 'includes/header.php';
                                     <?php endif; ?>
                                     <?php if (!empty($commission['adjustment_reason'])): ?>
                                         <span class="badge bg-info" title="This commission was adjusted">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="fas fa-info-circle"></i>
                                         </span>
                                     <?php endif; ?>
                                 </div>

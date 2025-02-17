@@ -536,7 +536,7 @@ try {
                                     number_format($commission['amount'], 2)) . '
                                     ' . (!empty($commission['adjustment_reason']) ? '
                                     <span class="badge bg-info" title="This commission was adjusted">
-                                        <i class="fas fa-edit"></i> Adjusted
+                                        <i class="fas fa-info-circle"></i> Adjusted
                                     </span>' : '') . '
                                     ' . ($commission['status'] !== 'paid' ? '
                                     <button type="button" class="btn btn-sm btn-primary ms-2 adjust-commission" data-commission-id="' . $commission_id . '">
