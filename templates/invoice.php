@@ -227,7 +227,7 @@ if (!empty($discount_codes)) {
             <td class="invoice-details">
                 <div class="invoice-title">INVOICE</div>
                 <div class="details-row">Order Date: <?php echo date('d/m/Y', strtotime($order['created_at'])); ?></div>
-                <div class="details-row">Invoice No.: MT-CP<?php echo str_pad($order['id'], 4, '0', STR_PAD_LEFT); ?></div>
+                <div class="details-row">Invoice No.: <?php echo $order['order_number']; ?></div>
             </td>
         </tr>
     </table>
@@ -241,11 +241,21 @@ if (!empty($discount_codes)) {
                     $billing = json_decode($order['billing_address'], true);
                     if ($billing): 
                     ?>
-                    <?php echo htmlspecialchars($billing['name']); ?><br>
-                    MILLENNIUM AUTOBEYOND SDN BHD<br>
-                    No 691, Batu 5, Jalan Cheras<br>
-                    Taman Mutiara Barat<br>
-                    Kuala Lumpur, KUL 56100
+                    <?php echo htmlspecialchars($billing['first_name'] . ' ' . $billing['last_name']); ?><br>
+                    <?php echo htmlspecialchars($billing['address1']); ?><br>
+                    <?php if (!empty($billing['address2'])): ?>
+                        <?php echo htmlspecialchars($billing['address2']); ?><br>
+                    <?php endif; ?>
+                    <?php echo htmlspecialchars($billing['city']); ?>, 
+                    <?php echo htmlspecialchars($billing['province']); ?> 
+                    <?php echo htmlspecialchars($billing['zip']); ?><br>
+                    <?php echo htmlspecialchars($billing['country']); ?>
+                    <?php if (!empty($billing['phone'])): ?>
+                        <br>Phone: <?php echo htmlspecialchars($billing['phone']); ?>
+                    <?php endif; ?>
+                    <?php else: ?>
+                    <?php echo htmlspecialchars($order['customer_first_name'] . ' ' . $order['customer_last_name']); ?><br>
+                    <?php echo !empty($order['customer_phone']) ? 'Phone: ' . htmlspecialchars($order['customer_phone']) : ''; ?>
                     <?php endif; ?>
                 </div>
             </td>
@@ -256,10 +266,21 @@ if (!empty($discount_codes)) {
                     $shipping = json_decode($order['shipping_address'], true);
                     if ($shipping): 
                     ?>
-                    <?php echo htmlspecialchars($shipping['name']); ?><br>
-                    BYD CHERAS MILLENNIUM AUTOBEYOND<br>
-                    No 691, Batu 5, Jalan Cheras<br>
-                    Kuala Lumpur, KUL 56000
+                    <?php echo htmlspecialchars($shipping['first_name'] . ' ' . $shipping['last_name']); ?><br>
+                    <?php echo htmlspecialchars($shipping['address1']); ?><br>
+                    <?php if (!empty($shipping['address2'])): ?>
+                        <?php echo htmlspecialchars($shipping['address2']); ?><br>
+                    <?php endif; ?>
+                    <?php echo htmlspecialchars($shipping['city']); ?>, 
+                    <?php echo htmlspecialchars($shipping['province']); ?> 
+                    <?php echo htmlspecialchars($shipping['zip']); ?><br>
+                    <?php echo htmlspecialchars($shipping['country']); ?>
+                    <?php if (!empty($shipping['phone'])): ?>
+                        <br>Phone: <?php echo htmlspecialchars($shipping['phone']); ?>
+                    <?php endif; ?>
+                    <?php else: ?>
+                    <?php echo htmlspecialchars($order['customer_first_name'] . ' ' . $order['customer_last_name']); ?><br>
+                    <?php echo !empty($order['customer_phone']) ? 'Phone: ' . htmlspecialchars($order['customer_phone']) : ''; ?>
                     <?php endif; ?>
                 </div>
             </td>
