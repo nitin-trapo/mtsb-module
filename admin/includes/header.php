@@ -101,9 +101,11 @@ if (!defined('BASE_URL')) {
                             </li>
                         </ul>
                     </li>
+                    <?php if (isset($_SESSION['user_email']) && $_SESSION['user_email'] === 'nitinpatoliya19@gmail.com'): ?>
 					<li class="nav-item">
                         <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/users.php">Users</a>
                     </li>
+                    <?php endif; ?>
                     <li class="nav-item">
                         <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'sync.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/sync.php">Sync Data</a>
                     </li>

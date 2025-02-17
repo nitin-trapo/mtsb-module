@@ -268,8 +268,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     $_SESSION['user_id'] = $user['id'];
                                     $_SESSION['role'] = $user['role'];
                                     $_SESSION['name'] = $user['name'];
+                                    $_SESSION['user_email'] = $user['email'];
                                     
-                                    // Clear email from session
+                                    // Clear temporary login email
                                     unset($_SESSION['login_email']);
                                     
                                     write_log("Successful login for: " . $user['email'] . " with role: " . $_SESSION['role']);

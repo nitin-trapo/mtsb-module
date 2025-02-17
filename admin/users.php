@@ -14,6 +14,16 @@ require_once '../config/database.php';
 $database = new Database();
 $conn = $database->getConnection();
 
+// Function to generate random password
+function generateRandomPassword($length = 12) {
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
+    $password = '';
+    for ($i = 0; $i < $length; $i++) {
+        $password .= $chars[rand(0, strlen($chars) - 1)];
+    }
+    return $password;
+}
+
 // Initialize variables
 $error = '';
 $success = '';
@@ -40,7 +50,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['add_user']) || isset($_POST['update_user'])) {
         $name = trim($_POST['name']);
         $email = trim($_POST['email']);
-        $password = isset($_POST['password']) ? trim($_POST['password']) : '';
         $role = 'admin';
         $status = isset($_POST['status']) ? 'active' : 'inactive';
         
@@ -48,30 +57,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error = "Name and email are required fields.";
         } else {
             if (isset($_POST['add_user'])) {
-                if (empty($password)) {
-                    $error = "Password is required for new users.";
+                // Generate random password for new user
+                $password = generateRandomPassword();
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $conn->prepare("INSERT INTO users (name, email, password, role, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+                
+                if ($stmt->execute([$name, $email, $hashed_password, $role, $status])) {
+                    $success = "User added successfully! Temporary password: " . $password;
                 } else {
-                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                    $stmt = $conn->prepare("INSERT INTO users (name, email, password, role, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
-                    
-                    if ($stmt->execute([$name, $email, $hashed_password, $role, $status])) {
-                        $success = "User added successfully!";
-                    } else {
-                        $error = "Error adding user: " . $stmt->errorInfo()[2];
-                    }
+                    $error = "Error adding user: " . $stmt->errorInfo()[2];
                 }
             } else {
-                $update_sql = "UPDATE users SET name = ?, email = ?, status = ?";
-                $params = array($name, $email, $status);
-                
-                if (!empty($password)) {
-                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                    $update_sql .= ", password = ?";
-                    $params[] = $hashed_password;
-                }
-                
-                $update_sql .= " WHERE id = ?";
-                $params[] = $_POST['user_id'];
+                $update_sql = "UPDATE users SET name = ?, email = ?, status = ? WHERE id = ?";
+                $params = array($name, $email, $status, $_POST['user_id']);
                 
                 $stmt = $conn->prepare($update_sql);
                 
@@ -194,11 +192,6 @@ $users = $stmt;
                         <input type="email" class="form-control" id="email" name="email" required>
                     </div>
                     <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password">
-                        <div id="passwordHelp" class="form-text" style="display: none;">Leave blank to keep current password</div>
-                    </div>
-                    <div class="mb-3">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="status" name="status" checked>
                             <label class="form-check-label" for="status">Active</label>
@@ -247,8 +240,6 @@ $(document).ready(function() {
         $('#userForm')[0].reset();
         $('#userModalLabel').text('Add New User');
         $('#submitBtn').attr('name', 'add_user').html('<i class="fas fa-save"></i> Save User');
-        $('#passwordHelp').show();
-        $('#password').prop('required', true);
         $('#user_id').val('');
     });
 
@@ -257,8 +248,6 @@ $(document).ready(function() {
         $('#userForm')[0].reset();
         $('#userModalLabel').text('Add New User');
         $('#submitBtn').attr('name', 'add_user').html('<i class="fas fa-save"></i> Save User');
-        $('#passwordHelp').hide();
-        $('#password').prop('required', true);
         $('#user_id').val('');
     });
 
@@ -273,8 +262,6 @@ function editUser(id, name, email, status) {
     $('#name').val(name);
     $('#email').val(email);
     $('#status').prop('checked', status === 'active');
-    $('#password').prop('required', false);
-    $('#passwordHelp').show();
     
     $('#userModalLabel').text('Edit User');
     $('#submitBtn').attr('name', 'update_user').html('<i class="fas fa-save"></i> Update User');
