@@ -54,7 +54,7 @@ if (!defined('BASE_URL')) {
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="<?php echo BASE_URL; ?>/admin/dashboard.php">
-                Shopify Commission Module
+                TRAPO
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
