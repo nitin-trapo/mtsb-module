@@ -25,7 +25,9 @@ $available_pages = [
     'rules' => 'Commission Rules',
     'sync' => 'Sync Data',
     'products' => 'Products',
-    'settings' => 'Settings'
+    'settings' => 'Settings',
+    'profile' => 'Profile',
+    'sales_report' => 'Sales Report'
 ];
 
 // Function to generate random password

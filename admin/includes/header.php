@@ -113,6 +113,14 @@ if (!defined('BASE_URL')) {
                         <a class="nav-link <?php echo $current_page === 'orders' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/orders.php">Orders</a>
                     </li>
                     <?php endif; ?>
+
+                    <?php if (isset($user_permissions['sales_report']) && $user_permissions['sales_report']): ?>
+                    <li class="nav-item">
+                        <a class="nav-link <?php echo $current_page === 'sales_report' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/sales_report.php">
+                           Sales Report
+                        </a>
+                    </li>
+                    <?php endif; ?>
                     
                     <?php if (isset($user_permissions['commissions']) && $user_permissions['commissions']): ?>
                     <li class="nav-item dropdown">
