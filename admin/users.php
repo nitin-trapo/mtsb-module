@@ -14,6 +14,20 @@ require_once '../config/database.php';
 $database = new Database();
 $conn = $database->getConnection();
 
+// Define available pages for permissions
+$available_pages = [
+    'dashboard' => 'Dashboard',
+    'users' => 'Users Management',
+    'orders' => 'Orders',
+    'agents' => 'Agents',
+    'commissions' => 'Commissions List',
+    'bulk_commissions' => 'Bulk Commissions',
+    'rules' => 'Commission Rules',
+    'sync' => 'Sync Data',
+    'products' => 'Products',
+    'settings' => 'Settings'
+];
+
 // Function to generate random password
 function generateRandomPassword($length = 12) {
     $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
@@ -63,6 +77,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt = $conn->prepare("INSERT INTO users (name, email, password, role, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
                 
                 if ($stmt->execute([$name, $email, $hashed_password, $role, $status])) {
+                    $new_user_id = $conn->lastInsertId();
+                    
+                    // Insert permissions for the new user
+                    $page_permissions = isset($_POST['permissions']) ? $_POST['permissions'] : [];
+                    $perm_stmt = $conn->prepare("INSERT INTO user_permissions (user_id, page_name, has_access) VALUES (?, ?, ?)");
+                    
+                    foreach ($available_pages as $page => $label) {
+                        $has_access = in_array($page, $page_permissions) ? 1 : 0;
+                        $perm_stmt->execute([$new_user_id, $page, $has_access]);
+                    }
+                    
                     $success = "User added successfully! Temporary password: " . $password;
                 } else {
                     $error = "Error adding user: " . $stmt->errorInfo()[2];
@@ -74,6 +99,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt = $conn->prepare($update_sql);
                 
                 if ($stmt->execute($params)) {
+                    // Update permissions
+                    $page_permissions = isset($_POST['permissions']) ? $_POST['permissions'] : [];
+                    
+                    // First, ensure permissions exist for all pages
+                    foreach ($available_pages as $page => $label) {
+                        $check_stmt = $conn->prepare("SELECT COUNT(*) FROM user_permissions WHERE user_id = ? AND page_name = ?");
+                        $check_stmt->execute([$_POST['user_id'], $page]);
+                        $exists = $check_stmt->fetchColumn();
+                        
+                        if ($exists == 0) {
+                            // Insert if doesn't exist
+                            $insert_stmt = $conn->prepare("INSERT INTO user_permissions (user_id, page_name, has_access) VALUES (?, ?, ?)");
+                            $has_access = in_array($page, $page_permissions) ? 1 : 0;
+                            $insert_stmt->execute([$_POST['user_id'], $page, $has_access]);
+                        } else {
+                            // Update if exists
+                            $update_stmt = $conn->prepare("UPDATE user_permissions SET has_access = ? WHERE user_id = ? AND page_name = ?");
+                            $has_access = in_array($page, $page_permissions) ? 1 : 0;
+                            $update_stmt->execute([$has_access, $_POST['user_id'], $page]);
+                        }
+                    }
+                    
                     $success = "User updated successfully!";
                 } else {
                     $error = "Error updating user: " . $stmt->errorInfo()[2];
@@ -83,8 +130,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Fetch all users
-$stmt = $conn->query("SELECT id, name, email, role, status, created_at FROM users WHERE role = 'admin' ORDER BY id DESC");
+// Fetch all users with their permissions
+$stmt = $conn->query("
+    SELECT u.id, u.name, u.email, u.role, u.status, u.created_at,
+           GROUP_CONCAT(CASE WHEN up.has_access = 1 THEN up.page_name ELSE NULL END) as permissions
+    FROM users u
+    LEFT JOIN user_permissions up ON u.id = up.user_id
+    WHERE u.role = 'admin'
+    GROUP BY u.id
+    ORDER BY u.id DESC
+");
 $users = $stmt;
 ?>
 
@@ -129,12 +184,13 @@ $users = $stmt;
                                 <th>Role</th>
                                 <th>Status</th>
                                 <th>Created At</th>
+                                <th>Permissions</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php while ($user = $users->fetch(PDO::FETCH_ASSOC)): ?>
-                                <tr>
+                                <tr data-permissions="<?php echo $user['permissions']; ?>">
                                     <td><?php echo $user['id']; ?></td>
                                     <td><?php echo htmlspecialchars($user['name']); ?></td>
                                     <td><?php echo htmlspecialchars($user['email']); ?></td>
@@ -150,10 +206,17 @@ $users = $stmt;
                                     </td>
                                     <td><?php echo date('M d, Y H:i', strtotime($user['created_at'])); ?></td>
                                     <td>
+                                        <?php if ($user['permissions']): ?>
+                                            <?php foreach (explode(',', $user['permissions']) as $permission): ?>
+                                                <span class="badge bg-success me-1"><?php echo $permission; ?></span>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
                                         <div class="btn-group" role="group">
                                             <button type="button" class="btn btn-primary btn-sm" 
                                                     onclick="editUser(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['name']); ?>', 
-                                                                     '<?php echo htmlspecialchars($user['email']); ?>', '<?php echo $user['status']; ?>')">
+                                                                     '<?php echo htmlspecialchars($user['email']); ?>', '<?php echo $user['status']; ?>', '<?php echo $user['permissions']; ?>')">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button type="button" class="btn btn-danger btn-sm" 
@@ -195,6 +258,23 @@ $users = $stmt;
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="status" name="status" checked>
                             <label class="form-check-label" for="status">Active</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Page Permissions</label>
+                        <div class="row">
+                            <?php foreach ($available_pages as $page => $label): ?>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input permission-checkbox" type="checkbox" 
+                                           name="permissions[]" value="<?php echo $page; ?>" 
+                                           id="perm_<?php echo $page; ?>">
+                                    <label class="form-check-label" for="perm_<?php echo $page; ?>">
+                                        <?php echo $label; ?>
+                                    </label>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
@@ -257,17 +337,49 @@ $(document).ready(function() {
     }, 5000);
 });
 
-function editUser(id, name, email, status) {
-    $('#user_id').val(id);
-    $('#name').val(name);
-    $('#email').val(email);
-    $('#status').prop('checked', status === 'active');
+function editUser(id, name, email, status, permissions = '') {
+    document.getElementById('userModalLabel').textContent = 'Edit User';
+    document.getElementById('user_id').value = id;
+    document.getElementById('name').value = name;
+    document.getElementById('email').value = email;
+    document.getElementById('status').checked = status === 'active';
     
-    $('#userModalLabel').text('Edit User');
-    $('#submitBtn').attr('name', 'update_user').html('<i class="fas fa-save"></i> Update User');
+    // Reset all permission checkboxes
+    document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
     
-    $('#userModal').modal('show');
+    // Set the permissions
+    if (permissions) {
+        const permissionArray = permissions.split(',');
+        permissionArray.forEach(page => {
+            const checkbox = document.getElementById('perm_' + page.trim());
+            if (checkbox) checkbox.checked = true;
+        });
+    }
+    
+    document.getElementById('userForm').querySelector('button[type="submit"]').name = 'update_user';
+    var modal = new bootstrap.Modal(document.getElementById('userModal'));
+    modal.show();
 }
+
+// Update the table row to show permissions
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('usersTable');
+    if (table) {
+        table.querySelectorAll('tbody tr').forEach(row => {
+            const permissions = row.getAttribute('data-permissions');
+            if (permissions) {
+                const permCell = row.querySelector('td:nth-last-child(2)'); // Get the permissions cell
+                if (permCell) {
+                    permCell.innerHTML = permissions.split(',').map(p => 
+                        `<span class="badge bg-success me-1">${p}</span>`
+                    ).join('');
+                }
+            }
+        });
+    }
+});
 
 // Delete user confirmation
 function deleteUser(id, name) {

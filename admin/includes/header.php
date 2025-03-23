@@ -1,4 +1,41 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
+
+require_once __DIR__ . '/../../config/database.php';
+
+// Initialize database connection
+$database = new Database();
+$conn = $database->getConnection();
+
+// Get current page name
+$current_page = basename($_SERVER['PHP_SELF'], '.php');
+
+// Check page permission for the current user
+$stmt = $conn->prepare("SELECT has_access FROM user_permissions WHERE user_id = ? AND page_name = ?");
+$stmt->execute([$_SESSION['user_id'], $current_page]);
+$permission = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$permission || !$permission['has_access']) {
+    header('Location: dashboard.php?error=access_denied');
+    exit;
+}
+
+// Get all user permissions for menu display
+$menu_stmt = $conn->prepare("SELECT page_name, has_access FROM user_permissions WHERE user_id = ?");
+$menu_stmt->execute([$_SESSION['user_id']]);
+$user_permissions = [];
+while ($row = $menu_stmt->fetch(PDO::FETCH_ASSOC)) {
+    $user_permissions[$row['page_name']] = $row['has_access'];
+}
+
 if (!defined('BASE_URL')) {
     define('BASE_URL', 'http://localhost/shopify-agent-module');
 }
@@ -17,8 +54,8 @@ if (!defined('BASE_URL')) {
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Select2 CSS -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- Custom CSS -->
     <link href="<?php echo BASE_URL; ?>/assets/css/style.css" rel="stylesheet">
 
@@ -30,7 +67,7 @@ if (!defined('BASE_URL')) {
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <!-- Select2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- Custom JS -->
     <script src="<?php echo BASE_URL; ?>/assets/js/main.js"></script>
     
@@ -62,17 +99,24 @@ if (!defined('BASE_URL')) {
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/dashboard.php">Dashboard</a>
+                        <a class="nav-link <?php echo $current_page === 'dashboard' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/dashboard.php">Dashboard</a>
                     </li>
+                    
+                    <?php if (isset($user_permissions['agents']) && $user_permissions['agents']): ?>
                     <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'agents.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/agents.php">Agents</a>
+                        <a class="nav-link <?php echo $current_page === 'agents' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/agents.php">Agents</a>
                     </li>
-
+                    <?php endif; ?>
+                    
+                    <?php if (isset($user_permissions['orders']) && $user_permissions['orders']): ?>
                     <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'orders.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/orders.php">Orders</a>
+                        <a class="nav-link <?php echo $current_page === 'orders' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/orders.php">Orders</a>
                     </li>
+                    <?php endif; ?>
+                    
+                    <?php if (isset($user_permissions['commissions']) && $user_permissions['commissions']): ?>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle <?php echo in_array(basename($_SERVER['PHP_SELF']), ['commissions.php', 'bulk_commissions.php', 'rules.php']) ? 'active' : ''; ?>" 
+                        <a class="nav-link dropdown-toggle <?php echo in_array($current_page, ['commissions', 'bulk_commissions', 'rules']) ? 'active' : ''; ?>" 
                            href="#" 
                            id="commissionsDropdown" 
                            role="button" 
@@ -81,34 +125,45 @@ if (!defined('BASE_URL')) {
                             Commissions
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="commissionsDropdown">
+                            <?php if (isset($user_permissions['commissions']) && $user_permissions['commissions']): ?>
                             <li>
-                                <a class="dropdown-item <?php echo basename($_SERVER['PHP_SELF']) == 'commissions.php' ? 'active' : ''; ?>" 
+                                <a class="dropdown-item <?php echo $current_page === 'commissions' ? 'active' : ''; ?>" 
                                    href="<?php echo BASE_URL; ?>/admin/commissions.php">
                                     Commissions List
                                 </a>
                             </li>
+                            <?php endif; ?>
+                            <?php if (isset($user_permissions['bulk_commissions']) && $user_permissions['bulk_commissions']): ?>
                             <li>
-                                <a class="dropdown-item <?php echo basename($_SERVER['PHP_SELF']) == 'bulk_commissions.php' ? 'active' : ''; ?>" 
+                                <a class="dropdown-item <?php echo $current_page === 'bulk_commissions' ? 'active' : ''; ?>" 
                                    href="<?php echo BASE_URL; ?>/admin/bulk_commissions.php">
                                     Bulk Commissions
                                 </a>
                             </li>
+                            <?php endif; ?>
+                            <?php if (isset($user_permissions['rules']) && $user_permissions['rules']): ?>
                             <li>
-                                <a class="dropdown-item <?php echo basename($_SERVER['PHP_SELF']) == 'rules.php' ? 'active' : ''; ?>" 
+                                <a class="dropdown-item <?php echo $current_page === 'rules' ? 'active' : ''; ?>" 
                                    href="<?php echo BASE_URL; ?>/admin/rules.php">
                                     Commission Rules
                                 </a>
                             </li>
+                            <?php endif; ?>
                         </ul>
                     </li>
-                    <?php if (isset($_SESSION['user_email']) && $_SESSION['user_email'] === 'nitinpatoliya19@gmail.com'): ?>
-					<li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/users.php">Users</a>
+                    <?php endif; ?>
+                    
+                    <?php if (isset($user_permissions['users']) && $user_permissions['users']): ?>
+                    <li class="nav-item">
+                        <a class="nav-link <?php echo $current_page === 'users' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/users.php">Users</a>
                     </li>
                     <?php endif; ?>
+                    
+                    <?php if (isset($user_permissions['sync']) && $user_permissions['sync']): ?>
                     <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'sync.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/sync.php">Sync Data</a>
+                        <a class="nav-link <?php echo $current_page === 'sync' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/sync.php">Sync Data</a>
                     </li>
+                    <?php endif; ?>
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
