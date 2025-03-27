@@ -248,8 +248,12 @@ try {
                 }
             }
 
-            // Ensure commission amount is not negative
-            $commission_amount = number_format(max(0, floatval($commission_amount)), 2, '.', '');
+            // Ensure commission amount is not negative and round off very small amounts to zero
+            if (floatval($commission_amount) <= 0.01) {
+                $commission_amount = "0.00";
+            } else {
+                $commission_amount = number_format(max(0, floatval($commission_amount)), 2, '.', '');
+            }
 
             // Insert or update commission record
             $stmt = $conn->prepare("
@@ -280,20 +284,20 @@ try {
                 $actual_commission, // actual_commission (before discount)
                 $total_discount,
                 $commission_amount, // amount (after discount)
-                $commission_amount == 0 ? 'paid' : 'pending'
+                $commission_amount == "0.00" ? 'paid' : 'pending'
             ])) {
                 throw new Exception("Failed to save commission for order {$order['id']}");
             }
 
             $processed_orders++;
-            $total_commissions += $commission_amount;
+            $total_commissions += floatval($commission_amount);
 
             logError("Commission saved", [
                 'order_id' => $order['id'],
                 'actual_commission' => $actual_commission,
                 'total_discount' => $total_discount,
                 'final_amount' => $commission_amount,
-                'status' => $commission_amount == 0 ? 'paid' : 'pending'
+                'status' => $commission_amount == "0.00" ? 'paid' : 'pending'
             ]);
 
         } catch (Exception $e) {

@@ -230,8 +230,12 @@ try {
         }
     }
 
-    // Ensure commission amount is not negative
-    $final_commission_amount = number_format(max(0, floatval($final_commission_amount)), 2, '.', '');
+    // Ensure commission amount is not negative and round off very small amounts to zero
+    if (floatval($final_commission_amount) <= 0.01) {
+        $final_commission_amount = "0.00";
+    } else {
+        $final_commission_amount = number_format(max(0, floatval($final_commission_amount)), 2, '.', '');
+    }
 
     // Save commission to database
     $stmt = $conn->prepare("
@@ -260,7 +264,7 @@ try {
         $total_commission,
         $total_discount,
         $final_commission_amount,
-        $final_commission_amount == 0 ? 'paid' : 'pending'
+        $final_commission_amount == "0.00" ? 'paid' : 'pending'
     ]);
 
     echo json_encode([
@@ -272,7 +276,7 @@ try {
         'currency' => $order['currency'],
         'processed_items' => $processed_items,
         'discount_codes' => $order['discount_codes'],
-        'status' => $final_commission_amount == 0 ? 'paid' : 'pending'
+        'status' => $final_commission_amount == "0.00" ? 'paid' : 'pending'
     ]);
 
 } catch (Exception $e) {
