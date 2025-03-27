@@ -85,6 +85,9 @@ include 'includes/header.php';
             <!--<button type="button" class="btn btn-success me-2" id="refreshAllCommissions">
                 <i class="fas fa-sync-alt"></i> Refresh All Commissions
             </button>-->
+            <a href="ajax/export_commissions.php" class="btn btn-success me-2">
+                <i class="fas fa-file-excel me-1"></i> Export to Excel
+            </a>
             <button type="button" class="btn btn-primary" id="calculateAllCommissions">
                 Calculate All Commissions
             </button>
